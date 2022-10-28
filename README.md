@@ -4,7 +4,7 @@
 
 * [What is Once.2023](#what-is-Once.2023)
 * [First steps](#first-steps)
-* [You are on dev branch](#dev-branch)
+* [You are on main branch](#dev-branch)
 * [Ups...I am a user](#wrong-here?)
 
 ## What is Once.2023
@@ -51,8 +51,13 @@ cd Once.2023
 ./check-system.sh
 ```
 
-## Dev branch
-This is the main development branch.
+## Main branch
+This is the main release branch.
+
+To switch to dev branch type
+```
+devTool commit
+```
 
 # Wrong here?
 Ups, I am a USER. [Where should I go?](https://tech4people.cloud)
