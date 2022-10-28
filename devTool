@@ -23,6 +23,7 @@ devTool.commit() # # commiting Once.2023
             # Working directory clean
             important.log "branch is clean...nothing to commit.
             "
+            return 0
         else 
             git add *
             git commit
