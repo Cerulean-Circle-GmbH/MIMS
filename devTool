@@ -56,7 +56,7 @@ devTool.commit() # # commiting Once.2023
 
 }
 
-devTool.release()
+devTool.release() # # releases by merging dev into main
 {
     local branch=$( git branch | line find "\*" )
     important.log "git barnch is: $branch"
@@ -73,7 +73,7 @@ devTool.release()
 }
 
 
-devTool.update()
+devTool.update() # # pulls the update from git
 {
     git pull
 }
@@ -83,6 +83,10 @@ usage() {
     "
     console.log "to supress output, next time type"
     console.log "  $0 silent
+    
+    to get completion type
+
+    c2 devTool [Press TAB]
     "
 }
 
