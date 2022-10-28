@@ -72,6 +72,12 @@ devTool.release()
     fi
 }
 
+
+devTool.update()
+{
+    git pull
+}
+
 usage() {
     console.log "$0 
     "
