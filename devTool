@@ -12,6 +12,11 @@ log_part()
     printf "$@" >$LOG_DEVICE
 }
 
+devTool.status() # # pulls the update from git
+{
+    git status
+}
+
 devTool.commit() # # commiting Once.2023
 {
     local branch=$( git branch | line find "\*" )
