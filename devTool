@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+#http://www.etalabs.net/sh_tricks.html
+
+
+log() 
+{
+    echo "$@" >$LOG_DEVICE
+}
+
+log_part() 
+{
+    printf "$@" >$LOG_DEVICE
+}
+
+devTool.commit() # # commiting Once.2023
+{
+    local branch=$( git branch | line find "\*" )
+    important.log "git barnch is: $branch"
+    if [ "$branch" = "* dev" ]; then
+        git add *
+        git commit
+        git push
+    else
+        error.log "not on the dev branch"
+        important.log "switch branch with
+    
+        oo mode.dev
+        
+        "
+    fi
+    success.log "comitted $@"
+}
+
+
+usage() {
+    console.log "$0 
+    "
+    console.log "to supress output, next time type"
+    console.log "  $0 silent
+    "
+}
+
+start() {
+    ./check-system.sh silent
+    ERROR=$?
+    if [ $ERROR -gt 0 ]; then
+        log "system check did not got well:"
+        log "Error: $(errno $ERROR)"
+        exit $ERROR
+    fi
+    source this
+
+
+    LOG_DEVICE=/dev/tty
+    #log "parameters: $@"
+    if [ -n "$1" ]; then
+        #log "got parameters: $@"
+        while [ -n $1 ]; do
+            case $1 in
+                fail)
+                    return 1
+                    ;;
+                error)
+                    shift
+                    return "$1"
+                    ;;
+                silent)
+                    LOG_DEVICE=/dev/null
+                    ;;
+                mode)
+                    log "got: mode"
+                    ;;
+                *)
+                    #this.call "$@"
+                    local cmd=$1
+                    shift
+                    log "processing: devTool.$cmd $@"
+                    devTool.$cmd "$@"
+                    ;;
+            esac
+            shift
+            #log "next parameter: =$1="
+            if [ -z "$1" ]; then
+                log ciao
+                return 0
+            fi
+        done
+        #return 0
+    else
+        usage
+        return 0
+    fi
+}
+
+
+start "$@"
