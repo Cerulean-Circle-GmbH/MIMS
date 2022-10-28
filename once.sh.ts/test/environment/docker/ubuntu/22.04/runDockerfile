@@ -1,0 +1,12 @@
+
+#!/bin/sh
+#ls -al ${PWD}/../../../../../
+docker run -it \
+  -p 8081:8080 \
+  -p 8444:8443 \
+  -v ${PWD}/../../../../../src/sh/init:/root/init \
+-v /var/run/docker.sock:/var/run/docker.sock \
+naked_ubuntu_22_04 sh
+
+
+#-v /var/dev/EAMD.ucp/Components/tla/EAM/layer1/Thinglish/Once/latestServer/src/sh/:/usr/local/sbin \

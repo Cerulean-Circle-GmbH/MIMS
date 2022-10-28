@@ -1,0 +1,13 @@
+#!/bin/sh
+
+cd $HOME
+#cp ./init/oosh ./install.oosh
+rm .local/share/bash-completion/completions/_oosh_commands
+rm -Rf ./oosh
+rm -Rf ./config
+#rm -Rf ./init
+rm -Rf ./init/oosh
+rm -Rf ./init/once
+rm ./.once
+rm ./.bashrc
+mv ./.bashrc.bak.without.completion $HOME/.bashrc
