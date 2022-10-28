@@ -54,6 +54,11 @@ cd Once.2023
 ## Dev branch
 This is the main development branch.
 
+to release type
+```
+devTool release
+```
+
 # Wrong here?
 Ups, I am a USER. [Where should I go?](https://tech4people.cloud)
 
