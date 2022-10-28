@@ -28,7 +28,7 @@ devTool.commit() # # commiting Once.2023
         
         "
     fi
-    success.log "comitted $@"
+    success.log "comitted $(cd ..;pwd) $@"
 }
 
 
