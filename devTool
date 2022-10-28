@@ -16,17 +16,33 @@ devTool.commit() # # commiting Once.2023
 {
     local branch=$( git branch | line find "\*" )
     important.log "git barnch is: $branch"
+
+    local stash=""
     if [ "$branch" = "* dev" ]; then
         git add *
         git commit
         git push
     else
         error.log "not on the dev branch"
-        important.log "switch branch with
     
-        oo mode.dev
-        
-        "
+        if [ -z "$(git status --porcelain)" ]; then 
+            # Working directory clean
+            important.log "switching branch...
+            "
+        else 
+            # Uncommitted changes
+            important.log "Uncommitted changes...
+
+            stashing
+            "
+            git stash 
+            stash=true
+        fi
+        git checkout dev
+        if [ -n $stash ]; then
+            git stash pop
+        fi
+        git status
     fi
     success.log "comitted $(basename $PWD) $@"
 }
@@ -40,7 +56,7 @@ devTool.release()
         git checkout main
         git merge dev
         git push
-        git checkout dev
+
     else
         warn.log "not in dev branch"
         git status
