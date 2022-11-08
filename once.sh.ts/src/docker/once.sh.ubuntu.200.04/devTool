@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+#http://www.etalabs.net/sh_tricks.html
+
+
+log() 
+{
+    echo "$@" >$LOG_DEVICE
+}
+
+log_part() 
+{
+    printf "$@" >$LOG_DEVICE
+}
+
+devTool.docker() # <dockerCmd:status> # builds the dockerfile 
+{
+    local dockerCmd=$1
+    shift
+    devTool.docker.$dockerCmd "$@"
+}
+
+devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile 
+{
+    cat ${BASH_SOURCE[0]} | line find "devTool.docker\." | line replace "devTool.docker\." | line replace "().*$"
+}
+
+devTool.docker.build() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker build -t ubuntu_22_04_sshd .
+}
+
+devTool.docker.run() # # runs the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker-compose up
+}
+
+devTool.docker.start() # # starts/runs the dockerfile 
+{
+    devTool.docker.run
+}
+
+devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker ps
+}
+
+devTool.docker.clean() # # starts/runs the dockerfile 
+{
+    docker system prune -a
+}
+
+devTool.docker.stop() # # stops the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker-compose down
+}
+
+
+devTool.status() # # pulls the update from git
+{
+    git status
+}
+
+devTool.config() # # shows the config
+{
+    cat .env
+    echo "====== applied:  "
+    docker-compose config
+}
+
+devTool.config.edit() # # pulls the update from git
+{
+    editor .env
+}
+
+devTool.commit() # # commiting Once.2023
+{
+    local branch=$( git branch | line find "\*" )
+    important.log "git barnch is: $branch"
+
+    local stash=""
+    if [ "$branch" = "* dev" ]; then
+            if [ -z "$(git status --porcelain)" ]; then 
+            # Working directory clean
+            important.log "branch is clean...nothing to commit.
+            "
+            return 0
+        else 
+            git add *
+            git commit
+            git push
+        fi
+        success.log "comitted $(basename $PWD) $@"
+    else
+        error.log "not on the dev branch"
+    
+        if [ -z "$(git status --porcelain)" ]; then 
+            # Working directory clean
+            important.log "switching branch...
+            "
+        else 
+            # Uncommitted changes
+            important.log "Uncommitted changes...
+
+            stashing
+            "
+            git stash 
+            stash=true
+        fi
+        git checkout dev
+        if [ -n $stash ]; then
+            git stash pop
+        fi
+        git status
+        success.log "switched $(basename $PWD) to dev branch"
+    fi
+
+}
+
+devTool.release() # # releases by merging dev into main
+{
+    local branch=$( git branch | line find "\*" )
+    important.log "git barnch is: $branch"
+    if [ "$branch" = "* dev" ]; then
+        devTool.commit
+        git checkout main
+        git merge dev
+        git push
+
+    else
+        warn.log "not in dev branch"
+        git status
+    fi
+}
+
+
+devTool.update() # # pulls the update from git
+{
+    git pull
+}
+
+devTool.fail() # # pulls the update from git
+{
+    exit 1
+}
+
+devTool.silent() # # pulls the update from git
+{
+    LOG_DEVICE=/dev/null
+}
+
+devTool.test() # # pulls the update from git
+{
+    cd once.sh.ts/test/environment/docker/ubuntu/20.04.sshd/
+    devTool.docker.build
+    devTool.docker.run
+}
+
+usage() {
+    console.log "$0 
+    "
+    console.log "to supress output, next time type"
+    console.log "  $0 silent
+    
+    to get completion type
+
+    c2 devTool [Press TAB]
+    "
+}
+
+start() {
+    /home/shared/dev/Workspaces/2cuGitHub/Once.2023/check-system.sh silent
+    ERROR=$?
+    if [ $ERROR -gt 0 ]; then
+        log "system check did not got well:"
+        log "Error: $(errno $ERROR)"
+        exit $ERROR
+    fi
+    source this
+    this.start "$@"
+
+
+    # LOG_DEVICE=/dev/tty
+    # #log "parameters: $@"
+    # if [ -n "$1" ]; then
+    #     #log "got parameters: $@"
+    #     while [ -n $1 ]; do
+    #         case $1 in
+    #             fail)
+    #                 return 1
+    #                 ;;
+    #             error)
+    #                 shift
+    #                 return "$1"
+    #                 ;;
+    #             silent)
+    #                 LOG_DEVICE=/dev/null
+    #                 ;;
+    #             mode)
+    #                 log "got: mode"
+    #                 ;;
+    #             *)
+    #                 #this.call "$@"
+    #                 # local cmd=$1
+    #                 # shift
+    #                 log "processing: devTool.$cmd $@"
+    #                 this.start "$@"
+    #                 #devTool.$cmd "$@"
+    #                 ;;
+    #         esac
+    #         shift
+    #         #log "next parameter: =$1="
+    #         if [ -z "$1" ]; then
+    #             log ciao
+    #             return 0
+    #         fi
+    #     done
+    #     #return 0
+    # else
+    #     usage
+    #     return 0
+    # fi
+}
+
+
+start "$@"

@@ -1,4 +1,0 @@
-list=var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot/1.7.0/config/test.wo-da.de
-firstItem=var
-lastItem=test.wo-da.de
-length=18
