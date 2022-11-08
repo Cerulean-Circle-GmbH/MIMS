@@ -16,7 +16,7 @@ devTool.docker() # <dockerCmd> # builds the dockerfile
 {
     local dockerCmd=$1
     shift
-    ${BASH_SOURCE[0]} docker.$dockerCmd "$@"
+    devTool.docker.$dockerCmd "$@"
 }
 
 devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile 
@@ -46,6 +46,18 @@ devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile
     echo "function "${FUNCNAME[0]} "$@"
     docker ps
 }
+
+devTool.docker.clean() # # starts/runs the dockerfile 
+{
+    docker system prune -a
+}
+
+devTool.docker.stop() # # stops the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker-compose down
+}
+
 
 devTool.status() # # pulls the update from git
 {
@@ -118,11 +130,21 @@ devTool.update() # # pulls the update from git
     git pull
 }
 
+devTool.fail() # # pulls the update from git
+{
+    exit 1
+}
+
+devTool.silent() # # pulls the update from git
+{
+    LOG_DEVICE=/dev/null
+}
+
 devTool.test() # # pulls the update from git
 {
     cd once.sh.ts/test/environment/docker/ubuntu/20.04.sshd/
-    buildDockerfile
-    runDockerfile
+    devTool.docker.build
+    devTool.docker.run
 }
 
 usage() {
@@ -146,48 +168,49 @@ start() {
         exit $ERROR
     fi
     source this
+    this.start "$@"
 
 
-    LOG_DEVICE=/dev/tty
-    #log "parameters: $@"
-    if [ -n "$1" ]; then
-        #log "got parameters: $@"
-        while [ -n $1 ]; do
-            case $1 in
-                fail)
-                    return 1
-                    ;;
-                error)
-                    shift
-                    return "$1"
-                    ;;
-                silent)
-                    LOG_DEVICE=/dev/null
-                    ;;
-                mode)
-                    log "got: mode"
-                    ;;
-                *)
-                    #this.call "$@"
-                    # local cmd=$1
-                    # shift
-                    log "processing: devTool.$cmd $@"
-                    this.start "$@"
-                    #devTool.$cmd "$@"
-                    ;;
-            esac
-            shift
-            #log "next parameter: =$1="
-            if [ -z "$1" ]; then
-                log ciao
-                return 0
-            fi
-        done
-        #return 0
-    else
-        usage
-        return 0
-    fi
+    # LOG_DEVICE=/dev/tty
+    # #log "parameters: $@"
+    # if [ -n "$1" ]; then
+    #     #log "got parameters: $@"
+    #     while [ -n $1 ]; do
+    #         case $1 in
+    #             fail)
+    #                 return 1
+    #                 ;;
+    #             error)
+    #                 shift
+    #                 return "$1"
+    #                 ;;
+    #             silent)
+    #                 LOG_DEVICE=/dev/null
+    #                 ;;
+    #             mode)
+    #                 log "got: mode"
+    #                 ;;
+    #             *)
+    #                 #this.call "$@"
+    #                 # local cmd=$1
+    #                 # shift
+    #                 log "processing: devTool.$cmd $@"
+    #                 this.start "$@"
+    #                 #devTool.$cmd "$@"
+    #                 ;;
+    #         esac
+    #         shift
+    #         #log "next parameter: =$1="
+    #         if [ -z "$1" ]; then
+    #             log ciao
+    #             return 0
+    #         fi
+    #     done
+    #     #return 0
+    # else
+    #     usage
+    #     return 0
+    # fi
 }
 
 
