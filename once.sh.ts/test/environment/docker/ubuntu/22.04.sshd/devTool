@@ -67,7 +67,7 @@ devTool.status() # # pulls the update from git
 devTool.config() # # shows the config
 {
     cat .env
-    echo "====== applied: "
+    echo "====== applied:  "
     docker-compose config
 }
 
