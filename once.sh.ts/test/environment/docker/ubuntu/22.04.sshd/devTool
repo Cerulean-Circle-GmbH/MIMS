@@ -12,7 +12,7 @@ log_part()
     printf "$@" >$LOG_DEVICE
 }
 
-devTool.docker() # <dockerCmd> # builds the dockerfile 
+devTool.docker() # <dockerCmd:status> # builds the dockerfile 
 {
     local dockerCmd=$1
     shift
@@ -62,6 +62,18 @@ devTool.docker.stop() # # stops the dockerfile
 devTool.status() # # pulls the update from git
 {
     git status
+}
+
+devTool.config() # # shows the config
+{
+    cat .env
+    echo "====== applied: "
+    docker-compose config
+}
+
+devTool.config.edit() # # pulls the update from git
+{
+    editor .env
 }
 
 devTool.commit() # # commiting Once.2023
