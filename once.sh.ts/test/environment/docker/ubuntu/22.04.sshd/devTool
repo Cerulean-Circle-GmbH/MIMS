@@ -12,6 +12,41 @@ log_part()
     printf "$@" >$LOG_DEVICE
 }
 
+devTool.docker() # <dockerCmd> # builds the dockerfile 
+{
+    local dockerCmd=$1
+    shift
+    ${BASH_SOURCE[0]} docker.$dockerCmd "$@"
+}
+
+devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile 
+{
+    cat ${BASH_SOURCE[0]} | line find "devTool.docker\." | line replace "devTool.docker\." | line replace "().*$"
+}
+
+devTool.docker.build() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker build -t ubuntu_22_04_sshd .
+}
+
+devTool.docker.run() # # runs the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker-compose up
+}
+
+devTool.docker.start() # # starts/runs the dockerfile 
+{
+    devTool.docker.run
+}
+
+devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker ps
+}
+
 devTool.status() # # pulls the update from git
 {
     git status
@@ -103,7 +138,7 @@ usage() {
 }
 
 start() {
-    ./check-system.sh silent
+    /home/shared/dev/Workspaces/2cuGitHub/Once.2023/check-system.sh silent
     ERROR=$?
     if [ $ERROR -gt 0 ]; then
         log "system check did not got well:"
@@ -134,10 +169,11 @@ start() {
                     ;;
                 *)
                     #this.call "$@"
-                    local cmd=$1
-                    shift
+                    # local cmd=$1
+                    # shift
                     log "processing: devTool.$cmd $@"
-                    devTool.$cmd "$@"
+                    this.start "$@"
+                    #devTool.$cmd "$@"
                     ;;
             esac
             shift

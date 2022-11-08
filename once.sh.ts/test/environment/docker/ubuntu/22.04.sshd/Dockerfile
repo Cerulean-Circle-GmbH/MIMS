@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 # ENV DEBUG ON
 # Define environment variable
 #ENV NAME DockerWorkspace
@@ -12,6 +12,8 @@ ENV WORKDIR /root/
 
 # Set the working directory to /app
 WORKDIR $WORKDIR
+#ADD entrypoint/start.sh entrypoint/start.sh
+ADD entrypoint entrypoint
 
 # Copy the current directory contents into the container at /app
 # COPY . /home/$USERNAME/$NAME
@@ -41,4 +43,5 @@ RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh
 # Run app.py when the container launches
 #CMD ["python", "app.py"]
 EXPOSE 22
-CMD ["/usr/bin/sudo", "/usr/sbin/sshd", "-D", "-o", "ListenAddress=0.0.0.0"]
+ENTRYPOINT ["entrypoint/start.sh"]
+#CMD ["/usr/bin/sudo", "/usr/sbin/sshd", "-D", "-o", "ListenAddress=0.0.0.0"]

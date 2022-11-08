@@ -3,8 +3,17 @@
 ## use sh scripts
 
 ```
-buidDockerfile
-runDockerfile
+
+c2 devTool docker[press TAB]
+
+
+c2 devTool docker.status
+c2 devTool docker.build
+c2 devTool docker.run
+
+## deprecated
+#buidDockerfile
+#runDockerfile
 ```
 
 ## start ssh inside the container
