@@ -103,6 +103,13 @@ usage() {
 }
 
 start() {
+    local This=$(which ${BASH_SOURCE[0]})
+    log "This: $This) "
+    local dir="$(dirname ${BASH_SOURCE[0]})"
+    if ! [ "$dir" = "." ]; then
+        log " cd: $dir"
+        cd $dir
+    fi
     ./check-system.sh silent
     ERROR=$?
     if [ $ERROR -gt 0 ]; then
@@ -111,6 +118,12 @@ start() {
         exit $ERROR
     fi
     source this
+
+    # if this.isSourced; then
+    #     warn.log "devTool sourced: $this, $This, $0, ${BASH_SOURCE[0]} ...exiting"
+    #     this.start "$@"
+    #     exit 0 
+    # fi
 
 
     LOG_DEVICE=/dev/tty
@@ -137,7 +150,7 @@ start() {
                     local cmd=$1
                     shift
                     log "processing: devTool.$cmd $@"
-                    devTool.$cmd "$@"
+                    this.call devTool.$cmd "$@"
                     ;;
             esac
             shift

@@ -160,6 +160,15 @@ oosh_install_oosh()
 
 oosh_status()
 {
+  if [ "$HOME"  = "/root" ];then
+    SUDO=""
+    if [ -z "$USER" ];then
+      export USER=root
+    fi
+  else
+    SUDO="sudo -S"
+  fi
+
   echo "
   SHELL: $SHELL
        : $SHELLNAME
@@ -180,11 +189,6 @@ oosh_status()
 
    PATH: $PATH
   "
-  if [ "$HOME"  = "/root" ];then
-    SUDO=""
-  else
-    SUDO="sudo -S"
-  fi
 }
 
 oosh_parse_shellps() 
