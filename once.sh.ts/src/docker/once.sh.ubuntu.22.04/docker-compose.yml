@@ -12,7 +12,7 @@ services:
       - /run/snapd.socket:/run/snapd.socket
     ports:
       - "9080:80"
-      - "90443:443"
+      - "9443:443"
       - "8022:22"
     command: "tail -f /root/.bashrc "
 # networks:
