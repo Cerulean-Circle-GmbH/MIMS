@@ -37,6 +37,19 @@ Open a terminal and type
 
 ```
 git clone git@github.com:Cerulean-Circle-GmbH/Once.2023.git
+
+### if you have the deploy key
+git clone githubCC.once2023:Cerulean-Circle-GmbH/Once.2023.git
+
+
+### with .ssh/config entry
+Host githubCC.once2023
+ User git
+ Port 22
+ HostName github.com
+ IdentityFile ~/.ssh/ids/once2023.githubCC/id_rsa
+
+
 ```
 no git?
 maybe you are not a developer? 
