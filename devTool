@@ -83,9 +83,9 @@ devTool.update() # # pulls the update from git
     git pull
 }
 
-devTool.test() # # pulls the update from git
+devTool.test() # # builds and runs the docker file
 {
-    cd once.sh.ts/test/environment/docker/ubuntu/20.04.sshd/
+    cd once.sh.ts/test/environment/docker/ubuntu/22.04.sshd/
     buildDockerfile
     runDockerfile
 }
