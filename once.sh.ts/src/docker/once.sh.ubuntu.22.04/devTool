@@ -49,7 +49,8 @@ devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile
 
 devTool.docker.clean() # # starts/runs the dockerfile 
 {
-    docker system prune -a
+    docker image rm -f ubuntu_22_04_sshd
+    #docker system prune -a
 }
 
 devTool.docker.stop() # # stops the dockerfile 

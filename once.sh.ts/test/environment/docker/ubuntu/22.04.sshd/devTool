@@ -172,7 +172,8 @@ usage() {
 }
 
 start() {
-    /home/shared/dev/Workspaces/2cuGitHub/Once.2023/check-system.sh silent
+    pwd
+    ../../../../../../check-system.sh silent
     ERROR=$?
     if [ $ERROR -gt 0 ]; then
         log "system check did not got well:"
