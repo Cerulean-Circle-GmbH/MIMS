@@ -1,5 +1,14 @@
 # Once.2023
 
+Purpose of thei project when its done:
+do a 
+```
+   docker pull once2023 
+```
+and have a complete installation
+
+
+
 ## shortcuts:
 
 * [What is Once.2023](#what-is-Once.2023)
