@@ -2,12 +2,12 @@ version: '3'
 
 services:
   once-ubuntu-22-04-sshd:
-    container_name: ${DOCEKR_CONTAINER_NAME}
-    image: ${DOCEKR_IMAGE}
+    container_name: ${DOCKER_CONTAINER_NAME}
+    image: ${DOCKER_IMAGE}
     #restart: unless-stopped
     volumes:
-      - ./../../../../../src/sh/init:/root/init
-      - ./../../../../../src/sh/init:/home/ubuntu/init
+      #- ./../../../../../src/sh/init:/root/init
+      #- ./../../../../../src/sh/init:/home/ubuntu/init
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
     ports:
