@@ -5,11 +5,13 @@
 log() 
 {
     echo "$@" >$LOG_DEVICE
+    return $?
 }
 
 log_part() 
 {
     printf "$@" >$LOG_DEVICE
+    return $?
 }
 
 devTool.docker() # <dockerCmd:status> # builds the dockerfile 
@@ -17,52 +19,68 @@ devTool.docker() # <dockerCmd:status> # builds the dockerfile
     local dockerCmd=$1
     shift
     devTool.docker.$dockerCmd "$@"
+    return $?
 }
 
 devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile 
 {
     cat ${BASH_SOURCE[0]} | line find "devTool.docker\." | line replace "devTool.docker\." | line replace "().*$"
+    return $?
+}
+
+devTool.docker.build.progressplain() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile with --progress=plain to give the full build output
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker build --progress=plain -t ubuntu_22_04_sshd .
+    return $?
 }
 
 devTool.docker.build() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
     docker build -t ubuntu_22_04_sshd .
+    return $?
 }
 
 devTool.docker.run() # # runs the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
     docker-compose up
+    return $?
 }
 
 devTool.docker.start() # # starts/runs the dockerfile 
 {
     devTool.docker.run
+    return $?
 }
 
 devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
     docker ps
+    return $?
 }
 
 devTool.docker.clean() # # starts/runs the dockerfile 
 {
     docker image rm -f ubuntu_22_04_sshd
     #docker system prune -a
+    return $?
 }
 
 devTool.docker.stop() # # stops the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
     docker-compose down
+    return $?
 }
 
 
 devTool.status() # # pulls the update from git
 {
     git status
+    return $?
 }
 
 devTool.config() # # shows the config
@@ -70,6 +88,7 @@ devTool.config() # # shows the config
     cat .env
     echo "====== applied:  "
     docker-compose config
+    return $?
 }
 
 devTool.config.edit() # # pulls the update from git
@@ -119,6 +138,7 @@ devTool.commit() # # commiting Once.2023
         success.log "switched $(basename $PWD) to dev branch"
     fi
 
+    return $?
 }
 
 devTool.release() # # releases by merging dev into main
@@ -135,29 +155,37 @@ devTool.release() # # releases by merging dev into main
         warn.log "not in dev branch"
         git status
     fi
+
+    return $?
 }
 
 
 devTool.update() # # pulls the update from git
 {
     git pull
+    return $?
 }
 
-devTool.fail() # # pulls the update from git
+devTool.fail() # # fails
 {
     exit 1
 }
 
-devTool.silent() # # pulls the update from git
+devTool.silent() # # switch to silent log
 {
     LOG_DEVICE=/dev/null
 }
 
-devTool.test() # # pulls the update from git
+devTool.test() # # build and run test container
 {
     cd ../../../../once.sh.ts/test/environment/docker/ubuntu/20.04.sshd/
     devTool.docker.build
+    ERROR=$?
+    if [ $ERROR -gt 0 ]; then
+        return $ERROR
+    fi
     devTool.docker.run
+    return $?
 }
 
 usage() {
@@ -170,6 +198,8 @@ usage() {
 
     c2 devTool [Press TAB]
     "
+
+    return $?
 }
 
 start() {
@@ -182,7 +212,10 @@ start() {
     fi
     source this
     this.start "$@"
-
+    ERROR=$?
+    if [ $ERROR -gt 0 ]; then
+        return $ERROR
+    fi
 
     # LOG_DEVICE=/dev/tty
     # #log "parameters: $@"
@@ -224,7 +257,10 @@ start() {
     #     usage
     #     return 0
     # fi
+
+    return $?
 }
 
 
 start "$@"
+exit $?
