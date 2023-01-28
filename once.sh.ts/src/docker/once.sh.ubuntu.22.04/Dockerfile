@@ -7,6 +7,11 @@ WORKDIR $WORKDIR
 ADD entrypoint entrypoint
 RUN export PATH=.:$PATH
 
+# wget is necessary to for build.sh
+RUN apt update
+RUN apt install wget -y
+
+# build all things inside container
 RUN entrypoint/build.sh
 
 EXPOSE 22
