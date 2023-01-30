@@ -1,17 +1,17 @@
 version: '3'
 
 services:
-  once-ubuntu-22-04-sshd:
+  once.sh:
     container_name: ${DOCKER_CONTAINER_NAME}
-    image: ${DOCKER_IMAGE}
+    image: ${DOCKER_IMAGE_VERSION}
     #restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
     ports:
-      - "8080:8080"
-      - "8443:443"
-      - "8022:22"
+      - "${DOCKER_HTTP}:8080"
+      - "${DOCKER_HTTPS}:443"
+      - "${DOCKER_SSH}:22"
     command: "tail -f /root/.bashrc "
 # networks:
 #   default:

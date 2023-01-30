@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 #http://www.etalabs.net/sh_tricks.html
 
+# Source .env variables
+pushd `dirname $0` > /dev/null
+source .env
+popd > /dev/null
 
 log() 
 {
@@ -28,17 +32,17 @@ devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile
     return $?
 }
 
-devTool.docker.build.progressplain() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile with --progress=plain to give the full build output
+devTool.docker.build.progressplain() # <?imageName:${DOCKER_IMAGE}> # builds the dockerfile with --progress=plain to give the full build output
 {
     echo "function "${FUNCNAME[0]} "$@"
-    docker build --progress=plain -t ubuntu_22_04_sshd .
+    docker build --progress=plain -t ${DOCKER_IMAGE} .
     return $?
 }
 
-devTool.docker.build() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
+devTool.docker.build() # <?imageName:${DOCKER_IMAGE}> # builds the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
-    docker build -t ubuntu_22_04_sshd .
+    docker build -t ${DOCKER_IMAGE} .
     return $?
 }
 
@@ -55,7 +59,7 @@ devTool.docker.start() # # starts/runs the dockerfile
     return $?
 }
 
-devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile 
+devTool.docker.status() # <?imageName:${DOCKER_IMAGE}> # builds the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
     docker ps
@@ -64,7 +68,7 @@ devTool.docker.status() # <?imageName:ubuntu_22_04_sshd> # builds the dockerfile
 
 devTool.docker.clean() # # starts/runs the dockerfile 
 {
-    docker image rm -f ubuntu_22_04_sshd
+    docker image rm -f ${DOCKER_IMAGE}
     #docker system prune -a
     return $?
 }
@@ -180,9 +184,9 @@ devTool.test() # # build and run test container
 {
     cd ../../../../once.sh.ts/test/environment/docker/ubuntu/20.04.sshd/
     devTool.docker.build
-    ERROR=$?
-    if [ $ERROR -gt 0 ]; then
-        return $ERROR
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        return $RETURN_VALUE
     fi
     devTool.docker.run
     return $?
@@ -204,17 +208,17 @@ usage() {
 
 start() {
     ../../../../check-system.sh silent
-    ERROR=$?
-    if [ $ERROR -gt 0 ]; then
-        log "system check did not got well:"
-        log "Error: $(errno $ERROR)"
-        exit $ERROR
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        log "system check did not go well:"
+        log "Error: $(errno $RETURN_VALUE)"
+        exit $RETURN_VALUE
     fi
     source this
     this.start "$@"
-    ERROR=$?
-    if [ $ERROR -gt 0 ]; then
-        return $ERROR
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        return $RETURN_VALUE
     fi
 
     # LOG_DEVICE=/dev/tty
@@ -263,4 +267,3 @@ start() {
 
 
 start "$@"
-exit $?
