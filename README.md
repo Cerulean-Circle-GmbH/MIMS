@@ -1,12 +1,23 @@
 # Once.2023
 
-Purpose of thei project when its done:
+Purpose of this project when its done:
 do a 
 ```
-   docker pull once2023 
+   docker pull once.sh (or better a docker compose file)
 ```
-and have a complete installation
+and have a complete installation.
 
+Connect to the running container via docker or VS Code or call:
+```
+   ssh-keygen -R [localhost]:8022 # Call this only one time after creation of the container
+   ssh root@localhost -p 8022 # password is "once"
+```
+
+To start a Once server call this inside the container:
+```
+   once restart
+```
+Then go to http://localhost:8080
 
 
 ## shortcuts:
