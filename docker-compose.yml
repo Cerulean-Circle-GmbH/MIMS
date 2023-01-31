@@ -1,19 +1,15 @@
 version: '3'
 
 services:
-  once-ubuntu-22-04-sshd:
-    container_name: once-sshd
-    image: naked_ubuntu_20_04:latest
+  once.sh:
+    container_name: once.sh_container
+    image: donges/once:latest
     #restart: unless-stopped
     volumes:
-      - ./once.sh.ts/src/sh/init:/root/init
-      - ./once.sh.ts/src/sh/init:/home/ubuntu/init
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /run/snapd.socket:/run/snapd.socket
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:8080"
+      - "8443:443"
       - "8022:22"
     command: "tail -f /root/.bashrc "
-# networks:
-#   default:
-#     external:
-#       name: once-woda-network
