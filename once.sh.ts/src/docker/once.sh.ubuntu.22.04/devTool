@@ -99,7 +99,7 @@ devTool.docker.up() # # starts up the service from the dockerfile (using docker 
         error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
         return 22
     fi
-    docker-compose up
+    docker-compose -p once up
     return $?
 }
 
