@@ -4,7 +4,6 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND noninteractive
 ENV WORKDIR /root/
 WORKDIR $WORKDIR
-ADD entrypoint entrypoint
 RUN export PATH=.:$PATH
 
 # wget is necessary to for build.sh
@@ -12,6 +11,7 @@ RUN apt update
 RUN apt install wget -y
 
 # build all things inside container
+ADD entrypoint entrypoint
 RUN entrypoint/build.sh
 
 EXPOSE 22

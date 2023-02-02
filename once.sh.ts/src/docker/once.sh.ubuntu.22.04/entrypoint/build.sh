@@ -25,6 +25,7 @@ echo "====== DONE ================="
 oo cmd net-tools
 oo cmd openssh-server
 oo cmd errno
+oo cmd docker
 
 # Setup ssh and root login
 echo 'root:once' | chpasswd

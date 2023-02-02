@@ -18,6 +18,8 @@ if [[ -n ${ONCE_INITIALIZED} ]]; then
 
     # Pre start once
     once start
+    # The stop call might need to wait until once is really up
+    # For now it seems to work
     once stop
 fi
 
