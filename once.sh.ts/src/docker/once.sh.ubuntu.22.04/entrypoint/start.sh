@@ -46,6 +46,7 @@ if [[ -d ${OUTER_SSH_CONFIG} && -f ${OUTER_SSH_CONFIG}/id_rsa ]]; then
         mkdir -p ${SSH_ID_DIR}
         cp -f ${OUTER_SSH_CONFIG}/id_rsa ${SSH_ID_DIR}/
         cp -f ${OUTER_SSH_CONFIG}/id_rsa.pub ${SSH_ID_DIR}/
+        chmod 600 ${SSH_ID_DIR}/id_rsa*
         if [[ ! -f ${SSH_CONFIG}.ORIG ]]; then
             cp -f ${SSH_CONFIG} ${SSH_CONFIG}.ORIG
         fi
