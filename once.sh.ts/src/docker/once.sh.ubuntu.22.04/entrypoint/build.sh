@@ -30,11 +30,6 @@ oo cmd errno
 oo cmd docker.io
 oo cmd docker-compose
 
-# Install buildx extension
-DOCKER_BUILDKIT=1 docker build --platform=local -o . "https://github.com/docker/buildx.git"
-mkdir -p ~/.docker/cli-plugins
-mv buildx ~/.docker/cli-plugins/docker-buildx
-
 # Setup ssh and root login
 echo 'root:once' | chpasswd
 mkdir /var/run/sshd

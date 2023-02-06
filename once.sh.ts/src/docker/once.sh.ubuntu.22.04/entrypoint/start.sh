@@ -56,6 +56,16 @@ else
     echo "${OUTER_SSH_CONFIG} or keys not found"
 fi
 
+# Install buildx extension
+DOCKER_BUILDX_DIR=~/buildx
+mkdir -p ${DOCKER_BUILDX_DIR}
+pushd DOCKER_BUILDX_DIR
+DOCKER_BUILDKIT=1
+docker build --platform=local -o . "https://github.com/docker/buildx.git"
+mkdir -p ~/.docker/cli-plugins
+mv buildx ~/.docker/cli-plugins/docker-buildx
+popd
+
 # Start
 cat startmsg/build.txt > startmsg/msg.txt
 echo "Welcome to Web 4.0" >> startmsg/msg.txt
