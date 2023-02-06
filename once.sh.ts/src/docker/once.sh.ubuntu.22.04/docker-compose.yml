@@ -7,13 +7,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
-      - once-development:/var/dev
-      - ${HOME}/.ssh:/outer-config/.ssh
-      - ${HOME}/.gitconfig:/outer-config/.gitconfig
+      - once-development-test:/var/dev
+      - ${OUTER_CONFIG}:/outer-config
     ports:
       - "${DOCKER_HTTP}:8080"
       - "${DOCKER_HTTPS}:443"
       - "${DOCKER_SSH}:22"
     command: "tail -f /root/.bashrc "
 volumes:
-  once-development:
+  once-development-test:

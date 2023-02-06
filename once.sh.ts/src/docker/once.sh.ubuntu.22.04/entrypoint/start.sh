@@ -28,10 +28,7 @@ OUTER_GIT_CONFIG=/outer-config/.gitconfig
 if [ -f ${OUTER_GIT_CONFIG} ]; then
     if [[ -z `git config --get user.name` || -z `git config --get user.email` ]]; then
         echo "Git name or email is not set, get configuration from ${OUTER_GIT_CONFIG}"
-        GIT_USER_NAME=`git config -f /outer-config/.gitconfig --get user.name`
-        GIT_USER_EMAIL=`git config -f /outer-config/.gitconfig --get user.email`
-        git config --global user.name "${GIT_USER_NAME}"
-        git config --global user.email "${GIT_USER_EMAIL}"
+        git config --global include.path "/outer-config/.gitconfig"
     fi
     echo "Git name and email:"
     git config -l | grep user.

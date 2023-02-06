@@ -40,6 +40,18 @@ devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" build
     return $?
 }
 
+devTool.docker.buildx.build() # # builds the multi architecture images with manifest and tags current version
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    # skip: linux/arm/v7
+    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION} .
+    return $?
+}
+
 devTool.docker.buildx.push() # # builds and pushes the multi architecture images with manifest and tags current version
 {
     echo "function "${FUNCNAME[0]} "$@"

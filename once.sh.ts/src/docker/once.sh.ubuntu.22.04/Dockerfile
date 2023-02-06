@@ -6,7 +6,7 @@ ENV WORKDIR /root/
 WORKDIR $WORKDIR
 RUN export PATH=.:$PATH
 
-# wget is necessary to for build.sh
+# wget is necessary for build.sh
 RUN apt update
 RUN apt install wget -y
 
