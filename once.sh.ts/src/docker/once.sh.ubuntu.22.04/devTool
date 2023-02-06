@@ -72,6 +72,14 @@ devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture
     return $?
 }
 
+devTool.docker.buildx.push.dev() # # builds and pushes the multi architecture images with manifest and tags dev
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    export DOCKER_IMAGE_VERSION=dev
+    devTool.docker.buildx.push
+    return $?
+}
+
 devTool.docker.build.progressplain() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile with --progress=plain to give the full build output
 {
     echo "function "${FUNCNAME[0]} "$@"
