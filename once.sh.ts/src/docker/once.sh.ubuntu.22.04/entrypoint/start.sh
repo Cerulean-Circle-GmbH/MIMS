@@ -60,7 +60,7 @@ fi
 # Install buildx extension
 DOCKER_BUILDX_DIR=~/buildx
 mkdir -p ${DOCKER_BUILDX_DIR}
-pushd DOCKER_BUILDX_DIR
+pushd ${DOCKER_BUILDX_DIR}
 DOCKER_BUILDKIT=1
 docker build --platform=local -o . "https://github.com/docker/buildx.git"
 mkdir -p ~/.docker/cli-plugins

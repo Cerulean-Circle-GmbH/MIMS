@@ -10,6 +10,12 @@ RUN export PATH=.:$PATH
 RUN apt update
 RUN apt install wget -y
 
+# Fix nodejs problem on ubuntu
+# (See https://github.com/nodesource/distributions/issues/1157#issuecomment-1131212089)
+RUN dpkg --remove --force-remove-reinstreq libnode-dev
+RUN dpkg --remove --force-remove-reinstreq libnode72:amd64
+RUN dpkg --remove --force-remove-reinstreq libnode72:arm64
+
 # Use better Docker caching for recurring build (saves up to 5min during rebuild when only build.sh changed)
 #RUN apt install git -y
 #RUN apt install net-tools -y
