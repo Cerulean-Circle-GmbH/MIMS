@@ -1,6 +1,45 @@
 # Once.2023
 
-## shortcuts:
+## Download and start container
+This installation assume that VS Code, ssh and Docker is already installed on your system and in the search path of your shell.
+
+* Create a directory of your choice and open a shell there
+* Start the container by calling:
+```
+curl -O https://raw.githubusercontent.com/Cerulean-Circle-GmbH/once.sh/main/once.2023/docker-compose.yml
+docker compose -f docker-compose.yml up
+```
+
+## Login to container
+
+### ssh
+* Now open another shell (e.g. in WSL on Windows or native on Mac) and call:
+```
+ssh root@localhost -p 8022
+# password is: once
+```
+* You are logged in now
+
+### Connect with VS Code
+* Start VS Code
+* Click bottom left “><“ (“Open a remote Window”)
+* Type “Attach" and Click "Attach to Running Container...")
+* Select '/once.sh_container'
+* Now you are inside the container
+* Open a shell with “Terminal”→”New Terminal”
+* Open the folder '/var/dev/EAMD.ucp/'
+
+## Run and test server
+* Call:
+```
+once restart
+```
+* Test now with
+   * http://localhost:8080
+   * https://localhost:8443
+
+
+## Shortcuts:
 
 * [What is Once.2023](#what-is-Once.2023)
 * [First steps](#first-steps)
@@ -70,6 +109,11 @@ This is the main release branch.
 To switch to dev branch type
 ```
 devTool commit
+```
+
+to release type
+```
+devTool release
 ```
 
 # Wrong here?

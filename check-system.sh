@@ -80,8 +80,8 @@ check_this() {
 
 
 check_bash() {
-    local inBash=$( ps -o ppid,command= $PPID | line find bash )
-    if [ -z "$inBash" ]; then
+    isInBash=$( ps -o ppid,command= $PPID | line find bash )
+    if [ -z "$isInBash" ]; then
 
         log "\033[1;31mNot in OOSH\033[0m"
         log "
@@ -92,7 +92,7 @@ check_bash() {
         exit 1
     else
         log ""
-        log "inBash=\"$inBash\"
+        log "isInBash=\"$isInBash\"
         "
         log "\033[1;32mSUCCESS\033[0m"
         log "\033[32mYou are within the Object Oriented SHELL 'oosh' aready...\033[0m

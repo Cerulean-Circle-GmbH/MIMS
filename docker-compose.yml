@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  once-ubuntu-22-04-sshd:
+    container_name: once-sshd
+    image: naked_ubuntu_20_04:latest
+    #restart: unless-stopped
+    volumes:
+      - ./once.sh.ts/src/sh/init:/root/init
+      - ./once.sh.ts/src/sh/init:/home/ubuntu/init
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8022:22"
+    command: "tail -f /root/.bashrc "
+# networks:
+#   default:
+#     external:
+#       name: once-woda-network
