@@ -123,6 +123,28 @@ devTool.docker.up() # # starts up the service from the dockerfile (using docker 
     return $?
 }
 
+devTool.docker.up.detach() # # starts up the service from the dockerfile (using docker compose) and detach
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    docker-compose -p once up -d
+    return $?
+}
+
+devTool.docker.down() # # stops the service from the dockerfile (using docker compose) and removes container
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    docker-compose -p once down
+    return $?
+}
+
 devTool.docker.status() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile 
 {
     echo "function "${FUNCNAME[0]} "$@"
