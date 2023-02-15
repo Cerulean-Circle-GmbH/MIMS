@@ -32,6 +32,20 @@ devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile
 devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" buildx environment
 {
     echo "function "${FUNCNAME[0]} "$@"
+    
+    # Install buildx if necessary
+    if [ ! -f ~/.docker/cli-plugins/docker-buildx/buildx ]; then
+        DOCKER_BUILDX_DIR=~/buildx
+        mkdir -p ${DOCKER_BUILDX_DIR}
+        pushd ${DOCKER_BUILDX_DIR}
+        DOCKER_BUILDKIT=1
+        docker build --platform=local -o . "https://github.com/docker/buildx.git"
+        mkdir -p ~/.docker/cli-plugins
+        mv buildx ~/.docker/cli-plugins/docker-buildx
+        popd
+    fi
+
+    # Create myoncebuilder
     MYBUILDER=myoncebuilder
     docker buildx ls
     docker buildx create --name ${MYBUILDER}
