@@ -6,11 +6,7 @@ NOW=`date`
 echo "This container was build: $NOW" > startmsg/build.txt
 
 echo "Starting custom build script: $PWD $0"
-export OOSH_SSH_CONFIG_HOST="docker.once.ssh"
-
-# Temporary log settings
-#export LOG_LEVEL=3
-#export LOG_DEVICE="$HOME/build-initial-oosh.log"
+export OOSH_SSH_CONFIG_HOST="docker.once.jenkins-builder"
 
 # Download and install oosh
 env sh -c "$(wget -O- https://raw.githubusercontent.com/Cerulean-Circle-GmbH/once.sh/main/init/oosh)"

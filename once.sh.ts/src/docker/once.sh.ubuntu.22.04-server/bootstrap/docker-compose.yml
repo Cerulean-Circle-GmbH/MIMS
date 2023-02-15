@@ -2,7 +2,7 @@ version: '3'
 
 services:
   once.sh:
-    container_name: once.sh_container
+    container_name: once.sh-server_container
     image: donges/once:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
