@@ -1,4 +1,4 @@
-BRANCH=${git symbolic-ref --short -q HEAD}
+BRANCH=`git symbolic-ref --short -q HEAD`
 
 echo "Build all images in branch: $BRANCH"
 
