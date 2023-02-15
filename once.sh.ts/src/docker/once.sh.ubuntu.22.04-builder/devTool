@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 #http://www.etalabs.net/sh_tricks.html
 
-
-# Irgendwie muss folgendes passieren:
-# 1. branch-dev explizit-local:     im Container muss auch das lokale once.sh konsequent sein
-# 2. branch-dev deployment:         im Container muss das dev once.sh konsequent sein
-# 3. branch-main:                   im Container muss das main once.sh konsequent sein
-# Aber immer das produktive EAMD.ucp. Es kann später noch auf dev/neom, test/neom oder main oder prod/neom gebracht werden.
-
-
 source .env
 
 log() 
@@ -34,57 +26,6 @@ devTool.docker() # <dockerCmd:status> # builds the dockerfile
 devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile 
 {
     cat ${BASH_SOURCE[0]} | line find "devTool.docker\." | line replace "devTool.docker\." | line replace "().*$"
-    return $?
-}
-
-devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" buildx environment
-{
-    echo "function "${FUNCNAME[0]} "$@"
-    MYBUILDER=myoncebuilder
-    docker buildx ls
-    docker buildx create --name ${MYBUILDER}
-    docker buildx use ${MYBUILDER}
-    docker buildx inspect ${MYBUILDER} --bootstrap
-    return $?
-}
-
-devTool.docker.buildx.build() # # builds the multi architecture images with manifest and tags current version
-{
-    echo "function "${FUNCNAME[0]} "$@"
-    if [ -z ${DOCKER_IMAGE_NAME} ]; then
-        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
-        return 22
-    fi
-    # skip: linux/arm/v7
-    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION} .
-    return $?
-}
-
-devTool.docker.buildx.push() # # builds and pushes the multi architecture images with manifest and tags current version
-{
-    echo "function "${FUNCNAME[0]} "$@"
-    if [ -z ${DOCKER_IMAGE_NAME} ]; then
-        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
-        return 22
-    fi
-    # skip: linux/arm/v7
-    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION} . --push
-    return $?
-}
-
-devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture images with manifest and tags latest
-{
-    echo "function "${FUNCNAME[0]} "$@"
-    export DOCKER_IMAGE_VERSION=latest
-    devTool.docker.buildx.push
-    return $?
-}
-
-devTool.docker.buildx.push.dev() # # builds and pushes the multi architecture images with manifest and tags dev
-{
-    echo "function "${FUNCNAME[0]} "$@"
-    export DOCKER_IMAGE_VERSION=dev
-    devTool.docker.buildx.push
     return $?
 }
 

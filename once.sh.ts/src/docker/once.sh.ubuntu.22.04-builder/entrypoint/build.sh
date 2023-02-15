@@ -6,7 +6,7 @@ NOW=`date`
 echo "This container was build: $NOW" > startmsg/build.txt
 
 echo "Starting custom build script: $PWD $0"
-export OOSH_SSH_CONFIG_HOST="docker.once.jenkins-builder"
+export OOSH_SSH_CONFIG_HOST="docker.once.builder"
 
 # Download and install oosh
 env sh -c "$(wget -O- https://raw.githubusercontent.com/Cerulean-Circle-GmbH/once.sh/main/init/oosh)"
