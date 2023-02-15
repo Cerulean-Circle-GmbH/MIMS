@@ -32,5 +32,16 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
            cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
            ./devTool docker.build"
 
+# build image once.sh-server multi-branch
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+           --entrypoint "" once.sh-builder /bin/bash -c \
+           "source ~/config/user.env &&
+           git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+           cd Once.2023 &&
+           git checkout $BRANCH &&
+           cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+           ./devTool docker.buildx.use &&
+           ./devTool docker.buildx.build"
+
 # Example to use image interactively
 #docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash

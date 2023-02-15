@@ -34,7 +34,7 @@ devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" build
     echo "function "${FUNCNAME[0]} "$@"
     
     # Install buildx if necessary
-    if [ ! -f ~/.docker/cli-plugins/docker-buildx/buildx ]; then
+    #if [ ! -f ~/.docker/cli-plugins/docker-buildx/buildx ]; then
         DOCKER_BUILDX_DIR=~/buildx
         mkdir -p ${DOCKER_BUILDX_DIR}
         pushd ${DOCKER_BUILDX_DIR}
@@ -43,7 +43,7 @@ devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" build
         mkdir -p ~/.docker/cli-plugins
         mv buildx ~/.docker/cli-plugins/docker-buildx
         popd
-    fi
+    #fi
 
     # Create myoncebuilder
     MYBUILDER=myoncebuilder
