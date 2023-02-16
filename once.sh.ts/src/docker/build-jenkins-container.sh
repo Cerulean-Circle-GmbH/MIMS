@@ -40,8 +40,8 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
            cd Once.2023 &&
            git checkout $BRANCH &&
            cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
-           ./devTool docker.buildx.use &&
-           ./devTool docker.buildx.build"
+           ./devTool docker.buildx.use echo $DOCKER_PASSWORD | docker login -u donges --password-stdin &&
+            devTool docker.buildx.push"
 
 # Example to use image interactively
 #docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash

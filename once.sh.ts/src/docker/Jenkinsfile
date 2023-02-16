@@ -1,0 +1,86 @@
+pipeline {
+    // Sollte in einem once.sh-light container gemacht werden not any?
+    agent any
+
+    stages {
+        stage('checkout') {
+            steps {
+                git branch: 'dev',
+                credentialsId: 'developking',
+                url: 'ssh://git@github.com/Cerulean-Circle-GmbH/Once.2023.git'
+            }
+        }
+
+        stage('build image once.jenkins') {
+            steps {
+                dir("once.sh.ts/src/docker") {
+                    sh '''
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                                --entrypoint "" once.sh-builder /bin/bash -c \
+                                "source ~/config/user.env &&
+                                git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                                cd Once.2023 &&
+                                git checkout $BRANCH &&
+                                cd once.sh.ts/src/docker/jenkins &&
+                                ./devTool docker.build"
+                        '''
+                }
+            }
+        }
+
+        stage('build image once.sh-builder') {
+            steps {
+                dir("once.sh.ts/src/docker") {
+                    sh '''
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                                --entrypoint "" once.sh-builder /bin/bash -c \
+                                "source ~/config/user.env &&
+                                git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                                cd Once.2023 &&
+                                git checkout $BRANCH &&
+                                cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-builder &&
+                                ./devTool docker.build"
+                        '''
+                }
+            }
+        }
+
+        stage('build image once.sh-server') {
+            steps {
+                dir("once.sh.ts/src/docker") {
+                    sh '''
+                        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                                --entrypoint "" once.sh-builder /bin/bash -c \
+                                "source ~/config/user.env &&
+                                git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                                cd Once.2023 &&
+                                git checkout $BRANCH &&
+                                cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+                                ./devTool docker.build"
+                        '''
+                }
+            }
+        }
+
+        stage('build & deploy image once.sh-server multi-branch') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
+                    dir("once.sh.ts/src/docker") {
+                        sh '''
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                                       --entrypoint "" once.sh-builder /bin/bash -c \
+                                       "source ~/config/user.env &&
+                                       git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                                       cd Once.2023 &&
+                                       git checkout $BRANCH &&
+                                       cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+                                       ./devTool docker.buildx.use &&
+                                       docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW} &&
+                                       devTool docker.buildx.push"
+                         '''
+                    }
+                }
+            }
+        }
+    }
+}
