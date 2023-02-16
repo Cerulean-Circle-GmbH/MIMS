@@ -15,6 +15,7 @@ pipeline {
             steps {
                 dir("once.sh.ts/src/docker") {
                     sh '''
+                        env
                         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
                                 --entrypoint "" once.sh-builder /bin/bash -c \
                                 "source ~/config/user.env &&
