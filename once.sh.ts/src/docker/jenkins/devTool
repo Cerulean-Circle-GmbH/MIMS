@@ -3,6 +3,12 @@
 
 source .env
 
+# Set RELEASE_TAG
+DOCKER_IMAGE_RELEASE_TAG="-"`git symbolic-ref --short -q HEAD`
+if [ ${DOCKER_IMAGE_RELEASE_TAG} == "-main" ]; then
+    DOCKER_IMAGE_RELEASE_TAG=""
+fi
+
 log() 
 {
     echo "$@" >$LOG_DEVICE
@@ -32,6 +38,20 @@ devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile
 devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" buildx environment
 {
     echo "function "${FUNCNAME[0]} "$@"
+    
+    # Install buildx if necessary
+    if [ ! -f ~/.docker/cli-plugins/docker-buildx ]; then
+        DOCKER_BUILDX_DIR=~/buildx
+        mkdir -p ${DOCKER_BUILDX_DIR}
+        pushd ${DOCKER_BUILDX_DIR}
+        export DOCKER_BUILDKIT=1
+        docker build --platform=local -o . "https://github.com/docker/buildx.git"
+        mkdir -p ~/.docker/cli-plugins
+        mv buildx ~/.docker/cli-plugins/docker-buildx
+        popd
+    fi
+
+    # Create myoncebuilder
     MYBUILDER=myoncebuilder
     docker buildx ls
     docker buildx create --name ${MYBUILDER}
@@ -48,7 +68,7 @@ devTool.docker.buildx.build() # # builds the multi architecture images with mani
         return 22
     fi
     # skip: linux/arm/v7
-    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION} .
+    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION}${DOCKER_IMAGE_RELEASE_TAG} .
     return $?
 }
 
@@ -59,8 +79,9 @@ devTool.docker.buildx.push() # # builds and pushes the multi architecture images
         error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
         return 22
     fi
+
     # skip: linux/arm/v7
-    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION} . --push
+    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION}${DOCKER_IMAGE_RELEASE_TAG} . --push
     return $?
 }
 
@@ -68,14 +89,6 @@ devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture
 {
     echo "function "${FUNCNAME[0]} "$@"
     export DOCKER_IMAGE_VERSION=latest
-    devTool.docker.buildx.push
-    return $?
-}
-
-devTool.docker.buildx.push.dev() # # builds and pushes the multi architecture images with manifest and tags dev
-{
-    echo "function "${FUNCNAME[0]} "$@"
-    export DOCKER_IMAGE_VERSION=dev
     devTool.docker.buildx.push
     return $?
 }
@@ -103,7 +116,7 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
     if [ $RETURN_VALUE -gt 0 ]; then
         return $RETURN_VALUE
     fi
-    docker tag ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+    docker tag ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${DOCKER_IMAGE_RELEASE_TAG}
     RETURN_VALUE=$?
     if [ $RETURN_VALUE -gt 0 ]; then
         return $RETURN_VALUE
