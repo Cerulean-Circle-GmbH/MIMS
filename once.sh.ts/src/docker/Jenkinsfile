@@ -13,9 +13,7 @@ pipeline {
 
         stage('show env') {
             steps {
-                sh '''
-                    env
-                    '''
+                sh "env"
             }
         }
 
