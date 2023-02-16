@@ -4,9 +4,13 @@
 source .env
 
 # Set RELEASE_TAG
-DOCKER_IMAGE_RELEASE_TAG="-"`git symbolic-ref --short -q HEAD`
-if [ ${DOCKER_IMAGE_RELEASE_TAG} == "-main" ]; then
+BRANCH=`git symbolic-ref --short -q HEAD`
+if [[ ${BRANCH} == "main" || ${BRANCH} == "main"* ]]; then
     DOCKER_IMAGE_RELEASE_TAG=""
+elif [[ ${BRANCH} == "test" || ${BRANCH} == "test"* ]]; then
+    DOCKER_IMAGE_RELEASE_TAG="-test"
+else
+    DOCKER_IMAGE_RELEASE_TAG="-dev"
 fi
 
 log() 
