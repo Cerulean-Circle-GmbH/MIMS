@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  once.sh:
+    container_name: ${DOCKER_CONTAINER_NAME}
+    image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_home:/var/jenkins_home
+    ports:
+      - "${DOCKER_HTTP}:8080"
+      - "50000:50000"
+    #command: "tail -f /var/jenkins_home/secrets/initialAdminPassword"
+volumes:
+  jenkins_home:
