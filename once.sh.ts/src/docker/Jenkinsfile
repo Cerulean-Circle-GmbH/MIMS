@@ -19,7 +19,6 @@ pipeline {
             }
         }
 
-
         stage('build image once.jenkins') {
             steps {
                 sh '''
