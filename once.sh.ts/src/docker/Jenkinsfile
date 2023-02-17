@@ -62,18 +62,6 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
                     sh '''
                         BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
-                        LATEST_TAG=""
-                        if [ $RELEASE_CMD == "release" ]; then
-                            if [ $BRANCH != "main" ]; then
-                                echo "Should be the main branch but is: $BRANCH"
-                                exit 1
-                            else
-                                LATEST_TAG=".latest"
-                            fi
-                        elif [ ! -z $RELEASE_CMD ]; then
-                            echo "RELEASE_CMD has the wrong value: $RELEASE_CMD"
-                            exit 1
-                        fi
                         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
                                     --entrypoint "" once.sh-builder /bin/bash -c \
                                     "source ~/config/user.env &&
@@ -83,7 +71,37 @@ pipeline {
                                     cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
                                     ./devTool docker.buildx.use &&
                                     docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW} &&
-                                    devTool docker.buildx.push${LATEST_TAG}"
+                                    devTool docker.buildx.push"
+                        '''
+                }
+            }
+        }
+
+        stage('release image once.sh-server multi-branch') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
+                    sh '''
+                        BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
+                        if [ $RELEASE_CMD == "release" ]; then
+                            if [ $BRANCH != "main" ]; then
+                                echo "Should be the main branch but is: $BRANCH"
+                                exit 1
+                            else
+                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                                            --entrypoint "" once.sh-builder /bin/bash -c \
+                                            "source ~/config/user.env &&
+                                            git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                                            cd Once.2023 &&
+                                            git checkout $BRANCH &&
+                                            cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+                                            ./devTool docker.buildx.use &&
+                                            docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW} &&
+                                            devTool docker.buildx.push.latest"
+                            fi
+                        elif [ ! -z $RELEASE_CMD ]; then
+                            echo "RELEASE_CMD has the wrong value: $RELEASE_CMD"
+                            exit 1
+                        fi
                         '''
                 }
             }
