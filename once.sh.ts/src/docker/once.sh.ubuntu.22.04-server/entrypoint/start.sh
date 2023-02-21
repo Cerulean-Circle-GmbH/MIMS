@@ -54,10 +54,11 @@ if [[ -d ${OUTER_SSH_CONFIG} && -f ${OUTER_SSH_CONFIG}/id_rsa ]]; then
         # create pushable keys and configure for WODA.test, WODA.dev, WODA.prod
         GIT_EMAIL=`git config --get user.email | sed "s;@;.;"`
         if [ -n $GIT_EMAIL ]; then
-            IDNAME=ssh.$GIT_EMAIL
-            ossh id.create.fromKey $IDNAME ${SSH_ID_DIR}
-            cp ~/.ssh/ids/$IDNAME/id_rsa.pub .ssh/public_keys/
-            cat ${SSH_CONFIG}.ORIG | sed "s;/home/developking/.ssh/id_rsa;/root/.ssh/ids/ssh.outeruser/id_rsa;" | sed "s;~/.ssh/id_rsa;/root/.ssh/ids/$IDNAME/id_rsa;" > ${SSH_CONFIG}
+            MY_IDNAME=ssh.$GIT_EMAIL
+            ossh id.create.fromKey ${MY_IDNAME} ${SSH_ID_DIR}
+            cp ~/.ssh/ids/${MY_IDNAME}/id_rsa.pub .ssh/public_keys/
+            MY_KEY=/root/.ssh/ids/${MY_IDNAME}/id_rsa
+            cat ${SSH_CONFIG}.ORIG | sed "s;/home/developking/.ssh/id_rsa;${MY_KEY};" | sed "s;~/.ssh/id_rsa;${MY_KEY};" > ${SSH_CONFIG}
         else
             cat ${SSH_CONFIG}.ORIG | sed "s;/home/developking/.ssh/id_rsa;/root/.ssh/ids/ssh.outeruser/id_rsa;" > ${SSH_CONFIG}
         fi
