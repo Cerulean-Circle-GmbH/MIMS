@@ -49,7 +49,7 @@ devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" build
         mkdir -p ${DOCKER_BUILDX_DIR}
         pushd ${DOCKER_BUILDX_DIR}
         export DOCKER_BUILDKIT=1
-        docker build --platform=local -o . "https://github.com/docker/buildx.git"
+        docker build --platform=local -o . "https://github.com/docker/buildx.git#v0.10"
         mkdir -p ~/.docker/cli-plugins
         mv buildx ~/.docker/cli-plugins/docker-buildx
         popd
