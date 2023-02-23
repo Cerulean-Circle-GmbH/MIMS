@@ -100,11 +100,8 @@ devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture
 devTool.docker.build.progressplain() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile with --progress=plain to give the full build output
 {
     echo "function "${FUNCNAME[0]} "$@"
-    if [ -z ${DOCKER_IMAGE_NAME} ]; then
-        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
-        return 22
-    fi
-    docker build --progress=plain -t ${DOCKER_IMAGE_NAME} .
+    PROGRESS_PLAIN_ARGUMENT="--progress=plain"
+    devTool.docker.build "$@"
     return $?
 }
 
@@ -115,7 +112,25 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
         error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
         return 22
     fi
-    docker build -t ${DOCKER_IMAGE_NAME} .
+
+    # Set 1 of the 2 variables in your shell to install a local oosh or one from a specific branch
+    #export OOSH_INSTALL_SOURCE=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev
+    #export OOSH_BRANCH="feature/neom/N1-185_Several_fixes_for_ONCE_state_machine"
+
+    cwd=`pwd`
+    OOSH_TAR=$cwd/entrypoint/_oosh.tar
+    rm -rf ${OOSH_TAR} $cwd/entrypoint/_env
+    # Create tar of local oosh dev
+    if ! [ -z ${OOSH_INSTALL_SOURCE} ]; then
+        pushd ${OOSH_INSTALL_SOURCE}
+        tar -cf ${OOSH_TAR} .
+        popd
+        echo "export OOSH_TAR=/root/entrypoint/_oosh.tar" > $cwd/entrypoint/_env
+    elif [ ! -z ${OOSH_BRANCH} ]; then
+        echo "export OOSH_BRANCH=${OOSH_BRANCH}" > $cwd/entrypoint/_env
+    fi
+
+    docker build ${PROGRESS_PLAIN_ARGUMENT} -t ${DOCKER_IMAGE_NAME} .
     RETURN_VALUE=$?
     if [ $RETURN_VALUE -gt 0 ]; then
         return $RETURN_VALUE
