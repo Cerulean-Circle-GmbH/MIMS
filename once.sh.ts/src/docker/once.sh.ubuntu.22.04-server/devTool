@@ -121,7 +121,7 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
     OOSH_TAR=$cwd/entrypoint/_oosh.tar
     rm -rf ${OOSH_TAR} $cwd/entrypoint/_env
     # Create tar of local oosh dev
-    if [ ! -z ${OOSH_INSTALL_SOURCE} ]; then
+    if [ ! -z ${OOSH_INSTALL_SOURCE} ] && [ -d ${OOSH_INSTALL_SOURCE} ]; then
         pushd ${OOSH_INSTALL_SOURCE}
         tar -cf ${OOSH_TAR} .
         popd
