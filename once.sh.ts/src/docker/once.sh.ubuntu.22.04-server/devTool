@@ -49,7 +49,7 @@ devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" build
         mkdir -p ${DOCKER_BUILDX_DIR}
         pushd ${DOCKER_BUILDX_DIR}
         export DOCKER_BUILDKIT=1
-        docker build --platform=local -o . "https://github.com/docker/buildx.git"
+        docker build --platform=local -o . "https://github.com/docker/buildx.git#v0.10"
         mkdir -p ~/.docker/cli-plugins
         mv buildx ~/.docker/cli-plugins/docker-buildx
         popd
@@ -121,7 +121,7 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
     OOSH_TAR=$cwd/entrypoint/_oosh.tar
     rm -rf ${OOSH_TAR} $cwd/entrypoint/_env
     # Create tar of local oosh dev
-    if ! [ -z ${OOSH_INSTALL_SOURCE} ]; then
+    if [ ! -z ${OOSH_INSTALL_SOURCE} ] && [ -d ${OOSH_INSTALL_SOURCE} ]; then
         pushd ${OOSH_INSTALL_SOURCE}
         tar -cf ${OOSH_TAR} .
         popd
