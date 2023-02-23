@@ -9,6 +9,7 @@ RUN export PATH=.:$PATH
 # wget is necessary for build.sh
 RUN apt update
 RUN apt install wget -y
+RUN apt install rsync -y
 
 # build all things inside container
 ADD entrypoint entrypoint
