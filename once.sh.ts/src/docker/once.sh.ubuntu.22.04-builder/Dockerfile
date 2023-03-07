@@ -10,6 +10,7 @@ RUN export PATH=.:$PATH
 RUN apt update
 RUN apt install wget -y
 RUN apt install rsync -y
+RUN apt install nodejs npm -y
 
 # build all things inside container
 ADD entrypoint entrypoint
