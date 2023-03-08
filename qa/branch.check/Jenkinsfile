@@ -46,7 +46,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     TMP=/tmp/${TREE}
-                    SOURCE=Components/${TREE}
+                    SOURCE=/var/dev/eamd.ucp/Components/${TREE}
                     source ~/config/user.env && oo mode.dev && oo update
                     rm -rf $TMP && mkdir -p $TMP
                     rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
