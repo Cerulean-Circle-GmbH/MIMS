@@ -34,7 +34,7 @@ pipeline {
                     '''
             }
         }
-        stage('Create class svg 1') {
+        stage('Create class svg (wavi)') {
             steps {
                 sh '''#!/usr/bin/bash
                     TREE=com/neom/EAM
@@ -48,23 +48,24 @@ pipeline {
                     rm -rf $TMP && mkdir -p $TMP
                     rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
                     cd $TMP && ( find -name "*mochaTest*" | xargs rm -rf )
-                    wavi $TMP $WORKSPACE/results/$NAME.svg
+                    wavi $TMP $WORKSPACE/results/$NAME.wavi.svg
                     '''
             }
         }
-        stage('Create class svg 2') {
+        stage('Create class svg (puml)') {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
                     cd eamd.ucp && git checkout feature/neom/N1-309_Generate_PUML && git pull
                     cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
-                    cd Once.2023 && git checkout feature/neom/N1-309_Generate_PUML && git pull
+                    cd Once.2023 && git checkout dev && git pull
 
                     cd qa/generatePUML
                     npm update
                     ./generatePUML.js /var/dev/eamd.ucp/Components/com/neom/EAM
-                    plantuml _test.puml -tsvg -o$WORKSPACE/results
+                    plantuml _test.puml -tsvg
+                    mv _test.svg $WORKSPACE/results/$NAME.puml.svg
                     '''
             }
         }
