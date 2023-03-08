@@ -23,16 +23,13 @@ pipeline {
         stage('Check branches') {
             steps {
                 sh '''#!/usr/bin/bash
-                    source ~/config/user.env &&
-                    oo mode.dev && oo update &&
-                    cd /var/dev &&
-                    ( git clone 2cuBitbucket:donges/eamd.ucp.git || true ) &&
-                    cd eamd.ucp &&
-                    export LOG_DEVICE=$WORKSPACE/results/branch.txt && config save log &&
-                    oo branches.check feature/neom dev/neom 6a7a3d3 &&
-                    export LOG_DEVICE=/dev/tty && config save log &&
-                    cat $WORKSPACE/results/branch.txt &&
-                    apt install colorized-logs &&
+                    source ~/config/user.env && oo mode.dev && oo update
+                    cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
+                    cd eamd.ucp
+                    export LOG_DEVICE=$WORKSPACE/results/branch.txt && config save log
+                    oo branches.check feature/neom dev/neom 6a7a3d3
+                    export LOG_DEVICE=/dev/tty && config save log
+                    cat $WORKSPACE/results/branch.txt 
                     cat $WORKSPACE/results/branch.txt | ansi2html > $WORKSPACE/results/branch.html
                     '''
             }
@@ -44,18 +41,14 @@ pipeline {
                     NAME=com.neom.EAM
                     TMP=/tmp/$TREE
                     SOURCE=Components/$TREE
-                    source ~/config/user.env &&
-                    oo mode.dev && oo update &&
-                    cd /var/dev &&
-                    ( git clone 2cuBitbucket:donges/eamd.ucp.git || true ) &&
-                    cd eamd.ucp &&
-                    git checkout dev/neom &&
-                    rm -rf $TMP &&
-                    mkdir -p $TMP &&
-                    rsync -aP --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/ &&
-                    cd $TMP &&
-                    ( find -name "*mochaTest*" | xargs rm -rf ) &&
-                    npm install wavi -g &&
+
+                    source ~/config/user.env && oo mode.dev && oo update
+                    cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
+                    cd eamd.ucp
+                    git checkout dev/neom
+                    rm -rf $TMP && mkdir -p $TMP
+                    rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
+                    cd $TMP && ( find -name "*mochaTest*" | xargs rm -rf )
                     wavi $TMP $WORKSPACE/results/$NAME.svg
                     '''
             }
