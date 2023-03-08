@@ -1,0 +1,69 @@
+pipeline {
+    agent {
+        docker {
+            image 'once.sh-builder'
+            args '-v once_jenkins:/var/dev  -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            reuseNode true
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+    
+    stages {
+        stage('Cleanup') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    rm -rf results
+                    mkdir -p results
+                    '''
+            }
+        }
+        stage('Check branches') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    source ~/config/user.env &&
+                    oo mode.dev && oo update &&
+                    cd /var/dev &&
+                    ( git clone 2cuBitbucket:donges/eamd.ucp.git || true ) &&
+                    cd eamd.ucp &&
+                    export LOG_DEVICE=$WORKSPACE/results/branch.txt && config save log &&
+                    oo branches.check feature/neom dev/neom 6a7a3d3 &&
+                    export LOG_DEVICE=/dev/tty && config save log &&
+                    cat $WORKSPACE/results/branch.txt &&
+                    apt install colorized-logs &&
+                    cat $WORKSPACE/results/branch.txt | ansi2html > $WORKSPACE/results/branch.html
+                    '''
+            }
+        }
+        stage('Create class svg') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    TREE=com/neom/EAM
+                    NAME=com.neom.EAM
+                    TMP=/tmp/$TREE
+                    SOURCE=Components/$TREE
+                    source ~/config/user.env &&
+                    oo mode.dev && oo update &&
+                    cd /var/dev &&
+                    ( git clone 2cuBitbucket:donges/eamd.ucp.git || true ) &&
+                    cd eamd.ucp &&
+                    git checkout dev/neom &&
+                    rm -rf $TMP &&
+                    mkdir -p $TMP &&
+                    rsync -aP --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/ &&
+                    cd $TMP &&
+                    ( find -name "*mochaTest*" | xargs rm -rf ) &&
+                    npm install wavi -g &&
+                    wavi $TMP $WORKSPACE/results/$NAME.svg
+                    '''
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
+        }
+    }
+}
