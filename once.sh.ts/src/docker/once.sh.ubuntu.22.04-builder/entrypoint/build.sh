@@ -48,6 +48,7 @@ oo cmd docker-compose
 
 # Install npm packages
 npm install wavi -g
+npm install acorn -g
 
 # Setup ssh and root login
 echo 'root:once' | chpasswd
