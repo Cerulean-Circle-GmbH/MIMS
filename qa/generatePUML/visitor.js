@@ -1,4 +1,3 @@
-const l = console.log
 const ops = {
     ADD: '+',
     SUB: '-',
@@ -7,6 +6,9 @@ const ops = {
 }
 let globalScope = new Map()
 class Visitor {
+    constructor(l) {
+        this.l = l
+    }
     visitVariableDeclaration(node) {
         const nodeKind = node.kind
         return this.visitNodes(node.declarations)
@@ -61,8 +63,8 @@ class Visitor {
         }
     }
     visitClassDeclaration(node) {
-        l("class " + node.id.name)
-        l(node.id.name + "->" + node.superClass.name)
+        this.l("class " + node.id.name)
+        this.l(node.id.name + "->" + node.superClass.name)
     }
     visitNode(node) {
         switch (node.type) {
