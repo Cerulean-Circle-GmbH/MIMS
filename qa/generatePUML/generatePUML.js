@@ -64,5 +64,7 @@ setTimeout(function() {
             console.log(err);
         }
     });
+    console.log("@startuml")
     jsInterpreter.interpret(body)
+    console.log("@enduml")
 }, 2000);

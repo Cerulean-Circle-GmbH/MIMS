@@ -61,6 +61,7 @@ class Visitor {
         }
     }
     visitClassDeclaration(node) {
+        l("class " + node.id.name)
         l(node.id.name + "->" + node.superClass.name)
     }
     visitNode(node) {
