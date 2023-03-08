@@ -7,6 +7,13 @@ pipeline {
         }
     }
 
+    environment {
+        TREE = 'com/neom/EAM'
+        NAME = 'com.neom.EAM'
+        TMP = '/tmp/$TREE'
+        SOURCE = 'Components/$TREE'
+    }
+
     options {
         ansiColor('xterm')
     }
@@ -37,17 +44,12 @@ pipeline {
         stage('Create class svg (wavi)') {
             steps {
                 sh '''#!/usr/bin/bash
-                    TREE=com/neom/EAM
-                    NAME=com.neom.EAM
-                    TMP=/tmp/$TREE
-                    SOURCE=Components/$TREE
-
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
                     cd eamd.ucp && git checkout dev/neom && git pull
                     rm -rf $TMP && mkdir -p $TMP
                     rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
-                    cd $TMP && ( find -name "*mochaTest*" | xargs rm -rf )
+                    cd $TMP && ( find -name "*mochaTest*" | xargs rm -rf ) && tree
                     wavi $TMP $WORKSPACE/results/$NAME.wavi.svg
                     '''
             }
