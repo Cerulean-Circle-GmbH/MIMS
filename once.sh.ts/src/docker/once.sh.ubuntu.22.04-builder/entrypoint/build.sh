@@ -46,6 +46,9 @@ oo cmd errno
 oo cmd docker.io
 oo cmd docker-compose
 
+# Install npm packages
+npm install wavi -g
+
 # Setup ssh and root login
 echo 'root:once' | chpasswd
 mkdir /var/run/sshd
