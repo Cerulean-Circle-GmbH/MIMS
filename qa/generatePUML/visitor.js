@@ -63,8 +63,14 @@ class Visitor {
         }
     }
     visitClassDeclaration(node) {
-        this.l("class " + node.id.name)
-        this.l(node.id.name + "->" + node.superClass.name)
+        if (node.superClass.name == "Interface")
+            this.l("interface " + node.id.name);
+        else if ([ "DefaultView", "UcpView", "UcpComponent"].includes(node.superClass.name))
+            this.l("class " + node.id.name + "(" + node.superClass.name + ")");
+        else {
+            this.l("class " + node.id.name);
+            this.l(node.id.name + " -> " + node.superClass.name)
+        }
     }
     visitNode(node) {
         switch (node.type) {
