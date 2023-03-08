@@ -44,8 +44,7 @@ pipeline {
 
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
-                    cd eamd.ucp
-                    git checkout dev/neom
+                    cd eamd.ucp && git checkout dev/neom && git pull
                     rm -rf $TMP && mkdir -p $TMP
                     rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
                     cd $TMP && ( find -name "*mochaTest*" | xargs rm -rf )
@@ -58,12 +57,11 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
-                    cd eamd.ucp
-                    git checkout feature/neom/N1-309_Generate_PUML
+                    cd eamd.ucp && git checkout feature/neom/N1-309_Generate_PUML && git pull
                     cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
-                    cd Once.2023
-                    git checkout feature/neom/N1-309_Generate_PUML
+                    cd Once.2023 && git checkout feature/neom/N1-309_Generate_PUML && git pull
 
+                    cd qa/generatePUML
                     ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom/EAM
                     plantuml _test.puml -tsvg -o$WORKSPACE/results
                     '''
