@@ -62,7 +62,8 @@ pipeline {
                     cd Once.2023 && git checkout feature/neom/N1-309_Generate_PUML && git pull
 
                     cd qa/generatePUML
-                    ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom/EAM
+                    npm update
+                    ./generatePUML.js /var/dev/eamd.ucp/Components/com/neom/EAM
                     plantuml _test.puml -tsvg -o$WORKSPACE/results
                     '''
             }
