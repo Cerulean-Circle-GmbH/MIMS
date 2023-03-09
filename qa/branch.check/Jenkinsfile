@@ -58,8 +58,6 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
-                    cd /var/dev/eamd.ucp && git checkout feature/neom/N1-309_Generate_PUML && git pull
-                    
                     cd /var/dev/Once.2023/qa/generatePUML
                     npm install
                     ./generatePUML.js /var/dev/eamd.ucp/Components/com/neom/EAM
