@@ -15,6 +15,8 @@ if [[ -n ${ONCE_INITIALIZED} ]]; then
     once init
     once domain.set localhost
     once stage next
+    once stage next
+    once stage next # install certificates
 
     # Pre start once
     once start
