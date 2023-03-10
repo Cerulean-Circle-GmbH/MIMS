@@ -3,3 +3,4 @@ once.sh.ts/src/docker/once.sh.ubuntu.200.04/entrypoint/once.sh
 this:
 *:
 _*
+node_modules
