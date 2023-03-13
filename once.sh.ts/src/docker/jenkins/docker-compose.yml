@@ -10,6 +10,8 @@ services:
     ports:
       - "${DOCKER_HTTP}:8080"
       - "50000:50000"
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
     #command: "tail -f /var/jenkins_home/secrets/initialAdminPassword"
 volumes:
   jenkins_home:
