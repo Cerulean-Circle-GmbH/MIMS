@@ -1,0 +1,75 @@
+pipeline {
+    agent {
+        docker {
+            image 'once.sh-builder'
+            args '-v once_jenkins:/var/dev  -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            reuseNode true
+        }
+    }
+
+    environment {
+        TREE = 'com/neom/EAM'
+        NAME = 'com.neom.EAM'
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+    
+    stages {
+        stage('Cleanup & update') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    rm -rf results
+                    mkdir -p results
+                    cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
+                    cd eamd.ucp && git reset --hard && git checkout dev/neom && git pull
+                    cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
+                    cd Once.2023 && git reset --hard && git checkout dev && git pull
+                    '''
+            }
+        }
+        stage('Check branches') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    source ~/config/user.env && oo mode.dev && oo update
+                    cd /var/dev/eamd.ucp
+                    export LOG_DEVICE=$WORKSPACE/results/branch.txt && config save log
+                    oo branches.check feature/neom dev/neom 6a7a3d3
+                    export LOG_DEVICE=/dev/tty && config save log
+                    cat $WORKSPACE/results/branch.txt 
+                    cat $WORKSPACE/results/branch.txt | ansi2html > $WORKSPACE/results/branch.html
+                    '''
+            }
+        }
+        stage('Create class svg (wavi)') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    TMP=/tmp/${TREE}
+                    SOURCE=/var/dev/eamd.ucp/Components/${TREE}
+                    source ~/config/user.env && oo mode.dev && oo update
+                    rm -rf $TMP && mkdir -p $TMP
+                    rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
+                    wavi $TMP $WORKSPACE/results/$NAME.wavi.svg
+                    '''
+            }
+        }
+        stage('Create class svg (puml)') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    source ~/config/user.env && oo mode.dev && oo update
+                    cd /var/dev/Once.2023/qa/generatePUML
+                    npm install
+                    ./generatePUML.js /var/dev/eamd.ucp/Components/com/neom/EAM
+                    plantuml _test.puml -tsvg
+                    mv _test.svg $WORKSPACE/results/$NAME.puml.svg
+                    '''
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
+        }
+    }
+}

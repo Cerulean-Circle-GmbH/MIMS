@@ -6,10 +6,11 @@ ENV WORKDIR /root/
 WORKDIR $WORKDIR
 RUN export PATH=.:$PATH
 
-# wget is necessary for build.sh
-RUN apt update
-RUN apt install wget -y
-RUN apt install rsync -y
+# Start the update in front of every added install statement because of the docker cache (update is not deterministic)
+RUN apt update && apt install wget rsync -y
+RUN apt update && apt install colorized-logs -y
+RUN apt update && apt install nodejs npm -y
+RUN apt update && apt install plantuml -y
 
 # build all things inside container
 ADD entrypoint entrypoint
