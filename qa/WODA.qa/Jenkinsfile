@@ -55,11 +55,19 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env
-                    export ONCE_DEFAULT_URL=https://localhost:8443 >> $ONCE_DEFAULT_SCENARIO/.once
-                    export ONCE_DIRECT_HTTPS_URL=https://localhost:8443 >> $ONCE_DEFAULT_SCENARIO/.once
-                    export ONCE_DEFAULT_UDE_STORE=https://localhost:8443 >> $ONCE_DEFAULT_SCENARIO/.once
-                    export ONCE_DEFAULT_URL=https://localhost:8443 >> $ONCE_DEFAULT_SCENARIO/.once
+                    source ~/.once
+                    echo "MKT: Fill .once"
+                    cat <<EOF >> $ONCE_DEFAULT_SCENARIO/.once
+export ONCE_DEFAULT_URL=https://localhost:8443
+export ONCE_DIRECT_HTTPS_URL=https://localhost:8443
+export ONCE_DEFAULT_UDE_STORE=https://localhost:8443
+export ONCE_DEFAULT_URL=https://localhost:8443
+export ONCE_DEFAULT_KEYCLOAK_SERVER='{ "realm": "master", "clientId": "shifternetzwerk", "testClient": { "client_id": "mochaAPI", "client_secret": "df37971a-f098-4310-8a62-b238b15c7b35" , "mocha1id": "42b8c48b-34d6-4a33-8c93-5e3782c05a48", "mocha2id": "ccfff6f6-7764-4111-98f3-6bf68d8e4b26", "mocha3id": "92746ce6-d5ce-4127-9e45-30fef19cf7a6" }, "url": "https://test.wo-da.de/auth"}'
+EOF
+                    echo "MKT: cat $ONCE_DEFAULT_SCENARIO/.once"
+                    wc -l $ONCE_DEFAULT_SCENARIO/.once
                     cat $ONCE_DEFAULT_SCENARIO/.once
+                    echo "MKT: once test"
                     once test
                     '''
             }
