@@ -37,7 +37,7 @@ pipeline {
                     once init
                     once domain.set localhost
                     once stage next
-                    once stage next # Der checked den test/sprint29 aus
+                    once stage next
                     once stage next
                     once start
                     '''
@@ -57,7 +57,7 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env
                     source ~/.once
-                    echo "MKT: Fill .once"
+                    echo "MKT: Add environment variables to .once"
                     cat <<EOF >> $ONCE_DEFAULT_SCENARIO/.once
 export ONCE_DEFAULT_URL=https://localhost:8443
 export ONCE_DIRECT_HTTPS_URL=https://localhost:8443
