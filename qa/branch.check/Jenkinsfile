@@ -71,7 +71,7 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev/Once.2023/qa/staticAnalysis
-                    ./staticAnalysis.sh
+                    ./staticAnalysis.sh | tee $WORKSPACE/results/staticAnalysis.txt
                     '''
             }
         }
