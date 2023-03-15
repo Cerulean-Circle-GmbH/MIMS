@@ -66,6 +66,15 @@ pipeline {
                     '''
             }
         }
+        stage('Static analysis of EAMD') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    source ~/config/user.env && oo mode.dev && oo update
+                    cd /var/dev/Once.2023/qa/staticAnalysis
+                    ./staticAnalysis.sh
+                    '''
+            }
+        }
     }
     post {
         always {
