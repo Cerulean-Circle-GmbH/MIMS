@@ -22,8 +22,8 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     rm -rf results
                     mkdir -p results
-                    cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
-                    cd eamd.ucp && git reset --hard && git checkout dev/neom && git pull
+                    cd /var/dev && ( git clone 2cuBitbucket:donges/EAMD.ucp.git || true )
+                    cd EAMD.ucp && git reset --hard && git checkout dev/neom && git pull
                     cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
                     cd Once.2023 && git reset --hard && git checkout dev && git pull
                     '''
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
-                    cd /var/dev/eamd.ucp
+                    cd /var/dev/EAMD.ucp
                     export LOG_DEVICE=$WORKSPACE/results/branch.txt && config save log
                     oo branches.check feature/neom dev/neom 6a7a3d3
                     export LOG_DEVICE=/dev/tty && config save log
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     TMP=/tmp/${TREE}
-                    SOURCE=/var/dev/eamd.ucp/Components/${TREE}
+                    SOURCE=/var/dev/EAMD.ucp/Components/${TREE}
                     source ~/config/user.env && oo mode.dev && oo update
                     rm -rf $TMP && mkdir -p $TMP
                     rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
@@ -60,7 +60,7 @@ pipeline {
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev/Once.2023/qa/generatePUML
                     npm install
-                    ./generatePUML.js /var/dev/eamd.ucp/Components/com/neom/EAM
+                    ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom/EAM
                     plantuml _test.puml -tsvg
                     mv _test.svg $WORKSPACE/results/$NAME.puml.svg
                     '''
@@ -71,7 +71,7 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev/Once.2023/qa/staticAnalysis
-                    ./staticAnalysis.sh | tee $WORKSPACE/results/staticAnalysis.txt
+                    ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
                     '''
             }
         }

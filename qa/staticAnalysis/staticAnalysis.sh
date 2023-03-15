@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=/var/dev/EAMD.ucp
+dir=$1
 
 banner() {
     echo
