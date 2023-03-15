@@ -23,10 +23,10 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     rm -rf results
                     mkdir -p results
-                    cd /var/dev && ( git clone 2cuBitbucket:donges/eamd.ucp.git || true )
-                    cd eamd.ucp && git reset --hard && git checkout $BRANCH && git pull
+                    cd /var/dev && ( git clone 2cuBitbucket:donges/EAMD.ucp.git || true )
+                    cd EAMD.ucp && git reset --hard && git fetch --prune && git checkout dev/neom && git pull
                     cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
-                    cd Once.2023 && git reset --hard && git checkout dev && git pull
+                    cd Once.2023 && git reset --hard && git fetch --prune && git checkout dev && git pull
                     '''
             }
         }
@@ -37,7 +37,7 @@ pipeline {
                     once init
                     once domain.set localhost
                     once stage next
-                    once stage next
+                    once stage next # Der checked den test/sprint29 aus
                     once stage next
                     once start
                     '''
@@ -47,6 +47,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env
+                    cd /var/dev/EAMD.ucp && git reset --hard && git fetch --prune && git checkout feature/neom/N1-311_test_system_fix && git pull
                     once status
                     '''
             }
@@ -68,14 +69,22 @@ EOF
                     wc -l $ONCE_DEFAULT_SCENARIO/.once
                     cat $ONCE_DEFAULT_SCENARIO/.once
                     echo "MKT: once test"
-                    once test
+                    #cd /var/dev/EAMD.ucp
+                    #git status
+                    #cat /var/dev/EAMD.ucp/Components/tla/EAM/layer1/Thinglish/Once/4.3.0/test/Once.mocha.test.js
+                    mkdir -p $WORKSPACE/results
+                    once test | tee $WORKSPACE/results/test.log
+                    if [ -n "`cat $WORKSPACE/results/test.log | grep failing`" ]; then
+                        echo "FAILING ..."
+                        exit 1
+                    fi
                     '''
             }
         }
     }
-    //post {
-    //    always {
-    //        archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
-    //    }
-    //}
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: false
+        }
+    }
 }
