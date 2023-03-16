@@ -33,3 +33,11 @@ dir=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Onc
 # Analyse dependency to test.wo-da.de
 banner "Analyse dependency to test.wo-da.de in $dir"
 grep -r "test.wo-da.de" "$dir" | while read line; do echo "[ERROR] Wrong dependency found: $line"; done
+
+# Analyse deprecated functions
+banner "Analyse deprecated functions in $dir"
+grep -rn "deprecated" "$dir" | while read line;
+do
+  token=$(echo $line | sed "s;.*deprecated;deprecated;" | sed "s;[ ()\"].*;;");
+  echo "[ERROR] Deprecated found ($token): $line";
+done | sort | sed "s;$dir;./;"
