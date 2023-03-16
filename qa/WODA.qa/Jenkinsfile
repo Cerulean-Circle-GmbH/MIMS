@@ -47,7 +47,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env
-                    cd /var/dev/EAMD.ucp && git reset --hard && git fetch --prune && git checkout feature/neom/N1-311_test_system_fix && git pull
+                    cd /var/dev/EAMD.ucp && git reset --hard && git fetch --prune && git checkout feature/neom/N1-365-tests-are-still-not-shutting-down && git pull
                     once status
                     '''
             }
