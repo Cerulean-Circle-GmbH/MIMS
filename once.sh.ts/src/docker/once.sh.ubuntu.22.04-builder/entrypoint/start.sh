@@ -8,6 +8,9 @@ echo "Starting custom start script: $0"
 # Start ssh
 service ssh restart
 
+# Update once.sh
+oo update
+
 # Start
 echo >> startmsg/msg.txt
 cat startmsg/build.txt > startmsg/msg.txt

@@ -8,6 +8,9 @@ echo "Starting custom start script: $0"
 # Start ssh
 service ssh restart
 
+# Update once.sh
+oo update
+
 # Install once (only if it is not yet initialized)
 source ~/config/user.env
 ONCE_INITIALIZED=`once check.initialized  | grep "once not initialized" 2>/dev/null`
