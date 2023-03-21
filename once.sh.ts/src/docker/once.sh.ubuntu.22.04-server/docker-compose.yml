@@ -8,10 +8,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
       - once-development-test:/var/dev
+      #- once-development-test:/home/shared
       - .:/outer-config
     ports:
       - "${DOCKER_HTTP}:8080"
-      - "${DOCKER_HTTPS}:443"
+      - "${DOCKER_HTTPS}:8443"
       - "${DOCKER_SSH}:22"
     command: "tail -f /root/.bashrc "
 volumes:

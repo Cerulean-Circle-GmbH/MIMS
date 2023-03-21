@@ -6,10 +6,10 @@ ENV WORKDIR /root/
 WORKDIR $WORKDIR
 RUN export PATH=.:$PATH
 
-# wget is necessary for build.sh
-RUN apt update
-RUN apt install wget -y
-RUN apt install rsync -y
+# Install various packages
+RUN apt update && apt install wget rsync openssh-server -y
+RUN apt update && apt install net-tools errno -y
+RUN apt update && apt install docker.io docker-compose -y
 
 # Fix nodejs problem on ubuntu
 # (See https://github.com/nodesource/distributions/issues/1157#issuecomment-1131212089)

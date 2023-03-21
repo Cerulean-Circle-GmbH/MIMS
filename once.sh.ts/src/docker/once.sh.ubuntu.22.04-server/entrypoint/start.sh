@@ -4,12 +4,62 @@
 set +e
 
 echo "Starting custom start script: $0"
+cat ~/startmsg/build.txt > ~/startmsg/msg.txt
+echo >> ~/startmsg/msg.txt
+echo "Timing:" >> ~/startmsg/msg.txt
+echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
 
 # Start ssh
 service ssh restart
 
+export OOSH_SSH_CONFIG_HOST="docker.once.ssh"
+
+# Import _env to see what you want to build (default: from web with branch main) (see devTool)
+if [ -f /root/entrypoint/_env ]; then
+    source /root/entrypoint/_env
+fi
+
+# Download and install oosh
+if [ ! -z ${OOSH_TAR} ] && [ -f ${OOSH_TAR} ]; then
+    export OOSH_INSTALL_SOURCE="/root/entrypoint/install.oosh.source"
+    echo "<build.sh> Install oosh from ${OOSH_INSTALL_SOURCE}"
+    mkdir -p ${OOSH_INSTALL_SOURCE}
+    tar xf ${OOSH_TAR} -C ${OOSH_INSTALL_SOURCE}
+    ${OOSH_INSTALL_SOURCE}/init/oosh
+else
+    if [ -z ${OOSH_BRANCH} ]; then
+        export OOSH_BRANCH="main"
+    fi
+    export OOSH_INSTALL_SOURCE="https://raw.githubusercontent.com/Cerulean-Circle-GmbH/once.sh/${OOSH_BRANCH}/init/oosh"
+    echo "<build.sh> Install oosh from ${OOSH_INSTALL_SOURCE}"
+    echo "<build.sh> Install oosh with branch ${OOSH_BRANCH}"
+    env sh -c "$(wget -O- ${OOSH_INSTALL_SOURCE})"
+    cd ${OOSH_DIR} && git checkout ${OOSH_BRANCH}
+fi
+
+cd ~
+source ~/config/user.env
+
+echo "custom build script: $PWD $0"
+echo "====== DONE ================="
+
+echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
+
+### migrate this code into the state machine
+
+# Install stuff
+oo cmd net-tools
+oo cmd openssh-server
+oo cmd errno
+
+# Install docker
+oo cmd docker.io
+oo cmd docker-compose
+
 # Update once.sh
 oo update
+
+echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
 
 # Install once (only if it is not yet initialized)
 source ~/config/user.env
@@ -27,6 +77,8 @@ if [[ -n ${ONCE_INITIALIZED} ]]; then
     # For now it seems to work
     once stop
 fi
+
+echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
 
 # Setup Git configuration
 OUTER_GIT_CONFIG=/outer-config/.gitconfig
@@ -61,7 +113,7 @@ if [[ -d ${OUTER_SSH_CONFIG} && -f ${OUTER_SSH_CONFIG}/id_rsa ]]; then
         if [ -n $GIT_EMAIL ]; then
             MY_IDNAME=ssh.$GIT_EMAIL
             ossh id.create.fromKey ${MY_IDNAME} ${SSH_ID_DIR}
-            cp ~/.ssh/ids/${MY_IDNAME}/id_rsa.pub .ssh/public_keys/
+            cp ~/.ssh/ids/${MY_IDNAME}/id_rsa.pub ~/.ssh/public_keys/
             MY_KEY=/root/.ssh/ids/${MY_IDNAME}/id_rsa
             cat ${SSH_CONFIG}.ORIG | sed "s;/home/developking/.ssh/id_rsa;${MY_KEY};" | sed "s;~/.ssh/id_rsa;${MY_KEY};" > ${SSH_CONFIG}
         else
@@ -74,10 +126,12 @@ else
 fi
 
 # Start
-cat startmsg/build.txt > startmsg/msg.txt
-echo "Welcome to Web 4.0" >> startmsg/msg.txt
-echo >> startmsg/msg.txt
-echo "To start the ONCE server type:" >> startmsg/msg.txt
-echo "   once restart" >> startmsg/msg.txt
-echo "and then call: http://localhost:8080" >> startmsg/msg.txt
-tail -f startmsg/msg.txt
+echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
+echo >> ~/startmsg/msg.txt
+
+echo "Welcome to Web 4.0" >> ~/startmsg/msg.txt
+echo >> ~/startmsg/msg.txt
+echo "To start the ONCE server type:" >> ~/startmsg/msg.txt
+echo "   once restart" >> ~/startmsg/msg.txt
+echo "and then call: http://localhost:8080" >> ~/startmsg/msg.txt
+tail -f ~/startmsg/msg.txt
