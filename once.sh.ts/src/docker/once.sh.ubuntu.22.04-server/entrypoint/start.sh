@@ -135,6 +135,7 @@ echo "To start the ONCE server type:" >> ~/startmsg/msg.txt
 echo "   once restart" >> ~/startmsg/msg.txt
 if [ -z "$ONCE_DOCKER_HTTP_PORT" ]; then
     export ONCE_DOCKER_HTTP_PORT=8080
+    export ONCE_DOCKER_HTTPS_PORT=8443
 fi
-echo "and then call: http://localhost:${ONCE_DOCKER_HTTP_PORT}" >> ~/startmsg/msg.txt
+echo "and then call: http://localhost:${ONCE_DOCKER_HTTP_PORT} or https://localhost:${ONCE_DOCKER_HTTPS_PORT}" >> ~/startmsg/msg.txt
 tail -f ~/startmsg/msg.txt
