@@ -59,8 +59,9 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
                     cd /var/dev/Once.2023/qa/generatePUML
+                    rm -rf _*
                     npm install
-                    ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom/EAM
+                    ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom
                     plantuml _test.puml -tsvg
                     mv _test.svg $WORKSPACE/results/$NAME.puml.svg
                     '''
