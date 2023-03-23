@@ -27,6 +27,7 @@ pipeline {
                     cd EAMD.ucp && git reset --hard && git fetch --prune && git checkout dev/neom && git pull
                     cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
                     cd Once.2023 && git reset --hard && git fetch --prune && git checkout dev && git pull
+                    env sh -c "$(wget -O- https://raw.githubusercontent.com/Cerulean-Circle-GmbH/once.sh/dev/init/oosh)"
                     '''
             }
         }
@@ -47,7 +48,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env
-                    cd /var/dev/EAMD.ucp && git reset --hard && git fetch --prune && git checkout feature/neom/N1-365-tests-are-still-not-shutting-down && git pull
+                    cd /var/dev/EAMD.ucp && git reset --hard && git fetch --prune && git checkout dev/neom && git pull
                     once status
                     '''
             }

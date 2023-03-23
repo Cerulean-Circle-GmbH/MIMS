@@ -28,6 +28,18 @@ search_links "$dir"
 banner "Analyse dependency to test.wo-da.de in $dir/Components"
 grep -r "test.wo-da.de" "$dir/Components" | while read line; do echo "[ERROR] Wrong dependency found: $line"; done
 
+# Analyse files which are commited but ignored by git
+banner "Analyse files which are commited but ignored by git"
+find "$dir" -type f -o -type l | while read FILE; do
+  IGNORED=$(git check-ignore --no-index -v "$FILE")
+  if [ -n "$IGNORED" ]; then
+    IGNORED_NOTCOMMITED=$(git check-ignore "$FILE")
+    if [ -z "$IGNORED_NOTCOMMITED" ]; then
+      echo $IGNORED
+    fi
+  fi
+done
+
 dir=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev/
 
 # Analyse dependency to test.wo-da.de
