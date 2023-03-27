@@ -65,6 +65,7 @@ pipeline {
                     plantuml _test.puml -tsvg
                     plantuml _test.puml -tpng
                     mv _test.svg $WORKSPACE/results/$NAME.puml.svg
+                    mv _test.png $WORKSPACE/results/$NAME.puml.png
                     '''
             }
         }
