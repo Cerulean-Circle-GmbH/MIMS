@@ -63,6 +63,7 @@ pipeline {
                     npm install
                     ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom
                     plantuml _test.puml -tsvg
+                    plantuml _test.puml -tpng
                     mv _test.svg $WORKSPACE/results/$NAME.puml.svg
                     '''
             }
