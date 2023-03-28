@@ -22,11 +22,11 @@ pipeline {
                     '''
             }
         }
-        withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
-            stage('Backup structr') {
-                steps {
+        stage('Backup structr') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
-                       /var/dev/Once.2023/qa/backup/backupStructr.sh
+                        /var/dev/Once.2023/qa/backup/backupStructr.sh
                     '''
                 }
             }
