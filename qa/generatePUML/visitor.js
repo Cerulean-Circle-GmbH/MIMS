@@ -8,6 +8,8 @@ let globalScope = new Map()
 class Visitor {
     constructor(l) {
         this.l = l
+        this.staticState = true
+        this.methodMap = new Map()
     }
     visitVariableDeclaration(node) {
         const nodeKind = node.kind
@@ -52,10 +54,12 @@ class Visitor {
         return g
     }
     visitCallExpression(node) {
+        this.l("package " + node.arguments[0].value + " {");
         const callee = this.visitIdentifier(node.callee)
         const _arguments = this.evalArgs(node.arguments)
         if (callee == "print")
             l(..._arguments)
+        this.l("}");
     }
     visitNodes(nodes) {
         for (const node of nodes) {
@@ -63,14 +67,42 @@ class Visitor {
         }
     }
     visitClassDeclaration(node) {
+        let name = node.id.name
+        if (this.methodMap.get(name))
+            name = name + "_DUPLICATE"
+        this.methodMap.set(name,true)
         if (node.superClass.name == "Interface")
-            this.l("interface " + node.id.name);
-        else if ([ "DefaultView", "UcpView", "UcpComponent"].includes(node.superClass.name))
-            this.l("class " + node.id.name + "(" + node.superClass.name + ")");
-        else {
-            this.l("class " + node.id.name);
-            this.l(node.id.name + " -> " + node.superClass.name)
+            this.l("interface " + name + " {");
+        else if ([ "DefaultView", "UcpView", "UcpComponent"].includes(node.superClass.name)) {
+            this.l("class " + name + " {");
+            this.l("... is a " + node.superClass.name);
+        } else {
+            this.l(name + " -> " + node.superClass.name)
+            this.l("class " + name + " {");
         }
+        this.staticState = true
+        this.evalArgs(node.body.body)
+        this.l("}");
+    }
+    visitMethodDefinition(node) {
+        let st = ""
+        if (node.static) {
+            if (!this.staticState) {
+                this.staticState = true
+                this.l("==");
+            }
+            st = " (static)"
+        } else {
+            if (this.staticState) {
+                this.staticState = false
+                this.l("==");
+            }
+        }
+        let gs = ""
+        if (node.kind == "get" || node.kind == "set")
+            gs = node.kind + " "
+        this.l("+" + gs + node.key.name + "() " + st);
+        return node.raw
     }
     visitNode(node) {
         switch (node.type) {
@@ -88,6 +120,8 @@ class Visitor {
                 return this.visitBinaryExpression(node)
             case "CallExpression":
                 return this.visitCallExpression(node)
+            case "MethodDefinition":
+                return this.visitMethodDefinition(node)
         }
     }
     run(nodes) {

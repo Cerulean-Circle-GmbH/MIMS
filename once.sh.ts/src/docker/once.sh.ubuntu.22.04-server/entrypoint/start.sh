@@ -9,6 +9,10 @@ echo >> ~/startmsg/msg.txt
 echo "Timing:" >> ~/startmsg/msg.txt
 echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
 
+# https://github.com/remotemobprogramming/mob
+#curl -sL install.mob.sh | sh
+#go install github.com/remotemobprogramming/mob/v3@latest
+
 # Start ssh
 service ssh restart
 
@@ -76,6 +80,10 @@ if [[ -n ${ONCE_INITIALIZED} ]]; then
     # The stop call might need to wait until once is really up
     # For now it seems to work
     once stop
+
+    source /root/.once
+    export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","test.wo-da.de"]]'
+    echo "export ONCE_REVERSE_PROXY_CONFIG='$ONCE_REVERSE_PROXY_CONFIG'" >> $ONCE_DEFAULT_SCENARIO/.once
 fi
 
 echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt

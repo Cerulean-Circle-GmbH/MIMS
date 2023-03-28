@@ -3,6 +3,7 @@
 const acorn = require('acorn')
 const fs = require('fs')
 const path = require('path');
+const { fileURLToPath } = require('url');
 const util = require('util');
 
 const Interpreter = require("./interpreter.js")
@@ -13,6 +14,11 @@ var buffer = ""
 // Define the directory path as a command line argument
 const directoryPath = process.argv[2];
 console.log("Path: "+directoryPath);
+
+function filter(filePath) {
+    // TODO: This must be fixed by filtering multiple versions of the same class
+    return !filePath.includes("Metaverse/1.0.0")
+}
 
 // Collect all js files
 function searchDirectoryForJsFiles(directoryPath) {
@@ -28,7 +34,10 @@ function searchDirectoryForJsFiles(directoryPath) {
             searchDirectoryForJsFiles(filePath);
         } else if (path.extname(filePath) === '.js') {
             // If it is a .js file, print its name to the console
-            buffer += fs.readFileSync(filePath).toString();
+            if (filter(filePath)) {
+                console.log(filePath)
+                buffer += fs.readFileSync(filePath).toString();
+            }
         }
     });
 }
@@ -59,7 +68,7 @@ var log_file = fs.createWriteStream(__dirname + '/_test.puml', {flags : 'w'});
 var log_stdout = process.stdout;
 console.log = function(d) { //
   log_file.write(util.format(d) + '\n');
-  log_stdout.write(util.format(d) + '\n');
+  //log_stdout.write(util.format(d) + '\n');
 }
 console.log("@startuml")
 const jsInterpreter = new Interpreter(new Visitor(console.log))

@@ -1,0 +1,38 @@
+pipeline {
+    agent {
+        docker {
+            image 'once.sh-builder'
+            args '-v once_jenkins:/var/dev  -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            reuseNode true
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+    
+    stages {
+        stage('Cleanup & update') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    rm -rf results
+                    mkdir -p results
+                    cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
+                    cd Once.2023 && git reset --hard && git checkout dev && git pull
+                    '''
+            }
+        }
+        stage('Backup structr') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    /var/dev/Once.2023/qa/backup/backupStructr.sh
+                    '''
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
+        }
+    }
+}
