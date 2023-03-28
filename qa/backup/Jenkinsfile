@@ -40,5 +40,14 @@ pipeline {
                 }
             }
         }
+        stage('Backup once(test.wo-da.de)') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        /var/dev/Once.2023/qa/backup/backupOnce.sh
+                    '''
+                }
+            }
+        }
     }
 }
