@@ -19,14 +19,15 @@ date=$(date +%Y-%m-%d-%H_%M)
 tarfile=${date}_${dirname}.tar.gz
 rsynclog=_rsync.log
 rm -rf 20*.tar.gz $rsynclog
-if [ -n "${keyfile}"]; then
+if [[ -n "${keyfile}" ]]; then
+    echo "Use ${keyfile}"
     use_key="-i ${keyfile}"
 fi
 
 # Get data
 banner "Get data from $sourcedir"
 while true; do
-    rsync -avzP --delete $use_key -e 'ssh -o "StrictHostKeyChecking no"' $sourcedir/$dirname $destdir | tee $rsynclog
+    rsync -avzP --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $sourcedir/$dirname $destdir | tee $rsynclog
     if [ -z "$(cat $rsynclog | grep $dirname)" ]; then
         break;
     else
@@ -43,4 +44,4 @@ ls -lah
 
 # Copy to backup server
 banner "Copy to backup server"
-rsync -avzP $use_key -e 'ssh -o "StrictHostKeyChecking no"' $tarfile backup.sfsre.com:/var/backups/structr/
+rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile backup.sfsre.com:/var/backups/structr/
