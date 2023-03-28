@@ -22,7 +22,7 @@ fi
 
 # Create tar
 banner "Create $tarfile"
-tar czf $tarfile /var/jenkins_home
+tar czf --exclude "var/jenkins_home/workspace" $tarfile /var/jenkins_home
 
 # Copy to backup server
 banner "Copy to backup server"
