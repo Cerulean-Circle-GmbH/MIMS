@@ -13,8 +13,8 @@ cd _build
 
 # Initialization
 date=$(date +%Y-%m-%d-%H_%M)
-tarfile=backup-${date}.tar.gz
-rm -rf 20*.tar.gz
+tarfile=backup-jenkins-${date}.tar.gz
+rm -rf backup-jenkins-*
 if [[ -n "${keyfile}" ]]; then
     echo "Use ${keyfile}"
     use_key="-i ${keyfile}"

@@ -16,9 +16,9 @@ dirname=WODA-current
 sourcedir="WODA.test:/var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/2_systems/Docker/StructrServer.v2.1.4/Workspaces/structrAppWorkspace"
 destdir=.
 date=$(date +%Y-%m-%d-%H_%M)
-tarfile=${date}_${dirname}.tar.gz
+tarfile=backup-structr-${date}_${dirname}.tar.gz
 rsynclog=_rsync.log
-rm -rf 20*.tar.gz $rsynclog
+rm -rf backup-structr-* $rsynclog
 if [[ -n "${keyfile}" ]]; then
     echo "Use ${keyfile}"
     use_key="-i ${keyfile}"
