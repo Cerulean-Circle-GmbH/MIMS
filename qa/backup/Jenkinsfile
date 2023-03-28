@@ -25,7 +25,9 @@ pipeline {
         stage('Backup structr') {
             steps {
                 sh '''#!/usr/bin/bash
-                    /var/dev/Once.2023/qa/backup/backupStructr.sh
+                    withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                        /var/dev/Once.2023/qa/backup/backupStructr.sh
+                    }
                     '''
             }
         }
