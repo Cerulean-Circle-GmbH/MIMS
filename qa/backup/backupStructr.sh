@@ -7,7 +7,7 @@ banner() {
     echo "============================================="
 }
 
-# Work in buld dir
+# Work in build dir
 mkdir -p _build
 cd _build
 

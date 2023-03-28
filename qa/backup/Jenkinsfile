@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'once.sh-builder'
-            args '-v once_jenkins:/var/dev  -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            args '-v once_jenkins:/var/dev -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
             reuseNode true
         }
     }
@@ -27,6 +27,15 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
                         /var/dev/Once.2023/qa/backup/backupStructr.sh
+                    '''
+                }
+            }
+        }
+        stage('Backup jenkins') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        /var/dev/Once.2023/qa/backup/backupJenkins.sh
                     '''
                 }
             }
