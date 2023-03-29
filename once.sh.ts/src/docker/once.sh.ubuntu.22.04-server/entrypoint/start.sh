@@ -81,9 +81,12 @@ if [[ -n ${ONCE_INITIALIZED} ]]; then
     # For now it seems to work
     once stop
 
+    # Adapt once config
     source /root/.once
     export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","test.wo-da.de"]]'
-    echo "export ONCE_REVERSE_PROXY_CONFIG='$ONCE_REVERSE_PROXY_CONFIG'" >> $ONCE_DEFAULT_SCENARIO/.once
+    CF=$ONCE_DEFAULT_SCENARIO/.once
+    mv $CF $CF.ORIG
+    cat $CF.ORIG | line replace "ONCE_REVERSE_PROXY_CONFIG=.*" "ONCE_REVERSE_PROXY_CONFIG='$ONCE_REVERSE_PROXY_CONFIG'" > $CF
 fi
 
 echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
