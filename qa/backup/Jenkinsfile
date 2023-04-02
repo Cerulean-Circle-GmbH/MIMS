@@ -55,6 +55,7 @@ pipeline {
                     sh '''#!/usr/bin/bash
                     ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "tree /var/backups" > results/tree.txt
                     ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "du -skh /var/backups/*" > results/du.txt
+                    ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "df -skh /var/backups/" >> results/du.txt
                     '''
                 }
             }
