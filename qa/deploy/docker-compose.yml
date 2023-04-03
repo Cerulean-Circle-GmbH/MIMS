@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  once.sh:
+    container_name: ${SCENARIO_CONTAINER}
+    image: donges/once:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /run/snapd.socket:/run/snapd.socket
+      - var_dev:/var/dev
+    ports:
+      - ${SCENARIO_ONCE_HTTP}:8080
+      - ${SCENARIO_ONCE_HTTPS}:8443
+      - ${SCENARIO_ONCE_SSH}:22
+    environment:
+      ONCE_DOCKER_HTTP_PORT: ${SCENARIO_ONCE_HTTP}
+      ONCE_DOCKER_HTTPS_PORT: ${SCENARIO_ONCE_HTTPS}
+volumes:
+  var_dev:
+#networks:
+#  default:
+#    external: false
+#    name: ${SCENARIO_NAME}-woda-network
