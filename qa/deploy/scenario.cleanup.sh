@@ -14,7 +14,8 @@ docker-compose -p $SCENARIO_NAME down
 
 # Cleanup docker
 banner "Cleanup docker"
-#docker volume rm ${SCENARIO_NAME}_var_dev
+docker volume rm ${SCENARIO_NAME}_var_dev
+docker volume ls
 docker image prune -f
 
 # Remove structr dir and other stuff

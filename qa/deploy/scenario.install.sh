@@ -65,7 +65,7 @@ docker image ls
 docker-compose -p $SCENARIO_NAME up -d
 docker ps
 
-# Wait for startup of conainer and installation of ONCE
+# Wait for startup of container and installation of ONCE
 found=""
 while [ -z "$found" ]; do
   # MKT: TODO: Fix this correctly
@@ -77,16 +77,16 @@ done
 echo "Startup done ($found)"
 
 # Checkout correct branch
-banner "Checkout correct branch"
-docker exec $SCENARIO_CONTAINER bash -s << EOF
+banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
+docker exec -i $SCENARIO_CONTAINER bash -s << EOF
 cd /var/dev/EAMD.ucp
 git checkout $SCENARIO_BRANCH
 (date && git status) > ./git-status.txt
 EOF
 
 # Reconfigure ONCE server and connect structr
-banner "Reconfigure ONCE server and connect structr"
-docker exec $SCENARIO_CONTAINER bash -s << EOF
+banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
+docker exec -i $SCENARIO_CONTAINER bash -s << EOF
 source /root/.once
 export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP"]]'
 CF=\$ONCE_DEFAULT_SCENARIO/.once

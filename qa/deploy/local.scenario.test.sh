@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Get current dir
-pushd $(dirname $0) > /dev/null
-cwd=$(pwd)
-popd > /dev/null
-source $cwd/.env
+source .env.$1
 
 function checkURL() {
     up=$(curl -s -o /dev/null -w "%{http_code}" $1)
