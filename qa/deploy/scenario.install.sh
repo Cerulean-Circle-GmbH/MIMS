@@ -65,15 +65,37 @@ docker image ls
 docker-compose -p $SCENARIO_NAME up -d
 docker ps
 
+# Test shell columns
+banner "Test shell columns"
+stty size | awk '{print $2}'
+tput cols
+shopt -s checkwinsize
+echo COLUMNS=$COLUMNS
+
 # Wait for startup of container and installation of ONCE
+banner "Wait for startup of container and installation of ONCE"
 found=""
+echo
+echo
+echo
+echo
+echo
+echo
 while [ -z "$found" ]; do
-  # MKT: TODO: Fix this correctly
-  echo "Waiting for startup..."
-  sleep 5
-  #timeout 5s docker logs --follow $SCENARIO_CONTAINER
+  UP='\033[7A'
+  LINEFEED='\033[0G'
+  echo -e "$LINEFEED$UP"
+  STR=$(docker logs -n 5 $SCENARIO_CONTAINER 2>&1)
+  echo "== Wait for startup... ==========================================================="
+  while IFS= read -r line
+  do
+    COLUMNS=80
+    printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
+  done < <(printf '%s\n' "$STR")
+  sleep 0.3
   found=$(docker logs $SCENARIO_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
 done
+echo "===================="
 echo "Startup done ($found)"
 
 # Checkout correct branch
