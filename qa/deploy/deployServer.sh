@@ -31,7 +31,7 @@ SCENARIO_ONCE_HTTPs=9443
 SCENARIO_ONCE_SSH=9022
 SCENARIO_DOMAIN=localhost
 
-BACKUP_STRUCTR_FILE=/var/backups/structr/backup-structr-${TAG}_WODA-current.tar.gz
+SCENARIO_STRUCTR_DATA_FILE=backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_TAG}_WODA-current.tar.gz
 STRUCTUR_ZIP=/var/dev/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip
 SCENARIOS_DIR_REMOTE=/var/dev/ONCE.2023-Scenarios
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
@@ -58,12 +58,12 @@ SCENARIO_STRUCTR_HTTP=8082
 SCENARIO_STRUCTR_HTTPS=8083
 SCENARIO_STRUCTR_FTP=8021
 SCENARIO_STRUCTR_EXTRA=7574
+SCENARIO_STRUCTR_DATA_FILE=$SCENARIO_STRUCTR_DATA_FILE
 EOF
-#cp $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/structr/
 
 # Cleanup remotely
 banner "Cleanup remotely"
-callRemote ./scenario.cleanup.sh || true
+#callRemote ./scenario.cleanup.sh || true
 
 # Sync to remote and call on destination docker host
 banner "Sync to remote and call on destination docker host"
@@ -90,8 +90,8 @@ else
     echo "OK: http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp is running"
 fi
 
-## Get backup
-## Setup structr scenario
-## Start structr
-## Reconfigure ONCE server
-## Start ONCE server
+## Reconfigure ONCE server and connect structr
+
+banner "Show tree"
+tree -L 3 -a .
+exit 0
