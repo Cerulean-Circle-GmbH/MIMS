@@ -36,7 +36,7 @@ SCENARIO_BRANCH=dev/neom # Use also tag here later
 SCENARIO_SERVER=backup.sfsre.com
 SCENARIO_CONTAINER=$SCENARIO_NAME-once.sh_container
 SCENARIO_ONCE_HTTP=9080
-SCENARIO_ONCE_HTTPs=9443
+SCENARIO_ONCE_HTTPS=9443
 SCENARIO_ONCE_SSH=9022
 SCENARIO_DOMAIN=localhost
 SCENARIO_STRUCTR_SERVER=https://$SCENARIO_DOMAIN
@@ -65,7 +65,7 @@ SCENARIO_NAME=$SCENARIO_NAME
 SCENARIO_BRANCH=$SCENARIO_BRANCH
 SCENARIO_CONTAINER=$SCENARIO_CONTAINER
 SCENARIO_ONCE_HTTP=$SCENARIO_ONCE_HTTP
-SCENARIO_ONCE_HTTPS=$SCENARIO_ONCE_HTTPs
+SCENARIO_ONCE_HTTPS=$SCENARIO_ONCE_HTTPS
 SCENARIO_ONCE_SSH=$SCENARIO_ONCE_SSH
 SCENARIO_DOMAIN=$SCENARIO_DOMAIN
 SCENARIO_STRUCTR_SERVER=$SCENARIO_STRUCTR_SERVER
@@ -89,7 +89,7 @@ banner "Sync to remote and call on destination docker host"
 ssh $SCENARIO_SERVER bash -s << EOF
 mkdir -p $SCENARIOS_DIR_REMOTE/$SCENARIO_NAME
 EOF
-rsync -avzP --exclude=./structr/_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR_REMOTE/$SCENARIO_NAME/
+rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR_REMOTE/$SCENARIO_NAME/
 
 # Startup WODA with WODA.2023 container and check that startup is done
 banner "Startup WODA with WODA.2023 container and check that startup is done"
@@ -102,7 +102,16 @@ callRemote ./scenario.start.sh
 # Check running servers
 banner "Check running servers"
 checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
+checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
 checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
+checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
 
 ## Reconfigure ONCE server and connect structr
-callRemote tree -L 3 -a .
+ssh $SCENARIO_SERVER bash -s << EOF
+source /root/.once
+export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP"]]'
+CF=\$ONCE_DEFAULT_SCENARIO/.once
+mv \$CF \$CF.ORIG
+cat \$CF.ORIG | line replace "ONCE_REVERSE_PROXY_CONFIG=.*" "ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG'" > \$CF
+EOF
+callRemote source /root/.once && echo $ONCE_DEFAULT_SCENARIO/.once && cat $ONCE_DEFAULT_SCENARIO/.once
