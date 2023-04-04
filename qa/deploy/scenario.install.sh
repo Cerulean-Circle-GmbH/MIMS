@@ -75,3 +75,7 @@ while [ -z "$found" ]; do
   found=$(docker logs $SCENARIO_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
 done
 echo "Startup done ($found)"
+
+# Checkout correct branch
+docker exec $SCENARIO_CONTAINER bash -c "cd /var/dev/EAMD.ucp && git checkout $SCENARIO_BRANCH"
+docker exec $SCENARIO_CONTAINER bash -c "cd /var/dev/EAMD.ucp && (date && git status) > ./git-status.txt"
