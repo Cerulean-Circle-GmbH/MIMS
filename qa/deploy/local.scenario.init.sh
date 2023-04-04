@@ -1,6 +1,9 @@
 #!/bin/bash
 
-source .env.$1
+# Get current dir
+pushd $(dirname $0) > /dev/null
+cwd=$(pwd)
+popd > /dev/null
 
 function banner() {
     echo
@@ -8,6 +11,14 @@ function banner() {
     echo
 }
 
+# Scenario vars
+if [ -z "$1" ]; then
+    echo "Usage: $0 <scenario>"
+    echo "Example: $0 dev"
+    exit 1
+fi
+SCENARIO_NAME=$1
+source .env.$SCENARIO_NAME
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 
 # Setup scenario dir locally

@@ -103,7 +103,7 @@ banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
 docker exec -i $SCENARIO_CONTAINER bash -s << EOF
 cd /var/dev/EAMD.ucp
 git checkout $SCENARIO_BRANCH
-(date && git status) > ./git-status.txt
+(date && git status) > ./git-status.log
 EOF
 
 # Reconfigure ONCE server and connect structr
