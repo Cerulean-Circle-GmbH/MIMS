@@ -63,6 +63,7 @@ cp -R -a docker-compose.yml scenario.*.sh structr certbot $SCENARIOS_DIR_LOCAL/$
 cat << EOF > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 SCENARIO_NAME=$SCENARIO_NAME
 SCENARIO_BRANCH=$SCENARIO_BRANCH
+SCENARIO_SERVER=$SCENARIO_SERVER
 SCENARIO_CONTAINER=$SCENARIO_CONTAINER
 SCENARIO_ONCE_HTTP=$SCENARIO_ONCE_HTTP
 SCENARIO_ONCE_HTTPS=$SCENARIO_ONCE_HTTPS
@@ -100,18 +101,4 @@ banner "Restart once server"
 callRemote ./scenario.start.sh
 
 # Check running servers
-banner "Check running servers"
-checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
-checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
-checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
-checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
-
-## Reconfigure ONCE server and connect structr
-ssh $SCENARIO_SERVER bash -s << EOF
-source /root/.once
-export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP"]]'
-CF=\$ONCE_DEFAULT_SCENARIO/.once
-mv \$CF \$CF.ORIG
-cat \$CF.ORIG | line replace "ONCE_REVERSE_PROXY_CONFIG=.*" "ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG'" > \$CF
-EOF
-callRemote source /root/.once && echo $ONCE_DEFAULT_SCENARIO/.once && cat $ONCE_DEFAULT_SCENARIO/.once
+_scenarios/dev/scenario.test.sh
