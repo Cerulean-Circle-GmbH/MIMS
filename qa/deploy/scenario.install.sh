@@ -84,8 +84,8 @@ echo
 while [ -z "$found" ]; do
   UP='\033[7A'
   LINEFEED='\033[0G'
-  echo -e "$LINEFEED$UP"
   STR=$(docker logs -n 5 $SCENARIO_CONTAINER 2>&1)
+  echo -e "$LINEFEED$UP"
   echo "== Wait for startup... ==========================================================="
   while IFS= read -r line
   do
