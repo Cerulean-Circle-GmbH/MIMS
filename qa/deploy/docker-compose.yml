@@ -18,7 +18,7 @@ services:
   woda-structr-server:
     build: './structr'
     image: woda-structr-server2.1.4
-    user: "${STRUCTR_UID}:${STRUCTR_GID}"
+    user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
     restart: unless-stopped
     env_file: '.env'
     ports:
@@ -27,14 +27,14 @@ services:
       - ${SCENARIO_STRUCTR_FTP}:8021
       - ${SCENARIO_STRUCTR_EXTRA}:7688
     volumes:
-      - ${structr_dir}/db/:/var/lib/structr/db/
-      - ${structr_dir}/files/:/var/lib/structr/files/
-      - ${structr_dir}/layouts/:/var/lib/structr/layouts/
-      - ${structr_dir}/logs/:/var/lib/structr/logs/
-      - ${structr_dir}/sessions/:/var/lib/structr/sessions/
-      - ${structr_dir}/snapshots/:/var/lib/structr/snapshots/
-      - ${files_dir}:/EAMD.ucp
-      - ${files_dir}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
+      - ${SCENARIO_STRUCTR_DIR}/db/:/var/lib/structr/db/
+      - ${SCENARIO_STRUCTR_DIR}/files/:/var/lib/structr/files/
+      - ${SCENARIO_STRUCTR_DIR}/layouts/:/var/lib/structr/layouts/
+      - ${SCENARIO_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
+      - ${SCENARIO_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/
+      - ${SCENARIO_STRUCTR_DIR}/snapshots/:/var/lib/structr/snapshots/
+      - ${SCENARIO_STRUCTR_FILES_DIR}:/EAMD.ucp
+      - ${SCENARIO_STRUCTR_FILES_DIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
     environment:
       - PROXY_ADDRESS_FORWARDING=true
 volumes:

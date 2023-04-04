@@ -21,22 +21,38 @@ function banner() {
 #    echo "Docker Network '${NETWORK_NAME}' Already Exists..."
 #  fi
 
-pushd structr > /dev/null
+mkdir -p structr/_data
+pushd structr/_data > /dev/null
 
 # Keystore
 banner "Keystore"
-ln -s ../certbot/fullchain1.pem fullchain.pem
-ln -s ../certbot/privkey1.pem privkey.pem
-openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123
+if [ -f "keystore.pkcs12" ]; then
+  echo "Already existing keystore.pkcs12..."
+else
+  echo "Creating new keystore.pkcs12..."
+  ln -s ../../certbot/fullchain1.pem fullchain.pem
+  ln -s ../../certbot/privkey1.pem privkey.pem
+  openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123
+fi
 
 # Workspace
-banner "Workspace ($SCENARIO_STRUCTR_DATA_FILE)"
-rsync -avzP -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_STRUCTR_DATA_FILE WODA-current.tar.gz
-tar xzf WODA-current.tar.gz
+banner "Workspace ($SCENARIO_STRUCTR_DATA_SRC_FILE)"
+if [ -d "WODA-current" ]; then
+  echo "Already existing workspace..."
+else
+  echo "Fetching workspace..."
+  rsync -avzP -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_STRUCTR_DATA_SRC_FILE WODA-current.tar.gz
+  tar xzf WODA-current.tar.gz
+fi
 
 # structr.zip
 banner "structr.zip"
-curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip
+if [ -f "structr.zip" ]; then
+  echo "Already existing structr.zip..."
+else
+  echo "Fetching structr.zip..."
+  curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip
+fi
 
 popd > /dev/null
 
