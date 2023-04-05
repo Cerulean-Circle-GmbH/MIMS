@@ -20,15 +20,6 @@ $@
 EOF
 }
 
-function checkURL() {
-    up=$(curl -s -o /dev/null -w "%{http_code}" $1)
-    if [ "$up" != "200" ]; then
-        echo "ERROR: $1 is not running (returned $up)"
-    else
-        echo "OK: $1 is running"
-    fi
-}
-
 # See also:
 # /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/NewUserStuff/scripts/structr.initApps
 # /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/DockerWorkspaces/WODA/1.0.0/Alpine/3.13.2/Openjdk
