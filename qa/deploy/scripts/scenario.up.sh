@@ -62,6 +62,7 @@ docker-compose build
 docker image ls
 
 # Create and run container
+banner "Create and run container"
 docker-compose -p $SCENARIO_NAME up -d
 docker ps
 

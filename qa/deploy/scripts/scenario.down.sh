@@ -11,18 +11,18 @@ function banner() {
 # Shutdown and remove containers
 banner "Shutdown and remove containers"
 docker-compose -p $SCENARIO_NAME down
+docker ps
 
 # Cleanup docker
 banner "Cleanup docker"
-#docker volume rm ${SCENARIO_NAME}_var_dev
+docker volume rm ${SCENARIO_NAME}_var_dev
 docker volume ls
 docker image prune -f
 
 # Remove structr dir and other stuff
-# MKT: TODO: Remove structr dir
+rm -rf structr
 
 # Test
 banner "Test"
-docker ps | grep $SCENARIO_NAME
 docker volume ls | grep $SCENARIO_NAME
 tree -L 3 -a .
