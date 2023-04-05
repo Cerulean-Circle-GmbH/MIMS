@@ -61,7 +61,11 @@ git tag $tag
 git tag
 git remote -vv
 more ~/.ssh/config
-git push -v origin $tag
+# Check wether git has the remote "token"
+if ! git remote | grep -q token; then
+    git remote add token https://x-token-auth:$BBTOKEN@bitbucket.org/donges/eamd.ucp.git
+fi
+git push -v token $tag
 
 # Cleanup
 banner "Cleanup"
