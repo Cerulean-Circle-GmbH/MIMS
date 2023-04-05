@@ -15,7 +15,7 @@ function banner() {
 
 function callRemote() {
     ssh $SCENARIO_SERVER bash -s << EOF
-cd $SCENARIOS_DIR_REMOTE/$SCENARIO_NAME
+cd $SCENARIOS_DIR/$SCENARIO_NAME
 $@
 EOF
 }
@@ -40,7 +40,16 @@ function checkURL() {
 # Scenario vars
 if [ -z "$1" ]; then
     echo "Usage: $0 <scenario> [init] [up] [start] [stop] [down] [test] [remove]"
-    echo "Example: $0 dev (defaults to: init stop up start test)"
+    echo
+    echo "          init   - init remote scenario dir"
+    echo "          up     - Create and start scenario"
+    echo "          start  - Start scenario if already created"
+    echo "          stop   - Stop scenario"
+    echo "          down   - Stop and shut down scenario"
+    echo "          test   - Test the running scenario"
+    echo "          remove - Remove all remote and local scenario dir"
+    echo
+    echo "Example: $0 dev (defaults to: init stop up test)"
     echo "Example: $0 dev stop start"
     echo "Example: $0 dev init stop up start test"
     echo "Example: $0 dev init down remove"
@@ -66,9 +75,9 @@ function init() {
     # Sync to remote and call on destination docker host
     banner "Sync to remote and call on destination docker host"
         ssh $SCENARIO_SERVER bash -s << EOF
-        mkdir -p $SCENARIOS_DIR_REMOTE/$SCENARIO_NAME
+        mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
-    rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR_REMOTE/$SCENARIO_NAME/
+    rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR/$SCENARIO_NAME/
 }
 
 function up() {
@@ -98,8 +107,9 @@ function down() {
 function remove() {
     # Remove remotely
     banner "Remove remotely"
+    rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
     ssh $SCENARIO_SERVER bash -s << EOF
-cd $SCENARIOS_DIR_REMOTE & rm -rf $SCENARIO_NAME
+cd $SCENARIOS_DIR & rm -rf $SCENARIO_NAME
 EOF
 }
 
@@ -120,7 +130,7 @@ function test() {
     # curl http://backup.sfsre.com:9080/EAMD.ucp/Scenarios/local/docker/d116a5682395/vhosts/localhost/EAM/1_infrastructure/Once/latestServer/.once.env
 }
 
-DEFAULT_STEPS="init stop up start test"
+DEFAULT_STEPS="init stop up test"
 if [ -z "$1" ]; then
     STEPS=$DEFAULT_STEPS
 else

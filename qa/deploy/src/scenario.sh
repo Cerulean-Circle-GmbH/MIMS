@@ -105,7 +105,15 @@ function up() {
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $SCENARIO_BRANCH
-        (date && git status) > ./git-status.log
+        (
+            date
+            git status
+            echo http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
+            echo http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
+            echo https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
+            echo http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
+            echo https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
+        ) > ./git-status.log
 EOF
 
     # Reconfigure ONCE server and connect structr
@@ -121,6 +129,11 @@ EOF
         echo "CF=\$CF"
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
+
+    # Restart once server
+    banner "Restart once server"
+    docker exec dev-once.sh_container bash -c "source ~/config/user.env && once restart"
+    echo "ONCE server restarted"
 }
 
 function start() {
