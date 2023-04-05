@@ -24,6 +24,10 @@ EOF
 # /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/NewUserStuff/scripts/structr.initApps
 # /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/DockerWorkspaces/WODA/1.0.0/Alpine/3.13.2/Openjdk
 
+# TODO: Struktur EAM/.... beachten
+# TODO: snet startup needs still a once restart, why?
+# TODO: Tag dev/neom version with structr backup
+
 # Scenario vars
 if [ -z "$1" ]; then
     echo "Usage: $0 <scenario>"

@@ -19,6 +19,7 @@ if [ -z "$1" ]; then
 fi
 SCENARIO_NAME=$1
 source .env.$SCENARIO_NAME
+source structr/.env
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 
 # Setup scenario dir locally
@@ -26,7 +27,7 @@ banner "Setup scenario dir locally"
 rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
 mkdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
 cp -R -a docker-compose.yml scenario.*.sh structr certbot $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
-ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME | grep -v ^# | grep -v ^$ | sed "s/=.*//")
+ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME structr/.env | grep -v ^# | grep -v ^$ | sed "s/=.*//")
 for ENV_VAR in $ENVIROMENT_VARIABLES; do
     echo "$ENV_VAR=${!ENV_VAR}"
 done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
