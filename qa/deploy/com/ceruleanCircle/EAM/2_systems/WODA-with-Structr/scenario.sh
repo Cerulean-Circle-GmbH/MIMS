@@ -11,9 +11,9 @@ function banner() {
 function checkURL() {
     up=$(curl -k -s -o /dev/null -w "%{http_code}" $1)
     if [ "$up" != "200" ]; then
-        echo "ERROR: $1 is not running (returned $up)"
+        echo "ERROR: $1 is not running (returned $up) - $2"
     else
-        echo "OK: running: $1"
+        echo "OK: running: $1 - $2"
     fi
 }
 
@@ -147,7 +147,7 @@ EOF
             . /root/.once
             echo "\$ONCE_DEFAULT_SCENARIO/.once:"
             cat \$ONCE_DEFAULT_SCENARIO/.once
-        ) > ./git-status.log
+        ) > ./installation-status.log
 EOF
 
     private.restart.once
@@ -206,16 +206,16 @@ function test() {
 
     # Check EAMD.ucp git status
     banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
-    curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
+    curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/installation-status.log
 
     # Check running servers
     banner "Check running servers"
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
-    checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
-    checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/ "EAMD.ucp repository (http)"
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/installation-status.log "EAMD.ucp installation status"
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html "NEOM CityManagement app"
+    checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/ "EAMD.ucp repository (https)"
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/ "structr server (http)"
+    checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/ "structr server (https)"
 }
 
 # Scenario vars
