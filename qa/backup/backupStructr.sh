@@ -45,3 +45,21 @@ ls -lah
 # Copy to backup server
 banner "Copy to backup server"
 rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile backup.sfsre.com:/var/backups/structr/
+latest_tarfile=backup-structr-latest_${dirname}.tar.gz
+ssh $use_key -o 'StrictHostKeyChecking no' backup.sfsre.com bash -s << EOF
+cd /var/backups/structr/
+rm $latest_tarfile
+ln -s $tarfile $latest_tarfile
+EOF
+
+# Tag dev/neom
+tag=tag/neom/backup-structr-${date}
+cd /var/dev
+git checkout dev/neom
+git pull
+git tag $tag
+git push origin $tag
+
+# Cleanup
+banner "Cleanup"
+rm -rf $tarfile $rsynclog

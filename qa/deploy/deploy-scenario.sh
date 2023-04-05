@@ -29,10 +29,6 @@ function checkURL() {
     fi
 }
 
-# TODO: Struktur EAM/.... beachten
-# TODO: snet startup needs still a once restart, why?
-# TODO: Tag dev/neom version with structr backup
-
 # Scenario vars
 if [ -z "$1" ]; then
     echo "Usage: $0 <scenario> [init] [up] [start] [stop] [down] [test] [remove]"
