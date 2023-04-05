@@ -42,16 +42,16 @@ source .env.$SCENARIO_NAME
 
 # Cleanup remotely
 banner "Cleanup remotely"
-#callRemote ./scenario.down.sh || true
-callRemote ./scenario.stop.sh || true
+#callRemote ./scenario.sh down || true
+callRemote ./scenario.sh stop || true
 
 # Startup WODA with WODA.2023 container and check that startup is done
 banner "Startup WODA with WODA.2023 container and check that startup is done"
-callRemote ./scenario.up.sh
+callRemote ./scenario.sh up
 
 # Restart once server
 banner "Restart once server"
-callRemote ./scenario.start.sh
+callRemote ./scenario.sh start
 
 # Check running servers
 ./local.scenario.test.sh $SCENARIO_NAME

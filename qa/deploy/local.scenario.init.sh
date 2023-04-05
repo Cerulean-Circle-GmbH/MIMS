@@ -26,12 +26,11 @@ SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 banner "Setup scenario dir locally"
 rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
 mkdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
-cp -R -a scripts/* structr certbot $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
+cp -R -a src/* $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
 ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME structr/.env | grep -v ^# | grep -v ^$ | sed "s/=.*//")
 for ENV_VAR in $ENVIROMENT_VARIABLES; do
     echo "$ENV_VAR=${!ENV_VAR}"
 done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
-cat local.scenario.test.sh | sed "s/source .env.*/source .env/" > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/scenario.test.sh
 
 # Sync to remote and call on destination docker host
 banner "Sync to remote and call on destination docker host"
