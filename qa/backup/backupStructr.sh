@@ -61,7 +61,7 @@ git tag $tag
 git tag
 git remote -vv
 more ~/.ssh/config
-git push origin $tag
+git push -v origin $tag
 
 # Cleanup
 banner "Cleanup"
