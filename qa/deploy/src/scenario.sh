@@ -102,7 +102,7 @@ function up() {
 
     # Checkout correct branch
     banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
-    ENV_CONTENT=$(cat $SCENARIOS_DIR/$SCENARIO_NAME/.env)
+    ENV_CONTENT=$(<$SCENARIOS_DIR/$SCENARIO_NAME/.env)
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $SCENARIO_BRANCH
@@ -116,7 +116,7 @@ function up() {
             echo https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
             echo
             echo "$SCENARIOS_DIR/$SCENARIO_NAME/.env:"
-            echo $ENV_CONTENT
+            echo "$ENV_CONTENT"
             echo
             echo "/root/.once:"
             cat /root/.once
@@ -141,10 +141,7 @@ EOF
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
 
-    # Restart once server
-    banner "Restart once server"
-    docker exec dev-once.sh_container bash -c "source ~/config/user.env && once restart"
-    echo "ONCE server restarted"
+    private.start.once
 }
 
 function start() {
@@ -153,10 +150,14 @@ function start() {
     docker-compose -p $SCENARIO_NAME start
     docker ps | grep $SCENARIO_NAME
 
-    # Restart once server
-    banner "Restart once server"
-    docker exec dev-once.sh_container bash -c "source ~/config/user.env && once restart"
-    echo "ONCE server restarted"
+    private.start.once
+}
+
+function private.start.once () {
+    # Start ONCE server
+    banner "Start ONCE server"
+    docker exec $SCENARIO_CONTAINER bash -c "source ~/config/user.env && once restart"
+    echo "ONCE server started"
 }
 
 function stop() {
@@ -187,10 +188,31 @@ function down() {
     tree -L 3 -a .
 }
 
+function test() {
+    # Test
+    banner "Test"
+    docker volume ls | grep $SCENARIO_NAME
+    docker ps | grep $SCENARIO_NAME
+    tree -L 3 -a .
+}
+
 # Scenario vars
 if [ -z "$1" ]; then
-    echo "Usage: $0 (up,start,top,down)"
+    echo "Usage: $0 (up,start,stop,down,test)"
     exit 1
 fi
 
-$@
+if [ $1 = "up" ]; then
+    up
+elif [ $1 = "start" ]; then
+    start
+elif [ $1 = "stop" ]; then
+    stop
+elif [ $1 = "down" ]; then
+    down
+elif [ $1 = "test" ]; then
+    test
+else
+    echo "Usage: $0 (up,start,stop,down,test)"
+    exit 1
+fi
