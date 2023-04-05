@@ -48,13 +48,13 @@ rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile backup.sfsr
 latest_tarfile=backup-structr-latest_${dirname}.tar.gz
 ssh $use_key -o 'StrictHostKeyChecking no' backup.sfsre.com bash -s << EOF
 cd /var/backups/structr/
-rm $latest_tarfile
+rm -rf $latest_tarfile
 ln -s $tarfile $latest_tarfile
 EOF
 
 # Tag dev/neom
 tag=tag/neom/backup-structr-${date}
-cd /var/dev
+cd /var/dev/EAMD.ucp
 git checkout dev/neom
 git pull
 git tag $tag
