@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# Get current dir
+pushd $(dirname $0) > /dev/null
+cwd=$(pwd)
+popd > /dev/null
+
+function banner() {
+    echo
+    echo "####################################################################################################"
+    echo "## $@"
+    echo "####################################################################################################"
+    echo
+}
+
+function callRemote() {
+    ssh $SCENARIO_SERVER bash -s << EOF
+cd $SCENARIOS_DIR_REMOTE/$SCENARIO_NAME
+$@
+EOF
+}
+
+# See also:
+# /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/NewUserStuff/scripts/structr.initApps
+# /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/DockerWorkspaces/WODA/1.0.0/Alpine/3.13.2/Openjdk
+
+# TODO: Struktur EAM/.... beachten
+# TODO: snet startup needs still a once restart, why?
+# TODO: Tag dev/neom version with structr backup
+
+# Scenario vars
+if [ -z "$1" ]; then
+    echo "Usage: $0 <scenario> [init] [up] [start] [stop] [down] [test] [remove]"
+    echo "Example: $0 dev (defaults to: init stop up start test)"
+    echo "Example: $0 dev stop start"
+    echo "Example: $0 dev init stop up start test"
+    echo "Example: $0 dev init down remove"
+    exit 1
+fi
+SCENARIO_NAME=$1
+shift
+source .env.$SCENARIO_NAME
+source src/structr/.env
+SCENARIOS_DIR_LOCAL=$cwd/_scenarios
+
+function init() {
+    # Setup scenario dir locally
+    banner "Setup scenario dir locally"
+    rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
+    mkdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
+    cp -R -a src/* $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
+    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME src/structr/.env | grep -v ^# | grep -v ^$ | sed "s/=.*//")
+    for ENV_VAR in $ENVIROMENT_VARIABLES; do
+        echo "$ENV_VAR=${!ENV_VAR}"
+    done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
+
+    # Sync to remote and call on destination docker host
+    banner "Sync to remote and call on destination docker host"
+        ssh $SCENARIO_SERVER bash -s << EOF
+        mkdir -p $SCENARIOS_DIR_REMOTE/$SCENARIO_NAME
+EOF
+    rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR_REMOTE/$SCENARIO_NAME/
+}
+
+function up() {
+    # Startup WODA with WODA.2023 container and check that startup is done
+    banner "Startup WODA with WODA.2023 container and check that startup is done"
+    callRemote ./scenario.sh up
+}
+
+function start() {
+    # Restart once server
+    banner "Restart once server"
+    callRemote ./scenario.sh start
+}
+
+function stop() {
+    # Stop remotely
+    banner "Stop remotely"
+    callRemote ./scenario.sh stop || true
+}
+
+function down() {
+    # Shutdown remotely
+    banner "Shutdown remotely"
+    callRemote ./scenario.sh down || true
+}
+
+function remove() {
+    # Remove remotely
+    banner "Remove remotely"
+    ssh $SCENARIO_SERVER bash -s << EOF
+cd $SCENARIOS_DIR_REMOTE & rm -rf $SCENARIO_NAME
+EOF
+}
+
+function test() {
+    # Check running servers
+    banner "Check running servers"
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
+    checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
+    checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
+
+    # Check EAMD.ucp git status
+    banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
+    # TODO: Put more data into git-status.log (5 links, .env, .once)
+    curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
+    # TODO: Check .once variable
+    # curl http://backup.sfsre.com:9080/EAMD.ucp/Scenarios/local/docker/d116a5682395/vhosts/localhost/EAM/1_infrastructure/Once/latestServer/.once.env
+}
+
+DEFAULT_STEPS="init stop up start test"
+if [ -z "$1" ]; then
+    STEPS=$DEFAULT_STEPS
+else
+    STEPS=$@
+fi
+
+for STEP in $STEPS; do
+    $STEP
+done
