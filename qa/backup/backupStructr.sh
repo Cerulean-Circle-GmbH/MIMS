@@ -58,6 +58,9 @@ cd /var/dev/EAMD.ucp
 git checkout dev/neom
 git pull
 git tag $tag
+git tag
+git remote -vv
+more ~/.ssh/config
 git push origin $tag
 
 # Cleanup
