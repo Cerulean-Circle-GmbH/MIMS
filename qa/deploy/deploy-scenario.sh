@@ -72,8 +72,8 @@ function init() {
         echo "$ENV_VAR=${!ENV_VAR}"
     done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 
-    # Sync to remote and call on destination docker host
-    banner "Sync to remote and call on destination docker host"
+    # Sync to remote
+    banner "Sync to remote"
         ssh $SCENARIO_SERVER bash -s << EOF
         mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
@@ -99,12 +99,16 @@ function stop() {
 }
 
 function down() {
+    init
+
     # Shutdown remotely
     banner "Shutdown remotely"
     callRemote ./scenario.sh down || true
 }
 
 function remove() {
+    down
+
     # Remove remotely
     banner "Remove remotely"
     rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
@@ -121,13 +125,11 @@ function test() {
     checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
     checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
     checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
 
     # Check EAMD.ucp git status
     banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
-    # TODO: Put more data into git-status.log (5 links, .env, .once)
     curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
-    # TODO: Check .once variable
-    # curl http://backup.sfsre.com:9080/EAMD.ucp/Scenarios/local/docker/d116a5682395/vhosts/localhost/EAM/1_infrastructure/Once/latestServer/.once.env
 }
 
 DEFAULT_STEPS="init stop up test"

@@ -102,17 +102,28 @@ function up() {
 
     # Checkout correct branch
     banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
+    ENV_CONTENT=$(cat $SCENARIOS_DIR/$SCENARIO_NAME/.env)
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $SCENARIO_BRANCH
         (
-            date
-            git status
+            date && echo
+            git status && echo
             echo http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
             echo http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
             echo https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
             echo http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
             echo https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
+            echo
+            echo "$SCENARIOS_DIR/$SCENARIO_NAME/.env:"
+            echo $ENV_CONTENT
+            echo
+            echo "/root/.once:"
+            cat /root/.once
+            echo
+            . /root/.once
+            echo "\$ONCE_DEFAULT_SCENARIO/.once:"
+            cat \$ONCE_DEFAULT_SCENARIO/.once
         ) > ./git-status.log
 EOF
 
