@@ -53,6 +53,9 @@ if [ -z "$1" ]; then
     echo "Example: $0 dev stop start"
     echo "Example: $0 dev init stop up start test"
     echo "Example: $0 dev init down remove"
+    echo
+    echo "Available scenarios:"
+    ls .env.* | sed "s/.env./    /" | sed "s/ /\\ /g"
     exit 1
 fi
 SCENARIO_NAME=$1

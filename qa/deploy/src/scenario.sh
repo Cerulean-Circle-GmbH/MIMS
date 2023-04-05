@@ -68,11 +68,11 @@ function up() {
     docker ps
 
     # Test shell columns
-    banner "Test shell columns"
-    stty size | awk '{print $2}'
-    tput cols
-    shopt -s checkwinsize
-    echo COLUMNS=$COLUMNS
+    #banner "Test shell columns"
+    #stty size | awk '{print $2}'
+    #tput cols
+    #shopt -s checkwinsize
+    #echo COLUMNS=$COLUMNS
 
     # Wait for startup of container and installation of ONCE
     banner "Wait for startup of container and installation of ONCE"
