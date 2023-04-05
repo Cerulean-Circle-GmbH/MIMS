@@ -84,7 +84,7 @@ function init() {
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
         mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
-    rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR/$SCENARIO_NAME/
+    rsync -avzP --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR/$SCENARIO_NAME/
 }
 
 function up() {
