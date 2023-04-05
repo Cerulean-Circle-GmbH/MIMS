@@ -34,4 +34,7 @@ checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
 
 # Check EAMD.ucp git status
 banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
+# TODO: Put more data into git-status.log (5 links, .env, .once)
 curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
+# TODO: Check .once variable
+# curl http://backup.sfsre.com:9080/EAMD.ucp/Scenarios/local/docker/d116a5682395/vhosts/localhost/EAM/1_infrastructure/Once/latestServer/.once.env
