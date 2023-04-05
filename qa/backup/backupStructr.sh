@@ -58,10 +58,8 @@ cd /var/dev/EAMD.ucp
 git checkout dev/neom
 git pull
 git tag $tag
-git tag
-git remote -vv
-more ~/.ssh/config
-# Check wether git has the remote "token"
+
+# Push tag to bitbucket
 if ! git remote | grep -q token; then
     git remote add token https://x-token-auth:$BBTOKEN@bitbucket.org/donges/eamd.ucp.git
 fi
