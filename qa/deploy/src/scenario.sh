@@ -10,7 +10,7 @@ function banner() {
 
 function up() {
     # Create once-woda-network
-    # TODO: Create once-woda-network
+    # TODO: Create once-woda-network and use in compose file
     #  NETWORK_NAME=once-woda-network
     #  if [ -z $(docker network ls --filter name=^${NETWORK_NAME}$ --format="{{ .Name }}") ] ; then 
     #      echo "${NETWORK_NAME} not exists, creating new..."

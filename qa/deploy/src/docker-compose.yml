@@ -37,7 +37,6 @@ services:
       - PROXY_ADDRESS_FORWARDING=true
 volumes:
   var_dev:
-# TODO: Use internal network
 #networks:
 #  default:
 #    external: false
