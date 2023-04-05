@@ -25,10 +25,11 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
+                        cwd=$(pwd)
                         cd /var/dev/Once.2023/qa/deploy
                         ./deploy-scenario.sh dev-neom remove
                         ./deploy-scenario.sh dev-neom
-                        ./deploy-scenario.sh dev-neom test > results/dev-neom.log
+                        ./deploy-scenario.sh dev-neom test > $cwd/results/dev-neom.log
                     '''
                 }
             }
