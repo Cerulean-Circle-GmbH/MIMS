@@ -57,6 +57,10 @@ if [ -z "$1" ]; then
 fi
 SCENARIO_NAME=$1
 shift
+if [ ! -f .env.$SCENARIO_NAME ]; then
+    echo "ERROR: Scenario .env.$SCENARIO_NAME not found"
+    exit 1
+fi
 source .env.$SCENARIO_NAME
 source src/structr/.env
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
@@ -109,11 +113,12 @@ function down() {
 function remove() {
     down
 
-    # Remove remotely
-    banner "Remove remotely"
+    # Remove locally and remotely
+    banner "Remove locally and remotely"
     rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
+    rmdir $SCENARIOS_DIR_LOCAL 2>/dev/null || true
     ssh $SCENARIO_SERVER bash -s << EOF
-cd $SCENARIOS_DIR & rm -rf $SCENARIO_NAME
+cd $SCENARIOS_DIR && rm -rf $SCENARIO_NAME
 EOF
 }
 
@@ -140,5 +145,22 @@ else
 fi
 
 for STEP in $STEPS; do
-    $STEP
+    if [ "$STEP" == "init" ]; then
+        init
+    elif [ "$STEP" == "up" ]; then
+        up
+    elif [ "$STEP" == "start" ]; then
+        start
+    elif [ "$STEP" == "stop" ]; then
+        stop
+    elif [ "$STEP" == "down" ]; then
+        down
+    elif [ "$STEP" == "remove" ]; then
+        remove
+    elif [ "$STEP" == "test" ]; then
+        test
+    else
+        echo "ERROR: Unknown step: $STEP"
+        exit 1
+    fi
 done
