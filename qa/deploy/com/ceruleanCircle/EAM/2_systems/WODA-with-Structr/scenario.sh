@@ -51,7 +51,7 @@ function up() {
         echo "Already existing workspace..."
     else
         echo "Fetching workspace..."
-        rsync -avzP -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_STRUCTR_DATA_SRC_FILE WODA-current.tar.gz
+        rsync -avzP -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_STRUCTR_DATA_SRC_FILE WODA-current.tar.gz
         tar xzf WODA-current.tar.gz
     fi
 
