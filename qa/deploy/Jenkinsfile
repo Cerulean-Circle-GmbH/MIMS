@@ -29,14 +29,15 @@ pipeline {
                         alias ssh="ssh -o StrictHostKeyChecking=no -i $keyfile"
                         ./deploy-scenario.sh dev-neom remove
                         ./deploy-scenario.sh dev-neom
+                        ./deploy-scenario.sh dev-neom test > results/dev-neom.log
                     '''
                 }
             }
         }
     }
-    //post {
-    //    always {
-    //        archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
-    //    }
-    //}
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
+        }
+    }
 }
