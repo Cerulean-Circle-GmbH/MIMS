@@ -26,7 +26,10 @@ banner "Setup scenario dir locally"
 rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
 mkdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
 cp -R -a docker-compose.yml scenario.*.sh structr certbot $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
-cp .env.$SCENARIO_NAME $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
+ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME | grep -v ^# | grep -v ^$ | sed "s/=.*//")
+for ENV_VAR in $ENVIROMENT_VARIABLES; do
+    echo "$ENV_VAR=${!ENV_VAR}"
+done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 cat local.scenario.test.sh | sed "s/source .env.*/source .env/" > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/scenario.test.sh
 
 # Sync to remote and call on destination docker host
