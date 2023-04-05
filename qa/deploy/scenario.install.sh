@@ -1,0 +1,120 @@
+#!/bin/bash
+
+source .env
+
+function banner() {
+    echo
+    echo "--- $1"
+    echo
+}
+
+# Create once-woda-network
+# MKT: TODO: Create once-woda-network
+#  NETWORK_NAME=once-woda-network
+#  if [ -z $(docker network ls --filter name=^${NETWORK_NAME}$ --format="{{ .Name }}") ] ; then 
+#      echo "${NETWORK_NAME} not exists, creating new..."
+#      docker network create ${NETWORK_NAME} ; 
+#      echo "${NETWORK_NAME} docker network created."
+#      echo
+#      docker network connect ${NETWORK_NAME} $(hostname)
+#  else
+#    echo "Docker Network '${NETWORK_NAME}' Already Exists..."
+#  fi
+
+mkdir -p structr/_data
+pushd structr/_data > /dev/null
+
+# Keystore
+banner "Keystore"
+if [ -f "keystore.pkcs12" ]; then
+  echo "Already existing keystore.pkcs12..."
+else
+  echo "Creating new keystore.pkcs12..."
+  ln -s ../../certbot/fullchain1.pem fullchain.pem
+  ln -s ../../certbot/privkey1.pem privkey.pem
+  openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123
+fi
+
+# Workspace
+banner "Workspace ($SCENARIO_STRUCTR_DATA_SRC_FILE)"
+if [ -d "WODA-current" ]; then
+  echo "Already existing workspace..."
+else
+  echo "Fetching workspace..."
+  rsync -avzP -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_STRUCTR_DATA_SRC_FILE WODA-current.tar.gz
+  tar xzf WODA-current.tar.gz
+fi
+
+# structr.zip
+banner "structr.zip"
+if [ -f "structr.zip" ]; then
+  echo "Already existing structr.zip..."
+else
+  echo "Fetching structr.zip..."
+  curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip
+fi
+
+popd > /dev/null
+
+# Create structr image
+banner "Create structr image"
+docker-compose build
+docker image ls
+
+# Create and run container
+docker-compose -p $SCENARIO_NAME up -d
+docker ps
+
+# Test shell columns
+banner "Test shell columns"
+stty size | awk '{print $2}'
+tput cols
+shopt -s checkwinsize
+echo COLUMNS=$COLUMNS
+
+# Wait for startup of container and installation of ONCE
+banner "Wait for startup of container and installation of ONCE"
+found=""
+echo
+echo
+echo
+echo
+echo
+echo
+while [ -z "$found" ]; do
+  UP='\033[7A'
+  LINEFEED='\033[0G'
+  STR=$(docker logs -n 5 $SCENARIO_CONTAINER 2>&1)
+  echo -e "$LINEFEED$UP"
+  echo "== Wait for startup... ==========================================================="
+  while IFS= read -r line
+  do
+    COLUMNS=80
+    printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
+  done < <(printf '%s\n' "$STR")
+  sleep 0.3
+  found=$(docker logs $SCENARIO_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
+done
+echo "===================="
+echo "Startup done ($found)"
+
+# Checkout correct branch
+banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
+docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+cd /var/dev/EAMD.ucp
+git checkout $SCENARIO_BRANCH
+(date && git status) > ./git-status.log
+EOF
+
+# Reconfigure ONCE server and connect structr
+banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
+docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+source /root/.once
+export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP"]]'
+CF=\$ONCE_DEFAULT_SCENARIO/.once
+mv \$CF \$CF.ORIG
+cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" > \$CF
+echo "CF=\$CF"
+cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
+EOF
+

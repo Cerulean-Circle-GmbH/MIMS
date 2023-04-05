@@ -6,12 +6,12 @@ ENV WORKDIR /root/
 WORKDIR $WORKDIR
 RUN export PATH=.:$PATH
 
-# Install various packages
+# Pre-install various packages to speedup startup
 RUN apt update && apt install wget rsync openssh-server -y
-RUN apt update && apt install net-tools errno -y
+RUN apt update && apt install net-tools errno gnupg -y
 RUN apt update && apt install docker.io docker-compose -y
 RUN apt update && apt install plantuml -y
-RUN apt update && apt install golang-go -y
+#RUN apt update && apt install golang-go -y
 
 # Fix nodejs problem on ubuntu
 # (See https://github.com/nodesource/distributions/issues/1157#issuecomment-1131212089)
