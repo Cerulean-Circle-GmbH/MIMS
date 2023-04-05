@@ -8,6 +8,15 @@ function banner() {
     echo
 }
 
+function checkURL() {
+    up=$(curl -k -s -o /dev/null -w "%{http_code}" $1)
+    if [ "$up" != "200" ]; then
+        echo "ERROR: $1 is not running (returned $up)"
+    else
+        echo "OK: running: $1"
+    fi
+}
+
 function up() {
     # Create once-woda-network
     # TODO: Create once-woda-network and use in compose file
@@ -194,6 +203,19 @@ function test() {
     docker volume ls | grep $SCENARIO_NAME
     docker ps | grep $SCENARIO_NAME
     tree -L 3 -a .
+
+    # Check EAMD.ucp git status
+    banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
+    curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
+
+    # Check running servers
+    banner "Check running servers"
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
+    checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
+    checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
+    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
 }
 
 # Scenario vars

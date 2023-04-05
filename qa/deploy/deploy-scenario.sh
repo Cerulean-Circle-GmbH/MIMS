@@ -126,22 +126,9 @@ EOF
 }
 
 function test() {
-    # Check EAMD.ucp git status
-    banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
-    curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
-
-    # Check remote
-    banner "Check remote"
+    # Test remote
+    banner "Test remote"
     callRemote ./scenario.sh test
-
-    # Check running servers
-    banner "Check running servers"
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
-    checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
-    checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/git-status.log
 }
 
 DEFAULT_STEPS="init stop up test"
