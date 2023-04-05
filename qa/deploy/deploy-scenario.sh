@@ -29,10 +29,6 @@ function checkURL() {
     fi
 }
 
-# See also:
-# /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/NewUserStuff/scripts/structr.initApps
-# /var/dev/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/DockerWorkspaces/WODA/1.0.0/Alpine/3.13.2/Openjdk
-
 # TODO: Struktur EAM/.... beachten
 # TODO: snet startup needs still a once restart, why?
 # TODO: Tag dev/neom version with structr backup
@@ -65,23 +61,25 @@ if [ ! -f .env.$SCENARIO_NAME ]; then
     exit 1
 fi
 source .env.$SCENARIO_NAME
-source src/structr/.env
+OTHER_ENV_FILES=$(find $SCENARIO_COMPONENT_DIR -name .env)
+for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
+    source $OTHER_ENV_FILE
+done
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 
 function init() {
     # Setup scenario dir locally
-    banner "Setup scenario dir locally"
+    banner "Setup scenario dir locally and sync to remote"
     rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
     mkdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
-    cp -R -a src/* $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
-    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME src/structr/.env | grep -v ^# | grep -v ^$ | sed "s/=.*//")
+    cp -R -a $SCENARIO_COMPONENT_DIR/* $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/
+    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && cat .env.$SCENARIO_NAME $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//")
     for ENV_VAR in $ENVIROMENT_VARIABLES; do
         echo "$ENV_VAR=${!ENV_VAR}"
     done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 
     # Sync to remote
-    banner "Sync to remote"
-        ssh $SCENARIO_SERVER bash -s << EOF
+    ssh $SCENARIO_SERVER bash -s << EOF
         mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
     rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR/$SCENARIO_NAME/
