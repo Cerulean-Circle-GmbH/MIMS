@@ -5,12 +5,11 @@ pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
 popd > /dev/null
 
-echo keyfile=$keyfile
-if [ -n $keyfile ]; then
-    alias ssh="ssh -o StrictHostKeyChecking=no -i $keyfile"
+# Check for keyfile
+if [[ -n "${keyfile}" ]]; then
+    echo "Use ${keyfile}"
+    use_key="-i ${keyfile}"
 fi
-echo "aliases:"
-alias 
 
 function banner() {
     echo
@@ -21,7 +20,7 @@ function banner() {
 }
 
 function callRemote() {
-    ssh $SCENARIO_SERVER bash -s << EOF
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
 cd $SCENARIOS_DIR/$SCENARIO_NAME
 $@
 EOF
@@ -82,7 +81,7 @@ function init() {
     done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 
     # Sync to remote
-    ssh $SCENARIO_SERVER bash -s << EOF
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
         mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
     rsync -avzP --exclude=_data --delete $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR/$SCENARIO_NAME/
@@ -121,7 +120,7 @@ function remove() {
     banner "Remove locally and remotely"
     rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
     rmdir $SCENARIOS_DIR_LOCAL 2>/dev/null || true
-    ssh $SCENARIO_SERVER bash -s << EOF
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
 cd $SCENARIOS_DIR && rm -rf $SCENARIO_NAME
 EOF
 }
