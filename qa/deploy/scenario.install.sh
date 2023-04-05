@@ -110,10 +110,12 @@ EOF
 banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
 docker exec -i $SCENARIO_CONTAINER bash -s << EOF
 source /root/.once
-export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP"]]'
+export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS"]]'
+export ONCE_PROXY_HOST='0.0.0.0'
+export ONCE_STRUCTR_SERVER='https://localhost:5005'
 CF=\$ONCE_DEFAULT_SCENARIO/.once
 mv \$CF \$CF.ORIG
-cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" > \$CF
+cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" | sed "s;ONCE_PROXY_HOST=.*;ONCE_PROXY_HOST='\$ONCE_PROXY_HOST';" | sed "s;ONCE_STRUCTR_SERVER=.*;ONCE_STRUCTR_SERVER='\$ONCE_STRUCTR_SERVER';" > \$CF
 echo "CF=\$CF"
 cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
