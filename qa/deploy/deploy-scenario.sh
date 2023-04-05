@@ -5,9 +5,12 @@ pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
 popd > /dev/null
 
+echo keyfile=$keyfile
 if [ -n $keyfile ]; then
     alias ssh="ssh -o StrictHostKeyChecking=no -i $keyfile"
 fi
+echo "aliases:"
+alias 
 
 function banner() {
     echo

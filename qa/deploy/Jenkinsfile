@@ -26,6 +26,7 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
                         cd /var/dev/Once.2023/qa/deploy
+                        echo keyfile=$keyfile
                         ./deploy-scenario.sh dev-neom remove
                         ./deploy-scenario.sh dev-neom
                         ./deploy-scenario.sh dev-neom test > results/dev-neom.log
