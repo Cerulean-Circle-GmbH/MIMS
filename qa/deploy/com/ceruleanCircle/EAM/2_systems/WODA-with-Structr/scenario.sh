@@ -123,6 +123,15 @@ function up() {
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
 
+    # Add marker string to City Management App
+    banner "Add marker string to City Management App (in container $SCENARIO_CONTAINER)"
+    CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
+    docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+        cd /var/dev/EAMD.ucp
+        git checkout $CMA_FILE
+        sed -i "s;City Management App;City Management App ($SCENARIO_BRANCH - $SCENARIO_TAG - $(date));g" $CMA_FILE
+EOF
+
     # Checkout correct branch
     banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
     ENV_CONTENT=$(<$SCENARIOS_DIR/$SCENARIO_NAME/.env)
