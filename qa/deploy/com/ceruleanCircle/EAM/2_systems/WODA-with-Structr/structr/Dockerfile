@@ -22,6 +22,8 @@ RUN mkdir ${WORK_DIR}
 WORKDIR ${WORK_DIR}
 ADD _data/structr.zip /
 RUN unzip -q /structr.zip -d /var/lib && rm /structr.zip
+ADD schema.js /
+RUN cp -f /schema.js /var/lib/structr/structr/js/schema.js
 ADD structr.conf ${WORK_DIR}/
 ADD _data/keystore.pkcs12 ${WORK_DIR}/
 RUN mkdir /usr/lib/structr

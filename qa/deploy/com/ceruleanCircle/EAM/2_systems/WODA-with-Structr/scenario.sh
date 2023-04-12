@@ -9,11 +9,15 @@ function banner() {
 }
 
 function checkURL() {
-    up=$(curl -k -s -o /dev/null -w "%{http_code}" $1)
+    comment=$1
+    shift
+    echo
+    echo call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
+    up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
     if [ "$up" != "200" ]; then
-        echo "ERROR: $1 is not running (returned $up) - $2"
+        echo "ERROR: $1 is not running (returned $up) - $comment"
     else
-        echo "OK: running: $1 - $2"
+        echo "OK: running: $1 - $comment"
     fi
 }
 
@@ -113,31 +117,29 @@ function up() {
     banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         source /root/.once
-        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS"]]'
-        export ONCE_PROXY_HOST='0.0.0.0'
-        export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS'
+        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_NAME}_woda-structr-server_1:8083"]]'
+        export ONCE_REV_PROXY_HOST='0.0.0.0'
+        export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT'
         CF=\$ONCE_DEFAULT_SCENARIO/.once
         mv \$CF \$CF.ORIG
-        cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" | sed "s;ONCE_PROXY_HOST=.*;ONCE_PROXY_HOST='\$ONCE_PROXY_HOST';" | sed "s;ONCE_STRUCTR_SERVER=.*;ONCE_STRUCTR_SERVER='\$ONCE_STRUCTR_SERVER';" > \$CF
+        cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" | \
+                        sed "s;ONCE_REV_PROXY_HOST=.*;ONCE_REV_PROXY_HOST='\$ONCE_REV_PROXY_HOST';" | \
+                        sed "s;ONCE_STRUCTR_SERVER=.*;ONCE_STRUCTR_SERVER='\$ONCE_STRUCTR_SERVER';" > \$CF
         echo "CF=\$CF"
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
 
-    # Add marker string to City Management App
-    banner "Add marker string to City Management App (in container $SCENARIO_CONTAINER)"
+    # Checkout correct branch and add marker string to City Management App
+    banner "Checkout correct branch (in container $SCENARIO_CONTAINER) and add marker string to City Management App (in container $SCENARIO_CONTAINER)"
     CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
-    docker exec -i $SCENARIO_CONTAINER bash -s << EOF
-        cd /var/dev/EAMD.ucp
-        git checkout $CMA_FILE
-        sed -i "s;City Management App;City Management App ($SCENARIO_BRANCH - $SCENARIO_TAG - $(date));g" $CMA_FILE
-EOF
-
-    # Checkout correct branch
-    banner "Checkout correct branch (in container $SCENARIO_CONTAINER)"
     ENV_CONTENT=$(<$SCENARIOS_DIR/$SCENARIO_NAME/.env)
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
+        git checkout $CMA_FILE
         git checkout $SCENARIO_BRANCH
+        git reset --hard
+        git pull
+        sed -i "s;City Management App;City Management App (scenario:$SCENARIO_NAME - branch:$SCENARIO_BRANCH - structr-tag:$SCENARIO_TAG - $(date));g" $CMA_FILE
         (
             date && echo
             git status && echo
@@ -219,12 +221,20 @@ function test() {
 
     # Check running servers
     banner "Check running servers"
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/ "EAMD.ucp repository (http)"
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/installation-status.log "EAMD.ucp installation status"
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html "NEOM CityManagement app"
-    checkURL https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/ "EAMD.ucp repository (https)"
-    checkURL http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/ "structr server (http)"
-    checkURL https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/ "structr server (https)"
+    checkURL "EAMD.ucp repository (http)" http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
+    checkURL "EAMD.ucp installation status" http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/installation-status.log
+    checkURL "EAMD.ucp repository (https)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/ 
+    checkURL "NEOM CityManagement app" https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/apps/neom/CityManagement.html 
+    checkURL "structr server (http)" http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/ 
+    checkURL "structr server (https)" https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/ 
+    checkURL "structr server (https) login" https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
+    checkURL "structr server (https) login via reverse proxy" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
+
+    # Why is this call failing from inside the Once container?
+#    docker exec -i ${SCENARIO_NAME}_woda-structr-server_1 bash -s << EOF
+#echo curl -k -s -o /dev/null -w %{http_code} https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+#curl -k -s -o /dev/null -w %{http_code} https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+#EOF
 }
 
 # Scenario vars
