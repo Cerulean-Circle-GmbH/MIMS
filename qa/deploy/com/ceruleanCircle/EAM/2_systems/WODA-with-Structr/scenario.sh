@@ -228,7 +228,9 @@ function test() {
     checkURL "structr server (http)" http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/ 
     checkURL "structr server (https)" https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/ 
     checkURL "structr server (https) login" https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
-    checkURL "structr server (https) login via reverse proxy" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
+    checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
+    checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
+    checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 
     # Why is this call failing from inside the Once container?
 #    docker exec -i ${SCENARIO_NAME}_woda-structr-server_1 bash -s << EOF
