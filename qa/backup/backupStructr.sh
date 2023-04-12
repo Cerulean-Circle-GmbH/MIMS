@@ -45,3 +45,26 @@ ls -lah
 # Copy to backup server
 banner "Copy to backup server"
 rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile backup.sfsre.com:/var/backups/structr/
+latest_tarfile=backup-structr-latest_${dirname}.tar.gz
+ssh $use_key -o 'StrictHostKeyChecking no' backup.sfsre.com bash -s << EOF
+cd /var/backups/structr/
+rm -rf $latest_tarfile
+ln -s $tarfile $latest_tarfile
+EOF
+
+# Tag dev/neom
+tag=tag/neom/backup-structr-${date}
+cd /var/dev/EAMD.ucp
+git checkout dev/neom
+git pull
+git tag $tag
+
+# Push tag to bitbucket
+if ! git remote | grep -q token; then
+    git remote add token https://x-token-auth:$BBTOKEN@bitbucket.org/donges/eamd.ucp.git
+fi
+git push -v token $tag
+
+# Cleanup
+banner "Cleanup"
+rm -rf $tarfile $rsynclog

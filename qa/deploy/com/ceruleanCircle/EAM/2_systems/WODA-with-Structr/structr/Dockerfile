@@ -28,6 +28,13 @@ RUN mkdir /usr/lib/structr
 ADD _data/keystore.pkcs12 /usr/lib/structr/
 ADD start-structr.sh ${WORK_DIR}/bin
 
+# Prepare links to the scripts and /EAMD.ucp to link into mounted volume
+RUN rm -rf /var/lib/structr/scripts && mkdir -p /var/lib/structr
+RUN mkdir -p /var/dev/EAMD.ucp/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh
+RUN ln -s /var/dev/EAMD.ucp /EAMD.ucp
+RUN ln -s /var/dev/EAMD.ucp/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh /var/lib/structr/scripts
+RUN rm -rf /var/dev/EAMD.ucp
+
 #ENTRYPOINT [ "/bin/sh", "/var/lib/structr/bin/docker.sh" ]
 ENTRYPOINT [ "bin/start-structr.sh" ]
 #CMD [ $JAVA_OPT_XMS, $JAVA_OPT_XMX ]

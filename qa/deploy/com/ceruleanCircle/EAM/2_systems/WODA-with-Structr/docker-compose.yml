@@ -24,17 +24,15 @@ services:
     ports:
       - ${SCENARIO_STRUCTR_HTTP}:8082
       - ${SCENARIO_STRUCTR_HTTPS}:8083
-      - ${SCENARIO_STRUCTR_FTP}:8021
-      - ${SCENARIO_STRUCTR_EXTRA}:7688
     volumes:
       - ${SCENARIO_STRUCTR_DIR}/db/:/var/lib/structr/db/
       - ${SCENARIO_STRUCTR_DIR}/files/:/var/lib/structr/files/
+      # Fix layouts
       - ${SCENARIO_STRUCTR_DIR}/layouts/:/var/lib/structr/layouts/
       - ${SCENARIO_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
       - ${SCENARIO_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/
       - ${SCENARIO_STRUCTR_DIR}/snapshots/:/var/lib/structr/snapshots/
-      - ${SCENARIO_STRUCTR_FILES_DIR}:/EAMD.ucp
-      - ${SCENARIO_STRUCTR_FILES_DIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
+      - var_dev:/var/dev
     environment:
       - PROXY_ADDRESS_FORWARDING=true
 volumes:
