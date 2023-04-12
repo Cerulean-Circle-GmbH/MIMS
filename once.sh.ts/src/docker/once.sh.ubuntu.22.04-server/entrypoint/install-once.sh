@@ -16,6 +16,10 @@ if [[ -n ${ONCE_INITIALIZED} ]]; then
     # For now it seems to work
     once stop
 
+    # Adapt git config
+    cd /var/dev/EAMD.ucp
+    git config pull.rebase false
+    
     # Adapt once config
     if [ -z $ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT ]; then
         export ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT=5005
