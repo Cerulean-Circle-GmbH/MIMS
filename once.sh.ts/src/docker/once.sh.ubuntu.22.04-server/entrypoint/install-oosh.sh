@@ -61,5 +61,7 @@ echo "Git branch and status of OOSH"
 git branch
 git status
 popd
+echo "ONCE script"
+ls -l /home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev/init/once /root/init/once
 echo "cat ~/config/user.env"
 cat ~/config/user.env
