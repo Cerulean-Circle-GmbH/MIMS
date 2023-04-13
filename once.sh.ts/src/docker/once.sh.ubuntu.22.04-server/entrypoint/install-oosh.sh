@@ -61,3 +61,5 @@ echo "Git branch and status of OOSH"
 git branch
 git status
 popd
+echo "cat ~/config/user.env"
+cat ~/config/user.env
