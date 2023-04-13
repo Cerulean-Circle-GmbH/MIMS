@@ -9,6 +9,15 @@ echo >> ~/startmsg/msg.txt
 echo "Timing:" >> ~/startmsg/msg.txt
 echo "start.sh:$LINENO: $(date)" >> ~/startmsg/msg.txt
 
+# Check OOSH installation
+if [ -f /root/entrypoint/_env ]; then
+    source /root/entrypoint/_env
+    if [ ! -z ${OOSH_TAR} ] && [ -f ${OOSH_TAR} ]; then
+        export OOSH_INSTALL_SOURCE="/root/entrypoint/install.oosh.source"
+        echo "<build.sh> installed oosh from ${OOSH_INSTALL_SOURCE}"
+    fi
+fi
+
 # Start ssh
 service ssh restart
 echo "start.sh:$LINENO: $(date) ssh restarted" >> ~/startmsg/msg.txt

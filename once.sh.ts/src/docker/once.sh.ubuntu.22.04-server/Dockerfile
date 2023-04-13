@@ -7,8 +7,9 @@ WORKDIR $WORKDIR
 RUN export PATH=.:$PATH
 
 # Pre-install various packages to speedup startup
-RUN apt update && apt install wget rsync openssh-server -y
-RUN apt update && apt install net-tools errno gnupg plantuml -y
+RUN apt update && apt install wget curl rsync openssh-server -y
+RUN apt update && apt install net-tools errno gnupg -y
+RUN apt update && apt install plantuml -y
 RUN apt update && apt install docker.io docker-compose -y
 
 # Fix nodejs problem on ubuntu
