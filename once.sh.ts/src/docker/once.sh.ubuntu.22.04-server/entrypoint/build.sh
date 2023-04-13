@@ -7,7 +7,8 @@ echo "This container was build: $NOW" > ~/startmsg/build.txt
 
 echo "Starting custom build script: $PWD $0"
 
-# Install https://github.com/remotemobprogramming/mob (Might need a go install github.com/remotemobprogramming/mob/v3@latest and recompile on arm64 ubuntu)
+# Install https://github.com/remotemobprogramming/mob (Might need a go install
+# github.com/remotemobprogramming/mob/v3@latest and recompile on arm64 ubuntu)
 curl -sL install.mob.sh | sh
 
 # Download and install oosh

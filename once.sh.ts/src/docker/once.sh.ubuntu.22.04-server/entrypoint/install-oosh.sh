@@ -22,6 +22,8 @@ else
     echo "<build.sh> Install oosh from ${OOSH_INSTALL_SOURCE}"
     echo "<build.sh> Install oosh with branch ${OOSH_BRANCH}"
     env sh -c "$(wget -O- ${OOSH_INSTALL_SOURCE})"
+    source ~/config/user.env
+    echo "Make sure to checkout ${OOSH_BRANCH} in ${OOSH_DIR}"
     cd ${OOSH_DIR} && git checkout ${OOSH_BRANCH}
 fi
 
@@ -44,3 +46,18 @@ oo cmd docker-compose
 
 # Update once.sh
 oo update
+
+# Verification
+echo "OOSH installation verification"
+echo "Location of 'oo': $(which oo)"
+echo "Content of root directory:"
+pushd /root/
+ls -l
+popd
+echo "Content of OOSH dev directory:"
+pushd /home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev
+ls -l
+echo "Git branch and status of OOSH"
+git branch
+git status
+popd
