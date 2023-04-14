@@ -26,7 +26,6 @@ pipeline {
                     cd EAMD.ucp && git reset --hard && git checkout dev/neom && git pull
                     cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
                     cd Once.2023 && git reset --hard && git checkout dev && git pull
-                    oo mode.dev && oo update
                     '''
             }
         }
