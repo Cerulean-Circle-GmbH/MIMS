@@ -30,6 +30,7 @@ grep -r "test.wo-da.de" "$dir/Components" | while read line; do echo "[ERROR] Wr
 
 # Analyse files which are commited but ignored by git
 banner "Analyse files which are commited but ignored by git"
+pushd $dir > /dev/null
 find "$dir" -type f -o -type l | while read FILE; do
   IGNORED=$(git check-ignore --no-index -v "$FILE")
   if [ -n "$IGNORED" ]; then
@@ -39,6 +40,7 @@ find "$dir" -type f -o -type l | while read FILE; do
     fi
   fi
 done
+popd > /dev/null
 
 dir=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev/
 
