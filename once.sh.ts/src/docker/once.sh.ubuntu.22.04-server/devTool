@@ -113,6 +113,11 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
         return 22
     fi
 
+    # Clean variables (because the once.sh installation could be installed
+    # in a different branch or another location)
+    unset OOSH_INSTALL_SOURCE
+    unset OOSH_BRANCH
+
     # Set 1 of the 2 variables in your shell to install a local oosh or one from a specific branch
     #export OOSH_INSTALL_SOURCE=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev
 
