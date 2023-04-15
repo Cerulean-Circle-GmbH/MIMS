@@ -11,8 +11,14 @@ echo "Starting custom build script: $PWD $0"
 # github.com/remotemobprogramming/mob/v3@latest and recompile on arm64 ubuntu)
 curl -sL install.mob.sh | sh
 
+# List files before oosh install
+~/entrypoint/showFiles.sh > ~/startmsg/01_ls-before-oosh.txt
+
 # Download and install oosh
 ~/entrypoint/install-oosh.sh
+
+# List files after oosh install
+~/entrypoint/showFiles.sh > ~/startmsg/02_ls-after-oosh.txt
 
 # Setup ssh and root login
 echo 'root:once' | chpasswd
