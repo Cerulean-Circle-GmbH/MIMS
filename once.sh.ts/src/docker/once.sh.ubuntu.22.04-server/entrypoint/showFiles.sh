@@ -1,3 +1,3 @@
 #!/bin/bash
 
-find /var/dev /var/nix /home /root -exec ls -lad {} \; || true
+find /var/dev /home /root -exec ls -lad {} \; || true
