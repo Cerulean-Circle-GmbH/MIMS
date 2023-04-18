@@ -8,7 +8,7 @@ popd > /dev/null
 # Check for keyfile
 if [[ -n "${keyfile}" ]]; then
     echo "Use ${keyfile}"
-    use_key="-i '${keyfile}'"
+    use_key="-i ${keyfile}"
 fi
 
 function banner() {
