@@ -147,6 +147,7 @@ EOF
 
     # Reconfigure ONCE server and connect structr
     banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
+    # TODO: Check this statement. The once docker container has dots in the name, but the structr container does not.
     # Docker container names must not contain dots
     DOCKER_STRUCTR_CONTAINER="$(echo ${SCENARIO_NAME}_woda-structr-server_1 | sed 's/\.//g' )"
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
