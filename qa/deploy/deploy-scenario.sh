@@ -20,7 +20,7 @@ function banner() {
 }
 
 function callRemote() {
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SSH_CONFIG bash -s << EOF
 cd $SCENARIOS_DIR/$SCENARIO_NAME
 $@
 EOF
@@ -68,6 +68,9 @@ for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
     source $OTHER_ENV_FILE
 done
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
+if [ -z "$SCENARIO_SSH_CONFIG" ]; then
+    SCENARIO_SSH_CONFIG=$SCENARIO_SERVER
+fi
 
 function init() {
     # Setup scenario dir locally
@@ -81,13 +84,15 @@ function init() {
     done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 
     # Sync to remote
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SSH_CONFIG bash -s << EOF
         mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
-    rsync -avzP --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SERVER:$SCENARIOS_DIR/$SCENARIO_NAME/
+    rsync -avzP --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/ $SCENARIO_SSH_CONFIG:$SCENARIOS_DIR/$SCENARIO_NAME/
 }
 
 function up() {
+    init
+
     # Startup WODA with WODA.2023 container and check that startup is done
     banner "Startup WODA with WODA.2023 container and check that startup is done"
     callRemote ./scenario.sh up
@@ -120,7 +125,7 @@ function remove() {
     banner "Remove locally and remotely"
     rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME
     rmdir $SCENARIOS_DIR_LOCAL 2>/dev/null || true
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER bash -s << EOF
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SSH_CONFIG bash -s << EOF
 cd $SCENARIOS_DIR && rm -rf $SCENARIO_NAME
 EOF
 }

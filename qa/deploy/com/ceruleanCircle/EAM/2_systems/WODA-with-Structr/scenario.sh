@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO: move scenarios down to scenario subdir
+# TODO: Check variables (or prefill with default) that they exist and rewrite/update scenarios
+
 source .env
 
 function banner() {
@@ -44,8 +47,22 @@ function up() {
         echo "Already existing keystore.pkcs12..."
     else
         echo "Creating new keystore.pkcs12..."
-        ln -s ../../certbot/fullchain1.pem fullchain.pem
-        ln -s ../../certbot/privkey1.pem privkey.pem
+        if [ -n "$SCENARIO_CERTIFICATE_DIR" ] && [ -f "$SCENARIO_CERTIFICATE_DIR/fullchain.pem" ] && [ -f "$SCENARIO_CERTIFICATE_DIR/privkey.pem" ]; then
+            echo "Using certificates from $SCENARIO_CERTIFICATE_DIR"
+            ls -l $SCENARIO_CERTIFICATE_DIR
+            ln -s $SCENARIO_CERTIFICATE_DIR/fullchain.pem fullchain.pem
+            ln -s $SCENARIO_CERTIFICATE_DIR/privkey.pem privkey.pem
+            openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem 
+            openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem 
+            openssl x509 -noout -text -inform pem -in fullchain.pem 
+        else
+            # TODO: Check whether mkcert is installed and create certificates instead of copying
+            #mkcert -cert-file fullchain.pem -key-file privkey.pem server.localhost localhost 127.0.0.1 ::1
+            echo "Linking commited fullchain.pem and privkey.pem..."
+            ln -s ../../certbot/fullchain.pem fullchain.pem
+            ln -s ../../certbot/privkey.pem privkey.pem
+        fi
+        # TODO: Check whether certificates are there, if not, generate them
         openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123
     fi
 
@@ -80,13 +97,6 @@ function up() {
     docker-compose -p $SCENARIO_NAME up -d
     docker ps
 
-    # Test shell columns
-    #banner "Test shell columns"
-    #stty size | awk '{print $2}'
-    #tput cols
-    #shopt -s checkwinsize
-    #echo COLUMNS=$COLUMNS
-
     # Wait for startup of container and installation of ONCE
     banner "Wait for startup of container and installation of ONCE"
     found=""
@@ -113,11 +123,35 @@ function up() {
     echo "===================="
     echo "Startup done ($found)"
 
+    # TODO: Mount directory into container and let ONCE use it
+    
+    # Copy certificates to container
+    if [ -n "$SCENARIO_CERTIFICATE_DIR" ]; then
+        banner "Copy certificates to container"
+        CERT=$(cat $SCENARIO_CERTIFICATE_DIR/fullchain.pem)
+        KEY=$(cat $SCENARIO_CERTIFICATE_DIR/privkey.pem)
+        docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+            source ~/config/user.env
+            source ~/.once
+            cd \$ONCE_DEFAULT_SCENARIO
+            mv once.cert.pem once.cert.pem.bak
+            mv once.key.pem once.key.pem.bak
+            echo "$CERT" > once.cert.pem
+            echo "$KEY" > once.key.pem
+            ls once.*.pem
+            openssl x509 -noout -fingerprint -sha256 -inform pem -in once.cert.pem 
+            openssl x509 -noout -fingerprint -sha1 -inform pem -in once.cert.pem 
+            openssl x509 -noout -text -inform pem -in once.cert.pem 
+EOF
+    fi
+
     # Reconfigure ONCE server and connect structr
     banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
+    # Docker container names must not contain dots
+    DOCKER_STRUCTR_CONTAINER="$(echo ${SCENARIO_NAME}_woda-structr-server_1 | sed 's/\.//g' )"
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         source /root/.once
-        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_NAME}_woda-structr-server_1:8083"]]'
+        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${DOCKER_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
         export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT'
         CF=\$ONCE_DEFAULT_SCENARIO/.once
