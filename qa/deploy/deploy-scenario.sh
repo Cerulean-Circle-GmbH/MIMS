@@ -84,6 +84,8 @@ function init() {
     done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME/.env
 
     # Sync to remote
+    echo "ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SSH_CONFIG ls $SCENARIOS_DIR/$SCENARIO_NAME"
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SSH_CONFIG ls $SCENARIOS_DIR/$SCENARIO_NAME
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SSH_CONFIG bash -s << EOF
         mkdir -p $SCENARIOS_DIR/$SCENARIO_NAME
 EOF
