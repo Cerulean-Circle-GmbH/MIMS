@@ -31,13 +31,10 @@ grep -r "test.wo-da.de" "$dir/Components" | while read line; do echo "[ERROR] Wr
 # Analyse files which are commited but ignored by git
 banner "Analyse files which are commited but ignored by git"
 pushd $dir > /dev/null
-find "$dir" -type f -o -type l | while read FILE; do
+git ls-tree -r HEAD --name-only | while read FILE; do
   IGNORED=$(git check-ignore --no-index -v "$FILE")
   if [ -n "$IGNORED" ]; then
-    IGNORED_NOTCOMMITED=$(git check-ignore "$FILE")
-    if [ -z "$IGNORED_NOTCOMMITED" ]; then
-      echo $IGNORED
-    fi
+    echo $IGNORED
   fi
 done
 popd > /dev/null
