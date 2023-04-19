@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# TODO: move scenarios down to scenario subdir
 # TODO: Check variables (or prefill with default) that they exist and rewrite/update scenarios
 
 source .env
@@ -167,7 +166,7 @@ EOF
     # Checkout correct branch and add marker string to City Management App
     banner "Checkout correct branch (in container $SCENARIO_CONTAINER) and add marker string to City Management App (in container $SCENARIO_CONTAINER)"
     CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
-    ENV_CONTENT=$(<$SCENARIOS_DIR/$SCENARIO_NAME/.env)
+    ENV_CONTENT=$(<$SCENARIOS_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
     docker exec -i $SCENARIO_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $CMA_FILE
@@ -184,7 +183,7 @@ EOF
             echo http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
             echo https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
             echo
-            echo "$SCENARIOS_DIR/$SCENARIO_NAME/.env:"
+            echo "$SCENARIOS_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env:"
             echo "$ENV_CONTENT"
             echo
             echo "/root/.once:"

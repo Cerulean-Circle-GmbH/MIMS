@@ -27,9 +27,9 @@ pipeline {
                     sh '''#!/usr/bin/bash
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/qa/deploy
-                        ./deploy-scenario.sh dev-neom-test.wo-da.de remove
-                        ./deploy-scenario.sh dev-neom-test.wo-da.de
-                        ./deploy-scenario.sh dev-neom-test.wo-da.de test > $cwd/results/dev-neom-test.wo-da.de.log
+                        ./deploy-scenario.sh de/wo-da/test/dev-neom remove
+                        ./deploy-scenario.sh de/wo-da/test/dev-neom
+                        ./deploy-scenario.sh de/wo-da/test/dev-neom test > $cwd/results/de.wo-da.test.dev-neom.log
                     '''
                 }
             }
