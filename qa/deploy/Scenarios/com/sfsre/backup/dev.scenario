@@ -1,6 +1,6 @@
 # Source setup
-SCENARIO_TAG=latest
-SCENARIO_BRANCH=dev/neom
+SCENARIO_TAG=2023-04-15-01_31
+SCENARIO_BRANCH=tag/neom/backup-structr-${SCENARIO_TAG}
 SCENARIO_STRUCTR_DATA_SRC_FILE=backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_TAG}_WODA-current.tar.gz
 SCENARIO_COMPONENT_DIR=com/ceruleanCircle/EAM/2_systems/WODA-with-Structr
 

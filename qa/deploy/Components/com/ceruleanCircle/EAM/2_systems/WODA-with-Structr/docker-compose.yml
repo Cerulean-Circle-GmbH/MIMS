@@ -31,7 +31,6 @@ services:
     volumes:
       - ${SCENARIO_STRUCTR_DIR}/db/:/var/lib/structr/db/
       - ${SCENARIO_STRUCTR_DIR}/files/:/var/lib/structr/files/
-      # Fix layouts
       - ${SCENARIO_STRUCTR_DIR}/layouts/:/var/lib/structr/layouts/
       - ${SCENARIO_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
       - ${SCENARIO_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/

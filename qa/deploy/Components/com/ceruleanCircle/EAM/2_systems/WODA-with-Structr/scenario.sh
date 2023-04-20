@@ -56,7 +56,6 @@ function up() {
             openssl x509 -noout -text -inform pem -in fullchain.pem 
         else
             # TODO: Check whether mkcert is installed and create certificates instead of copying
-            # TODO: Check whether certificates are there, if not, generate them
             #mkcert -cert-file fullchain.pem -key-file privkey.pem server.localhost localhost 127.0.0.1 ::1
             echo "Linking commited fullchain.pem and privkey.pem..."
             ln -s ../../certbot/fullchain.pem fullchain.pem

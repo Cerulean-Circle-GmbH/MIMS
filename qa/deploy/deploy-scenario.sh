@@ -63,20 +63,52 @@ fi
 SCENARIO_NAME=$(basename $1)
 SCENARIO_NAME_SPACE=$(dirname $1)
 SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
+SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 shift
 if [ ! -f $SCENARIO_FILE_NAME ]; then
     echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
     exit 1
 fi
-source $SCENARIO_FILE_NAME
-OTHER_ENV_FILES=$(find $cwd/Components/$SCENARIO_COMPONENT_DIR -name .env)
-for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
-    source $OTHER_ENV_FILE
-done
-SCENARIOS_DIR_LOCAL=$cwd/_scenarios
-if [ -z "$SCENARIO_SSH_CONFIG" ]; then
-    SCENARIO_SSH_CONFIG=$SCENARIO_SERVER
-fi
+
+# ask with default
+function ask_with_default {
+    read -p "$1 [$2]: " answer
+    if [[ -z "$answer" ]]; then
+        echo "$2"
+    else
+        echo "$answer"
+    fi
+}
+
+function check() {
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        mkdir -p $cwd/Scenarios/$SCENARIO_NAME_SPACE
+        touch $SCENARIO_FILE_NAME
+    fi
+
+    if [ -z "$SCENARIO_COMPONENT_DIR" ]; then
+        SCENARIO_COMPONENT_DIR=$(ask_with_default "Choose available component dir  :" "")
+    fi
+
+    # TODO: Continue here
+
+    # Check for required variables in $SCENARIO_FILE_NAME
+    sourceEnv
+}
+
+function sourceEnv() {
+    source $SCENARIO_FILE_NAME
+    OTHER_ENV_FILES=$(find $cwd/Components/$SCENARIO_COMPONENT_DIR -name .env)
+    for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
+        source $OTHER_ENV_FILE
+    done
+    if [ -z "$SCENARIO_SSH_CONFIG" ]; then
+        SCENARIO_SSH_CONFIG=$SCENARIO_SERVER
+    fi
+}
+
+sourceEnv
+#check
 
 function init() {
     # Setup scenario dir locally
