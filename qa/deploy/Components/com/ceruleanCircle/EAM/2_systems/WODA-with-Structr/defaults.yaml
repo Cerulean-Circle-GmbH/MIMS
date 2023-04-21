@@ -1,0 +1,63 @@
+scenario:
+  src:
+    description: "Source setup"
+    tag:
+      description: "Which backup tag should be restored?"
+      value: latest
+    branch:
+      description: "Which ONCE branch should be restored (maybe tag dependent)?"
+      value: dev/neom
+    structrdatafile:
+      description: "What is the URI of the struct data backup file (maybe tag dependent)?"
+      value: backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_TAG}_WODA-current.tar.gz
+    component: 
+      description: "What is the name of the scenario component (including namespace)?"
+      value: com/ceruleanCircle/EAM/2_systems/WODA-with-Structr
+
+  server:
+    description: "Server setup"
+    server: 
+      description: "What is the server, the scenario will be deployed?"
+      value: test.wo-da.de
+    sshconfig: 
+      description: "What is the SSH config the server can be connected with?"
+      value: WODA.test
+    configsdir: 
+      description: "What is the scenarios root directory on the server?"
+      value: /var/dev/ONCE.2023-Scenarios
+    certificatedir: 
+      description: "Where to find the servers certificate?"
+      value: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/conf/live/test.wo-da.de
+
+  resource:
+    description: "Unique resources"
+    container: 
+      description: "What is the container name for the ONCE service?"
+      value: ${SCENARIO_NAME}-once.sh_container
+    once:
+      http: 
+        description: "What is the ONCE http port?"
+        value: 9380
+      https: 
+        description: "What is the ONCE https port?"
+        value: 9743
+      ssh: 
+        description: "What is the ONCE container SSH port?"
+        value: 9322
+      reverseproxy:
+        http: 
+          description: "What is the ONCE reverse proxy http port?"
+          value: 6302
+        https: 
+          description: "What is the ONCE reverse proxy https port?"
+          value: 6305
+    domain: 
+      description: "What is the ONCE domain?"
+      value: localhost
+    structr:
+      http:
+        description: "What is the STRUCTR http port?"
+        value: 9382
+      https:
+        description: "What is the STRUCTR https port?"
+        value: 9383
