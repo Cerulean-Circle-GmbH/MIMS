@@ -25,17 +25,19 @@ function up() {
     mkdir -p structr/_data
     pushd structr/_data > /dev/null
 
+    local certdir=$SCENARIO_SERVER_CERTIFICATEDIR
+
     # Keystore
     banner "Keystore"
     if [ -f "keystore.pkcs12" ]; then
         echo "Already existing keystore.pkcs12..."
     else
         echo "Creating new keystore.pkcs12..."
-        if [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem" ]; then
-            echo "Using certificates from $SCENARIO_SERVER_CERTIFICATEDIR"
-            ls -l $SCENARIO_SERVER_CERTIFICATEDIR
-            ln -s $SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem fullchain.pem
-            ln -s $SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem privkey.pem
+        if [ -n "$certdir" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+            echo "Using certificates from $certdir"
+            ls -l $certdir
+            ln -s $certdir/fullchain.pem fullchain.pem
+            ln -s $certdir/privkey.pem privkey.pem
             openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem 
             openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem 
             openssl x509 -noout -text -inform pem -in fullchain.pem 
@@ -82,7 +84,7 @@ function up() {
 
     # Wait for startup of container and installation of ONCE
     banner "Wait for startup of container and installation of ONCE"
-    found=""
+    local found=""
     echo
     echo
     echo
@@ -90,18 +92,18 @@ function up() {
     echo
     echo
     while [ -z "$found" ]; do
-    UP='\033[7A'
-    LINEFEED='\033[0G'
-    STR=$(docker logs -n 5 $SCENARIO_ONCE_CONTAINER 2>&1)
-    echo -e "$LINEFEED$UP"
-    echo "== Wait for startup... ==========================================================="
-    while IFS= read -r line
-    do
-        COLUMNS=80
-        printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
-    done < <(printf '%s\n' "$STR")
-    sleep 0.3
-    found=$(docker logs $SCENARIO_ONCE_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
+        local UP='\033[7A'
+        local LINEFEED='\033[0G'
+        local STR=$(docker logs -n 5 $SCENARIO_ONCE_CONTAINER 2>&1)
+        echo -e "$LINEFEED$UP"
+        echo "== Wait for startup... ==========================================================="
+        while IFS= read -r line
+        do
+            local COLUMNS=80
+            printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
+        done < <(printf '%s\n' "$STR")
+        sleep 0.3
+        found=$(docker logs $SCENARIO_ONCE_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
     done
     echo "===================="
     echo "Startup done ($found)"
@@ -109,10 +111,10 @@ function up() {
     # TODO: Mount directory into container and let ONCE use it
     
     # Copy certificates to container
-    if [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem" ]; then
+    if [ -n "$certdir" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
         banner "Copy certificates to container"
-        CERT=$(cat $SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem)
-        KEY=$(cat $SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem)
+        local CERT=$(cat $certdir/fullchain.pem)
+        local KEY=$(cat $certdir/privkey.pem)
         docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
             source ~/config/user.env
             source ~/.once
@@ -146,8 +148,8 @@ EOF
 
     # Checkout correct branch and add marker string to City Management App
     banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER) and add marker string to City Management App (in container $SCENARIO_ONCE_CONTAINER)"
-    CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
-    ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
+    local CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
+    local ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
     docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $CMA_FILE
