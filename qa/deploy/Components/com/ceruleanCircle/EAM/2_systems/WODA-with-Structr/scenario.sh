@@ -46,11 +46,11 @@ function up() {
         echo "Already existing keystore.pkcs12..."
     else
         echo "Creating new keystore.pkcs12..."
-        if [ -n "$SCENARIO_CERTIFICATE_DIR" ] && [ -f "$SCENARIO_CERTIFICATE_DIR/fullchain.pem" ] && [ -f "$SCENARIO_CERTIFICATE_DIR/privkey.pem" ]; then
-            echo "Using certificates from $SCENARIO_CERTIFICATE_DIR"
-            ls -l $SCENARIO_CERTIFICATE_DIR
-            ln -s $SCENARIO_CERTIFICATE_DIR/fullchain.pem fullchain.pem
-            ln -s $SCENARIO_CERTIFICATE_DIR/privkey.pem privkey.pem
+        if [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem" ]; then
+            echo "Using certificates from $SCENARIO_SERVER_CERTIFICATEDIR"
+            ls -l $SCENARIO_SERVER_CERTIFICATEDIR
+            ln -s $SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem fullchain.pem
+            ln -s $SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem privkey.pem
             openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem 
             openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem 
             openssl x509 -noout -text -inform pem -in fullchain.pem 
@@ -65,12 +65,12 @@ function up() {
     fi
 
     # Workspace
-    banner "Workspace ($SCENARIO_STRUCTR_DATA_SRC_FILE)"
+    banner "Workspace ($SCENARIO_SRC_STRUCTRDATAFILE)"
     if [ -d "WODA-current" ]; then
         echo "Already existing workspace..."
     else
         echo "Fetching workspace..."
-        rsync -avzP -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_STRUCTR_DATA_SRC_FILE WODA-current.tar.gz
+        rsync -avzP -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTRDATAFILE WODA-current.tar.gz
         tar xzf WODA-current.tar.gz
     fi
 
@@ -107,7 +107,7 @@ function up() {
     while [ -z "$found" ]; do
     UP='\033[7A'
     LINEFEED='\033[0G'
-    STR=$(docker logs -n 5 $SCENARIO_CONTAINER 2>&1)
+    STR=$(docker logs -n 5 $SCENARIO_RESOURCE_CONTAINER 2>&1)
     echo -e "$LINEFEED$UP"
     echo "== Wait for startup... ==========================================================="
     while IFS= read -r line
@@ -116,7 +116,7 @@ function up() {
         printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
     done < <(printf '%s\n' "$STR")
     sleep 0.3
-    found=$(docker logs $SCENARIO_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
+    found=$(docker logs $SCENARIO_RESOURCE_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
     done
     echo "===================="
     echo "Startup done ($found)"
@@ -124,11 +124,11 @@ function up() {
     # TODO: Mount directory into container and let ONCE use it
     
     # Copy certificates to container
-    if [ -n "$SCENARIO_CERTIFICATE_DIR" ]; then
+    if [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem" ] && [ -f "$SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem" ]; then
         banner "Copy certificates to container"
-        CERT=$(cat $SCENARIO_CERTIFICATE_DIR/fullchain.pem)
-        KEY=$(cat $SCENARIO_CERTIFICATE_DIR/privkey.pem)
-        docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+        CERT=$(cat $SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem)
+        KEY=$(cat $SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem)
+        docker exec -i $SCENARIO_RESOURCE_CONTAINER bash -s << EOF
             source ~/config/user.env
             source ~/.once
             cd \$ONCE_DEFAULT_SCENARIO
@@ -144,15 +144,15 @@ EOF
     fi
 
     # Reconfigure ONCE server and connect structr
-    banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_CONTAINER)"
+    banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_RESOURCE_CONTAINER)"
     # TODO: Check this statement. The once docker container has dots in the name, but the structr container does not.
     # Docker container names must not contain dots
     DOCKER_STRUCTR_CONTAINER="$(echo ${SCENARIO_NAME}_woda-structr-server_1 | sed 's/\.//g' )"
-    docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+    docker exec -i $SCENARIO_RESOURCE_CONTAINER bash -s << EOF
         source /root/.once
         export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${DOCKER_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
-        export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT'
+        export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS'
         CF=\$ONCE_DEFAULT_SCENARIO/.once
         mv \$CF \$CF.ORIG
         cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" | \
@@ -163,26 +163,26 @@ EOF
 EOF
 
     # Checkout correct branch and add marker string to City Management App
-    banner "Checkout correct branch (in container $SCENARIO_CONTAINER) and add marker string to City Management App (in container $SCENARIO_CONTAINER)"
+    banner "Checkout correct branch (in container $SCENARIO_RESOURCE_CONTAINER) and add marker string to City Management App (in container $SCENARIO_RESOURCE_CONTAINER)"
     CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
-    ENV_CONTENT=$(<$SCENARIOS_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
-    docker exec -i $SCENARIO_CONTAINER bash -s << EOF
+    ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
+    docker exec -i $SCENARIO_RESOURCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $CMA_FILE
-        git checkout $SCENARIO_BRANCH
+        git checkout $SCENARIO_SRC_BRANCH
         git reset --hard
         git pull
-        sed -i "s;City Management App;City Management App (scenario:$SCENARIO_NAME - branch:$SCENARIO_BRANCH - structr-tag:$SCENARIO_TAG - $(date));g" $CMA_FILE
+        sed -i "s;City Management App;City Management App (scenario:$SCENARIO_NAME - branch:$SCENARIO_SRC_BRANCH - structr-tag:$SCENARIO_SRC_TAG - $(date));g" $CMA_FILE
         (
             date && echo
             git status && echo
-            echo http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
-            echo http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
-            echo https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/
-            echo http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/
-            echo https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/
+            echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/
+            echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
+            echo https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/
+            echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/
+            echo https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/
             echo
-            echo "$SCENARIOS_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env:"
+            echo "$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env:"
             echo "$ENV_CONTENT"
             echo
             echo "/root/.once:"
@@ -209,7 +209,7 @@ function start() {
 function private.restart.once () {
     # Start ONCE server
     banner "Start ONCE server"
-    docker exec $SCENARIO_CONTAINER bash -c "source ~/config/user.env && once restart"
+    docker exec $SCENARIO_RESOURCE_CONTAINER bash -c "source ~/config/user.env && once restart"
     echo "ONCE server restarted"
 }
 
@@ -249,27 +249,21 @@ function test() {
     tree -L 3 -a .
 
     # Check EAMD.ucp git status
-    banner "Check EAMD.ucp git status for $SCENARIO_SERVER - $SCENARIO_NAME"
-    curl http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/installation-status.log
+    banner "Check EAMD.ucp git status for $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+    curl http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
 
     # Check running servers
     banner "Check running servers"
-    checkURL "EAMD.ucp repository (http)" http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/
-    checkURL "EAMD.ucp installation status" http://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTP/EAMD.ucp/installation-status.log
-    checkURL "EAMD.ucp repository (https)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/ 
-    checkURL "NEOM CityManagement app" https://$SCENARIO_SERVER:$SCENARIO_ONCE_HTTPS/EAMD.ucp/apps/neom/CityManagement.html 
-    checkURL "structr server (http)" http://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTP/structr/ 
-    checkURL "structr server (https)" https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/ 
-    checkURL "structr server (https) login" https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
-    checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
-    checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
-    checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER:$SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT/structr/rest/login  -XPOST -d '{ "name": "Visitor", "password": "secret" }'
-
-    # Why is this call failing from inside the Once container?
-#    docker exec -i ${SCENARIO_NAME}_woda-structr-server_1 bash -s << EOF
-#echo curl -k -s -o /dev/null -w %{http_code} https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-#curl -k -s -o /dev/null -w %{http_code} https://$SCENARIO_SERVER:$SCENARIO_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-#EOF
+    checkURL "EAMD.ucp repository (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/
+    checkURL "EAMD.ucp installation status" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
+    checkURL "EAMD.ucp repository (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/ 
+    checkURL "NEOM CityManagement app" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/apps/neom/CityManagement.html 
+    checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/ 
+    checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/ 
+    checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
+    checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login  -XPOST -d '{ "name": "admin", "password": "*******" }'
+    checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login  -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
+    checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login  -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
 # Scenario vars
