@@ -41,7 +41,3 @@ services:
       - PROXY_ADDRESS_FORWARDING=true
 volumes:
   var_dev:
-#networks:
-#  default:
-#    external: false
-#    name: ${SCENARIO_NAME}-woda-network

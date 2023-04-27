@@ -22,19 +22,6 @@ function checkURL() {
 }
 
 function up() {
-    # Create once-woda-network
-    # TODO: Create once-woda-network and use in compose file
-    #  NETWORK_NAME=once-woda-network
-    #  if [ -z $(docker network ls --filter name=^${NETWORK_NAME}$ --format="{{ .Name }}") ] ; then 
-    #      echo "${NETWORK_NAME} not exists, creating new..."
-    #      docker network create ${NETWORK_NAME} ; 
-    #      echo "${NETWORK_NAME} docker network created."
-    #      echo
-    #      docker network connect ${NETWORK_NAME} $(hostname)
-    #  else
-    #    echo "Docker Network '${NETWORK_NAME}' Already Exists..."
-    #  fi
-
     mkdir -p structr/_data
     pushd structr/_data > /dev/null
 
