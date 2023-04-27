@@ -37,9 +37,10 @@ function checkURL() {
 
 # Usage
 if [ -z "$1" ]; then
-    echo "Usage: $0 <scenario> [init,up,start,stop,down,test,remove]"
+    echo "Usage: $0 <scenario> [init,updateconfig,up,start,stop,down,test,remove]"
     echo
     echo "          init   - init remote scenario dir"
+    echo "          updateconfig - update local scenario config"
     echo "          up     - Create and start scenario"
     echo "          start  - Start scenario if already created"
     echo "          stop   - Stop scenario"
@@ -102,13 +103,11 @@ function sourceEnv() {
     getVarFromOldVar SCENARIO_SERVER_SSHCONFIG          SCENARIO_SSH_CONFIG
     getVarFromOldVar SCENARIO_SERVER_CONFIGSDIR         SCENARIOS_DIR
     getVarFromOldVar SCENARIO_SERVER_CERTIFICATEDIR     SCENARIO_CERTIFICATE_DIR
-    getVarFromOldVar SCENARIO_RESOURCE_CONTAINER        SCENARIO_CONTAINER
     getVarFromOldVar SCENARIO_RESOURCE_ONCE_HTTP        SCENARIO_ONCE_HTTP
     getVarFromOldVar SCENARIO_RESOURCE_ONCE_HTTPS       SCENARIO_ONCE_HTTPS
     getVarFromOldVar SCENARIO_RESOURCE_ONCE_SSH         SCENARIO_ONCE_SSH
     getVarFromOldVar SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP       SCENARIO_ONCE_REVERSE_PROXY_HTTP_PORT
     getVarFromOldVar SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS      SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT
-    getVarFromOldVar SCENARIO_RESOURCE_DOMAIN           SCENARIO_DOMAIN
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTP     SCENARIO_STRUCTR_HTTP
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTPS    SCENARIO_STRUCTR_HTTPS
 
@@ -146,6 +145,16 @@ function parse_yaml {
         }
       }
    }'
+}
+
+function doCopyConfig() {
+    cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
+    echo "Please check $SCENARIO_FILE_NAME and commit it to git."
+}
+
+function updateconfig() {
+    config
+    doCopyConfig
 }
 
 function config() {
@@ -202,14 +211,14 @@ function config() {
 
     # Update $SCENARIO_FILE_NAME if needed
     if [ "$i_had_to_ask" = true ]; then
+        # TODO: Find another way to also ask if variables should be updated or are removed
         echo
         echo "I had to ask for some variables."
         SURE=$(ask_with_default "Should I update the scenario with the new values? (yes/no)?" "no")
         if [ -z `echo $SURE | grep -i y` ]; then
             echo "Not updated."
         else
-            cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
-            echo "Please check $SCENARIO_FILE_NAME and commit it to git."
+            doCopyConfig
         fi
     fi
 
@@ -300,6 +309,8 @@ fi
 for STEP in $(echo $STEPS | sed "s/,/ /g"); do
     if [ "$STEP" == "init" ]; then
         init
+    elif [ "$STEP" == "updateconfig" ]; then
+        updateconfig
     elif [ "$STEP" == "up" ]; then
         up
     elif [ "$STEP" == "start" ]; then

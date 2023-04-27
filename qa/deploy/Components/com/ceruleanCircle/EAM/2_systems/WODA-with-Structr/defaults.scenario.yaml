@@ -6,7 +6,7 @@ scenario:
     # Which ONCE branch should be restored (maybe tag dependent)?
     branch: dev/neom
     # What is the URI of the struct data backup file (maybe tag dependent)?
-    structrdatafile: backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_TAG}_WODA-current.tar.gz
+    structrdatafile: backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_SRC_TAG}_WODA-current.tar.gz
     # What is the name of the scenario component (including namespace)?
     component: com/ceruleanCircle/EAM/2_systems/WODA-with-Structr
 
@@ -23,8 +23,6 @@ scenario:
 
   ## Unique resources
   resource:
-    # What is the container name for the ONCE service?
-    container: ${SCENARIO_NAME}-once.sh_container
     once:
       # What is the ONCE http port?
       http: 9380
@@ -37,8 +35,6 @@ scenario:
         http: 6302
         # What is the ONCE reverse proxy https port?
         https: 6305
-    # What is the ONCE domain?
-    domain: localhost
     structr:
       # What is the STRUCTR http port?
       http: 9382

@@ -17,8 +17,6 @@ SCENARIO_SERVER_CONFIGSDIR="/var/dev/ONCE.2023-Scenarios"
 # Where to find the servers certificate?
 SCENARIO_SERVER_CERTIFICATEDIR="none"
 ## Unique resources
-# What is the container name for the ONCE service?
-SCENARIO_RESOURCE_CONTAINER="${SCENARIO_NAME}-once.sh_container"
 # What is the ONCE http port?
 SCENARIO_RESOURCE_ONCE_HTTP="9080"
 # What is the ONCE https port?
@@ -29,8 +27,6 @@ SCENARIO_RESOURCE_ONCE_SSH="9022"
 SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP="6002"
 # What is the ONCE reverse proxy https port?
 SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS="6005"
-# What is the ONCE domain?
-SCENARIO_RESOURCE_DOMAIN="localhost"
 # What is the STRUCTR http port?
 SCENARIO_RESOURCE_STRUCTR_HTTP="9082"
 # What is the STRUCTR https port?

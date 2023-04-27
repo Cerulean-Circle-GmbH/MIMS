@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# TODO: Check variables (or prefill with default) that they exist and rewrite/update scenarios
-
 source .env
+SCENARIO_RESOURCE_CONTAINER=${SCENARIO_NAME}-once.sh_container
 
 function banner() {
     echo
