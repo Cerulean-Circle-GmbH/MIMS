@@ -30,15 +30,14 @@ grep -r "test.wo-da.de" "$dir/Components" | while read line; do echo "[ERROR] Wr
 
 # Analyse files which are commited but ignored by git
 banner "Analyse files which are commited but ignored by git"
-find "$dir" -type f -o -type l | while read FILE; do
+pushd $dir > /dev/null
+git ls-tree -r HEAD --name-only | while read FILE; do
   IGNORED=$(git check-ignore --no-index -v "$FILE")
   if [ -n "$IGNORED" ]; then
-    IGNORED_NOTCOMMITED=$(git check-ignore "$FILE")
-    if [ -z "$IGNORED_NOTCOMMITED" ]; then
-      echo $IGNORED
-    fi
+    echo $IGNORED
   fi
 done
+popd > /dev/null
 
 dir=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev/
 

@@ -1,0 +1,33 @@
+## Source setup
+# Which backup tag should be restored?
+SCENARIO_SRC_TAG="latest"
+# Which ONCE branch should be restored (maybe tag dependent)?
+SCENARIO_SRC_BRANCH="dev/neom"
+# What is the URI of the struct data backup file (maybe tag dependent)?
+SCENARIO_SRC_STRUCTRDATAFILE="backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_SRC_TAG}_WODA-current.tar.gz"
+# What is the name of the scenario component (including namespace)?
+SCENARIO_SRC_COMPONENT="com/ceruleanCircle/EAM/2_systems/WODA-with-Structr"
+## Server setup
+# What is the server, the scenario will be deployed?
+SCENARIO_SERVER_NAME="backup.sfsre.com"
+# What is the SSH config the server can be connected with?
+SCENARIO_SERVER_SSHCONFIG="backup.sfsre.com"
+# What is the scenarios root directory on the server?
+SCENARIO_SERVER_CONFIGSDIR="/var/dev/ONCE.2023-Scenarios"
+# Where to find the servers certificate?
+SCENARIO_SERVER_CERTIFICATEDIR="none"
+## Unique resources
+# What is the ONCE http port?
+SCENARIO_RESOURCE_ONCE_HTTP="9380"
+# What is the ONCE https port?
+SCENARIO_RESOURCE_ONCE_HTTPS="9743"
+# What is the ONCE container SSH port?
+SCENARIO_RESOURCE_ONCE_SSH="9322"
+# What is the ONCE reverse proxy http port?
+SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP="6302"
+# What is the ONCE reverse proxy https port?
+SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS="6305"
+# What is the STRUCTR http port?
+SCENARIO_RESOURCE_STRUCTR_HTTP="9382"
+# What is the STRUCTR https port?
+SCENARIO_RESOURCE_STRUCTR_HTTPS="9383"

@@ -14,6 +14,7 @@ if [ ! -z ${OOSH_TAR} ] && [ -f ${OOSH_TAR} ]; then
     mkdir -p ${OOSH_INSTALL_SOURCE}
     tar xf ${OOSH_TAR} -C ${OOSH_INSTALL_SOURCE}
     ${OOSH_INSTALL_SOURCE}/init/oosh
+    rm -rf ${OOSH_INSTALL_SOURCE}
 else
     if [ -z ${OOSH_BRANCH} ]; then
         export OOSH_BRANCH="main"

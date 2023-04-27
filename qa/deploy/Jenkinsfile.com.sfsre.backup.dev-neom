@@ -27,9 +27,9 @@ pipeline {
                     sh '''#!/usr/bin/bash
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/qa/deploy
-                        ./deploy-scenario.sh dev-neom remove
-                        ./deploy-scenario.sh dev-neom
-                        ./deploy-scenario.sh dev-neom test > $cwd/results/dev-neom.log
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom remove
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom up,test
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom test > $cwd/results/com.sfsre.backup.dev-neom.log
                     '''
                 }
             }

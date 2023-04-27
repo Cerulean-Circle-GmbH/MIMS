@@ -4,3 +4,4 @@ this:
 *:
 _*
 node_modules
+*.tmp

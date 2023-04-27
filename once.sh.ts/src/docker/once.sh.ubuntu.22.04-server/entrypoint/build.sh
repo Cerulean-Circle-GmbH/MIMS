@@ -11,6 +11,9 @@ echo "Starting custom build script: $PWD $0"
 # github.com/remotemobprogramming/mob/v3@latest and recompile on arm64 ubuntu)
 curl -sL install.mob.sh | sh
 
+# Test deinstall oosh
+#~/entrypoint/testDeinstall.sh
+
 # Download and install oosh
 ~/entrypoint/install-oosh.sh
 
