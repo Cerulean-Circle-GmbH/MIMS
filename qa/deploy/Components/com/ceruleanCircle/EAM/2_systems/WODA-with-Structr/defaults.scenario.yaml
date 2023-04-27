@@ -1,6 +1,6 @@
 scenario:
+  ## Source setup
   src:
-    comment: "Source setup"
     # Which backup tag should be restored?
     tag: latest
     # Which ONCE branch should be restored (maybe tag dependent)?
@@ -10,10 +10,10 @@ scenario:
     # What is the name of the scenario component (including namespace)?
     component: com/ceruleanCircle/EAM/2_systems/WODA-with-Structr
 
+  ## Server setup
   server:
-    comment: "Server setup"
     # What is the server, the scenario will be deployed?
-    server: test.wo-da.de
+    name: test.wo-da.de
     # What is the SSH config the server can be connected with?
     sshconfig: WODA.test
     # What is the scenarios root directory on the server?
@@ -21,8 +21,8 @@ scenario:
     # Where to find the servers certificate?
     certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/conf/live/test.wo-da.de
 
+  ## Unique resources
   resource:
-    comment: "Unique resources"
     # What is the container name for the ONCE service?
     container: ${SCENARIO_NAME}-once.sh_container
     once:
