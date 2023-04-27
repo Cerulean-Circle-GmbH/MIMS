@@ -67,10 +67,6 @@ SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
 SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 shift
-if [ ! -f $SCENARIO_FILE_NAME ]; then
-    echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
-    exit 1
-fi
 
 # ask with default
 function ask_with_default {
@@ -93,6 +89,16 @@ function getVarFromOldVar() {
 
 # Source env files
 function sourceEnv() {
+    # Source scenario env file
+    if [ -f $SCENARIO_FILE_NAME ]; then
+        source $SCENARIO_FILE_NAME
+    fi
+
+    # Source scenario env file (tmp)
+    if [ -f $SCENARIO_FILE_NAME_TMP ]; then
+        source $SCENARIO_FILE_NAME_TMP
+    fi
+
     # Set missing variables resp. compatibility adaption (convert old env version to new one)
     getVarFromOldVar SCENARIO_SSH_CONFIG                SCENARIO_SERVER
     getVarFromOldVar SCENARIO_SRC_TAG                   SCENARIO_TAG
@@ -111,9 +117,7 @@ function sourceEnv() {
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTP     SCENARIO_STRUCTR_HTTP
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTPS    SCENARIO_STRUCTR_HTTPS
 
-    if [ -f $SCENARIO_FILE_NAME ]; then
-        source $SCENARIO_FILE_NAME
-    fi
+    # Source other env files from component definition
     OTHER_ENV_FILES=$(find $cwd/Components/$SCENARIO_SRC_COMPONENT -name .env)
     for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
         source $OTHER_ENV_FILE
@@ -163,10 +167,7 @@ function config() {
     # Configure scenario
     banner "Configure scenario"
 
-    if [ ! -f $SCENARIO_FILE_NAME ]; then
-        mkdir -p $cwd/Scenarios/$SCENARIO_NAME_SPACE
-        touch $SCENARIO_FILE_NAME
-    fi
+    mkdir -p $cwd/Scenarios/$SCENARIO_NAME_SPACE
 
     if [ -z "$SCENARIO_SRC_COMPONENT" ]; then
         echo "Available component dirs:"
@@ -258,18 +259,33 @@ function up() {
 }
 
 function start() {
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        exit 1
+    fi
+
     # Restart once server
     banner "Restart once server"
     callRemote ./scenario.sh start
 }
 
 function stop() {
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        exit 1
+    fi
+
     # Stop remotely
     banner "Stop remotely"
     callRemote ./scenario.sh stop || true
 }
 
 function down() {
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        exit 1
+    fi
+
     init
 
     # Shutdown remotely
@@ -278,6 +294,11 @@ function down() {
 }
 
 function remove() {
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        exit 1
+    fi
+
     down
 
     # Remove locally and remotely
@@ -292,6 +313,11 @@ EOF
 }
 
 function test() {
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        exit 1
+    fi
+
     init
 
     # Test remote
