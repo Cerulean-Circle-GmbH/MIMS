@@ -1,7 +1,6 @@
 #!/bin/bash
 
 source .env
-SCENARIO_RESOURCE_CONTAINER=${SCENARIO_NAME}-once.sh_container
 
 function banner() {
     echo
@@ -106,7 +105,7 @@ function up() {
     while [ -z "$found" ]; do
     UP='\033[7A'
     LINEFEED='\033[0G'
-    STR=$(docker logs -n 5 $SCENARIO_RESOURCE_CONTAINER 2>&1)
+    STR=$(docker logs -n 5 $SCENARIO_ONCE_CONTAINER 2>&1)
     echo -e "$LINEFEED$UP"
     echo "== Wait for startup... ==========================================================="
     while IFS= read -r line
@@ -115,7 +114,7 @@ function up() {
         printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
     done < <(printf '%s\n' "$STR")
     sleep 0.3
-    found=$(docker logs $SCENARIO_RESOURCE_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
+    found=$(docker logs $SCENARIO_ONCE_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
     done
     echo "===================="
     echo "Startup done ($found)"
@@ -127,7 +126,7 @@ function up() {
         banner "Copy certificates to container"
         CERT=$(cat $SCENARIO_SERVER_CERTIFICATEDIR/fullchain.pem)
         KEY=$(cat $SCENARIO_SERVER_CERTIFICATEDIR/privkey.pem)
-        docker exec -i $SCENARIO_RESOURCE_CONTAINER bash -s << EOF
+        docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
             source ~/config/user.env
             source ~/.once
             cd \$ONCE_DEFAULT_SCENARIO
@@ -143,13 +142,10 @@ EOF
     fi
 
     # Reconfigure ONCE server and connect structr
-    banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_RESOURCE_CONTAINER)"
-    # TODO: Check this statement. The once docker container has dots in the name, but the structr container does not.
-    # Docker container names must not contain dots
-    DOCKER_STRUCTR_CONTAINER="$(echo ${SCENARIO_NAME}_woda-structr-server_1 | sed 's/\.//g' )"
-    docker exec -i $SCENARIO_RESOURCE_CONTAINER bash -s << EOF
+    banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_ONCE_CONTAINER)"
+    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         source /root/.once
-        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${DOCKER_STRUCTR_CONTAINER}:8083"]]'
+        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
         export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS'
         CF=\$ONCE_DEFAULT_SCENARIO/.once
@@ -162,10 +158,10 @@ EOF
 EOF
 
     # Checkout correct branch and add marker string to City Management App
-    banner "Checkout correct branch (in container $SCENARIO_RESOURCE_CONTAINER) and add marker string to City Management App (in container $SCENARIO_RESOURCE_CONTAINER)"
+    banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER) and add marker string to City Management App (in container $SCENARIO_ONCE_CONTAINER)"
     CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
     ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
-    docker exec -i $SCENARIO_RESOURCE_CONTAINER bash -s << EOF
+    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         git checkout $CMA_FILE
         git checkout $SCENARIO_SRC_BRANCH
@@ -208,7 +204,7 @@ function start() {
 function private.restart.once () {
     # Start ONCE server
     banner "Start ONCE server"
-    docker exec $SCENARIO_RESOURCE_CONTAINER bash -c "source ~/config/user.env && once restart"
+    docker exec $SCENARIO_ONCE_CONTAINER bash -c "source ~/config/user.env && once restart"
     echo "ONCE server restarted"
 }
 

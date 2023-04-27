@@ -2,7 +2,7 @@ version: "3"
 
 services:
   once.sh:
-    container_name: ${SCENARIO_RESOURCE_CONTAINER}
+    container_name: ${SCENARIO_ONCE_CONTAINER}
     image: donges/once:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -20,6 +20,7 @@ services:
       ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP}
       ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}
   woda-structr-server:
+    container_name: ${SCENARIO_STRUCTR_CONTAINER}
     build: './structr'
     image: woda-structr-server2.1.4
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
