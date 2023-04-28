@@ -36,7 +36,11 @@ function searchDirectoryForJsFiles(directoryPath) {
             // If it is a .js file, print its name to the console
             if (filter(filePath)) {
                 console.log(filePath)
-                buffer += fs.readFileSync(filePath).toString();
+                str = fs.readFileSync(filePath).toString();
+                // replace some line which cause error in acorn
+                // TODO: needs to be fixed in acorn
+                str = str.replace('static transientMode =', '//static transientMode =')
+                buffer += str;
             }
         }
     });
