@@ -39,7 +39,7 @@ function searchDirectoryForJsFiles(directoryPath) {
                 str = fs.readFileSync(filePath).toString();
                 // replace some line which cause error in acorn
                 // TODO: needs to be fixed in acorn
-                str = str.replace('static transientMode =', '//static transientMode =')
+                str = str.replace('static transientMode =', '//static transientMode =').replace('static demoIdCounter=', '//static demoIdCounter=');
                 buffer += str;
             }
         }
@@ -56,6 +56,8 @@ fs.writeFile("_test.js", buffer, function(err) {
         console.log(err);
     }
 });
+
+//if (true) {
 
 // Parse js
 const body = acorn.parse(buffer, {ecmaVersion: 2020}).body
@@ -78,3 +80,5 @@ console.log("@startuml")
 const jsInterpreter = new Interpreter(new Visitor(console.log))
 jsInterpreter.interpret(body)
 console.log("@enduml")
+
+//}
