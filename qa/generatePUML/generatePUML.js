@@ -40,7 +40,7 @@ function searchDirectoryForJsFiles(directoryPath) {
                 // replace some line which cause error in acorn
                 // TODO: needs to be fixed in acorn
                 str = str.replace('static transientMode =', '//static transientMode =').replace('static demoIdCounter=', '//static demoIdCounter=');
-                buffer += str;
+                buffer += "\n" + str;
             }
         }
     });
@@ -57,7 +57,7 @@ fs.writeFile("_test.js", buffer, function(err) {
     }
 });
 
-//if (true) {
+//if (false) {
 
 // Parse js
 const body = acorn.parse(buffer, {ecmaVersion: 2020}).body
