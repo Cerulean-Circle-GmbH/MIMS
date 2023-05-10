@@ -1,6 +1,6 @@
 ## Source setup
 # Which backup tag should be restored?
-SCENARIO_SRC_TAG="2023-05-09-01_30"
+SCENARIO_SRC_TAG="2023-05-10-14_01"
 # Which ONCE branch should be restored (maybe tag dependent)?
 SCENARIO_SRC_BRANCH="tag/neom/backup-structr-${SCENARIO_SRC_TAG}"
 # What is the URI of the struct data backup file (maybe tag dependent)?
