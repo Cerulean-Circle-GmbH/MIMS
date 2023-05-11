@@ -89,14 +89,14 @@ function getVarFromOldVar() {
 
 # Source env files
 function sourceEnv() {
-    # Source scenario env file
-    if [ -f $SCENARIO_FILE_NAME ]; then
-        source $SCENARIO_FILE_NAME
-    fi
-
     # Source scenario env file (tmp)
     if [ -f $SCENARIO_FILE_NAME_TMP ]; then
         source $SCENARIO_FILE_NAME_TMP
+    fi
+
+    # Source scenario env file
+    if [ -f $SCENARIO_FILE_NAME ]; then
+        source $SCENARIO_FILE_NAME
     fi
 
     # Set missing variables resp. compatibility adaption (convert old env version to new one)
