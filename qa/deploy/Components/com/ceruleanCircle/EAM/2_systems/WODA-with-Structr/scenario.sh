@@ -146,17 +146,14 @@ EOF
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
 
-    # Checkout correct branch and add marker string to City Management App
-    banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER) and add marker string to City Management App (in container $SCENARIO_ONCE_CONTAINER)"
-    local CMA_FILE="Components/com/neom/udxd/CityManagement/1.0.0/src/js/CityManagement.class.js"
+    # Checkout correct branch
+    banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER)"
     local ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
     docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
-        git checkout $CMA_FILE
         git checkout $SCENARIO_SRC_BRANCH
         git reset --hard
         git pull
-        sed -i "s;City Management App;City Management App (scenario:$SCENARIO_NAME - branch:$SCENARIO_SRC_BRANCH - structr-tag:$SCENARIO_SRC_TAG - $(date));g" $CMA_FILE
         (
             date && echo
             git status && echo
