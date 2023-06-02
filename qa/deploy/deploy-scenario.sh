@@ -286,7 +286,8 @@ function down() {
         exit 1
     fi
 
-    init
+    # Could be dangerous to init again
+    #init
 
     # Shutdown remotely
     banner "Shutdown remotely"

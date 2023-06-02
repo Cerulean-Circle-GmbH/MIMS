@@ -116,8 +116,7 @@ function up() {
         local CERT=$(cat $certdir/fullchain.pem)
         local KEY=$(cat $certdir/privkey.pem)
         docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
-            source ~/config/user.env
-            source ~/.once
+            source /root/.once
             cd \$ONCE_DEFAULT_SCENARIO
             mv once.cert.pem once.cert.pem.bak
             mv once.key.pem once.key.pem.bak
@@ -169,7 +168,7 @@ EOF
             echo "/root/.once:"
             cat /root/.once
             echo
-            . /root/.once
+            source /root/.once
             echo "\$ONCE_DEFAULT_SCENARIO/.once:"
             cat \$ONCE_DEFAULT_SCENARIO/.once
         ) > ./installation-status.log
@@ -190,7 +189,14 @@ function start() {
 function private.restart.once () {
     # Start ONCE server
     banner "Start ONCE server"
-    docker exec $SCENARIO_ONCE_CONTAINER bash -c "source ~/config/user.env && once restart"
+    #docker exec $SCENARIO_ONCE_CONTAINER bash -c "source /root/.once && once restart"
+    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+cd /var/dev/EAMD.ucp
+source /root/.once
+once restart
+sleep 5
+once cat > restart.log
+EOF
     echo "ONCE server restarted"
 }
 

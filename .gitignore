@@ -5,3 +5,4 @@ this:
 _*
 node_modules
 *.tmp
+.DS_Store
