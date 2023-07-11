@@ -36,7 +36,11 @@ function searchDirectoryForJsFiles(directoryPath) {
             // If it is a .js file, print its name to the console
             if (filter(filePath)) {
                 console.log(filePath)
-                buffer += fs.readFileSync(filePath).toString();
+                str = fs.readFileSync(filePath).toString();
+                // replace some line which cause error in acorn
+                // TODO: needs to be fixed in acorn
+                str = str.replace('static transientMode =', '//static transientMode =').replace('static demoIdCounter=', '//static demoIdCounter=');
+                buffer += "\n" + str;
             }
         }
     });
@@ -52,6 +56,8 @@ fs.writeFile("_test.js", buffer, function(err) {
         console.log(err);
     }
 });
+
+//if (false) {
 
 // Parse js
 const body = acorn.parse(buffer, {ecmaVersion: 2020}).body
@@ -74,3 +80,5 @@ console.log("@startuml")
 const jsInterpreter = new Interpreter(new Visitor(console.log))
 jsInterpreter.interpret(body)
 console.log("@enduml")
+
+//}

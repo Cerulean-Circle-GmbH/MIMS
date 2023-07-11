@@ -1,0 +1,46 @@
+pipeline {
+    agent {
+        docker {
+            image 'once.sh-builder'
+            args '-v once_jenkins:/var/dev -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            reuseNode true
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+    
+    stages {
+        stage('Cleanup & update') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    rm -rf results
+                    mkdir -p results
+                    cd /var/dev/Once.2023 && git reset --hard && git checkout dev && git pull
+                    '''
+            }
+        }
+        stage('Deploy dev/neom with latest structr server') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        cwd=$(pwd)
+                        cd /var/dev/Once.2023/qa/deploy
+                        sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/de/wo-da/test/demo.scenario
+                        git status
+                        git diff
+                        ./deploy-scenario.sh de/wo-da/test/demo remove
+                        ./deploy-scenario.sh de/wo-da/test/demo up,test
+                        ./deploy-scenario.sh de/wo-da/test/demo test > $cwd/results/de.wo-da.test.demo.log
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
+        }
+    }
+}
