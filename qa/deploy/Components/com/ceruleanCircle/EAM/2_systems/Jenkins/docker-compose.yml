@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  once.sh:
+    container_name: ${SCENARIO_RESOURCE_CONTAINERNAME}
+    image: ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_home:/var/jenkins_home
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
+      - "50000:50000"
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
+    #command: "tail -f /var/jenkins_home/secrets/initialAdminPassword"
+volumes:
+  jenkins_home:
