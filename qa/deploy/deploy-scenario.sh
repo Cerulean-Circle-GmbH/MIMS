@@ -181,7 +181,6 @@ function config() {
 
     # Check $SCENARIO_FILE_NAME for missing variables
     local current_comment=""
-    local i_had_to_ask=false
     rm -rf $SCENARIO_FILE_NAME_TMP
     IFS=$'\n'
     for line in $(cat "$SCENARIO_DEFAULTS_ENV"); do
@@ -197,7 +196,6 @@ function config() {
             if [ -z "$value" ]; then
                 value=$(ask_with_default "$current_comment" "$default")
                 #echo "I ASKED AND GOT : \"$value\""
-                i_had_to_ask=true
             fi
             echo "$variable=\"$value\"" >> $SCENARIO_FILE_NAME_TMP
         else
@@ -210,10 +208,12 @@ function config() {
     unset IFS
 
     # Update $SCENARIO_FILE_NAME if needed
-    if [ "$i_had_to_ask" = true ]; then
-        # TODO: Find another way to also ask if variables should be updated or are removed
+    UPDATES=$(diff $SCENARIO_FILE_NAME $SCENARIO_FILE_NAME_TMP)
+    if [ -n "$UPDATES" ]; then
         echo
-        echo "I had to ask for some variables."
+        echo "I found changes for some variables."
+        echo "Changes:"
+        echo "$UPDATES"
         SURE=$(ask_with_default "Should I update the scenario with the new values? (yes/no)?" "no")
         if [ -z `echo $SURE | grep -i y` ]; then
             echo "Not updated."
