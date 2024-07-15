@@ -1,0 +1,30 @@
+scenario:
+  ## Source setup
+  src:
+    # What is the name of the scenario component (including namespace)?
+    component:
+
+  ## Server setup
+  server:
+    # What is the server, the scenario will be deployed?
+    name: test.wo-da.de
+    # What is the SSH config the server can be connected with?
+    sshconfig: WODA.test
+    # What is the scenarios root directory on the server?
+    configsdir: /var/dev/ONCE.2023-Scenarios
+    # Where to find the servers certificate?
+    certificatedir: none
+
+  ## Docker setup
+  docker:
+    # What is the name of the docker image?
+    imagename: once.jenkins
+    # What is the version of the docker image?
+    imageversion: 0.2
+
+  ## Unique resources
+  resource:
+    # What is the name of the docker container?
+    containername: once.jenkins_container
+    # What is the http port of the docker container?
+    httpport: 8086

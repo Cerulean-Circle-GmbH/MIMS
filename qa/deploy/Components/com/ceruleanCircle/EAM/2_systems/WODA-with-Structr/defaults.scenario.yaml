@@ -8,7 +8,7 @@ scenario:
     # What is the URI of the struct data backup file (maybe tag dependent)?
     structrdatafile: backup.sfsre.com:/var/backups/structr/backup-structr-${SCENARIO_SRC_TAG}_WODA-current.tar.gz
     # What is the name of the scenario component (including namespace)?
-    component: com/ceruleanCircle/EAM/2_systems/WODA-with-Structr
+    component:
 
   ## Server setup
   server:
