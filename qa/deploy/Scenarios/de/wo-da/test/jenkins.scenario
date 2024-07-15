@@ -1,3 +1,6 @@
+## Source setup
+# What is the name of the scenario component (including namespace)?
+SCENARIO_SRC_COMPONENT="com/ceruleanCircle/EAM/2_systems/Jenkins"
 ## Server setup
 # What is the server, the scenario will be deployed?
 SCENARIO_SERVER_NAME="test.wo-da.de"

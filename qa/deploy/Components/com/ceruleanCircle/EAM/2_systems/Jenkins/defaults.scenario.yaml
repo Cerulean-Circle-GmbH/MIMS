@@ -2,7 +2,7 @@ scenario:
   ## Source setup
   src:
     # What is the name of the scenario component (including namespace)?
-    component: com/ceruleanCircle/EAM/2_systems/WODA-with-Structr
+    component:
 
   ## Server setup
   server:
