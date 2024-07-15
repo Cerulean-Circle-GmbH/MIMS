@@ -18,13 +18,13 @@ scenario:
   ## Docker setup
   docker:
     # What is the name of the docker image?
-    imagename: once.jenkins
+    imagename: jenkins_image
     # What is the version of the docker image?
     imageversion: 0.2
 
   ## Unique resources
   resource:
     # What is the name of the docker container?
-    containername: once.jenkins_container
+    containername: jenkins_container
     # What is the http port of the docker container?
     httpport: 8086
