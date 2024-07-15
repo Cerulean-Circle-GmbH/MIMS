@@ -30,31 +30,33 @@ function up() {
 
     # Create and run container
     banner "Create and run container"
-    docker-compose -p once up -d
+    docker-compose -p $SCENARIO_NAME up -d
     docker ps
 }
 
 function start() {
     # Start container
     banner "Start container"
-    docker-compose -p once up -d
+    docker-compose -p $SCENARIO_NAME start
 }
 
 function stop() {
     # Stop container
     banner "Stop container"
-    docker-compose -p once down
+    docker-compose -p $SCENARIO_NAME stop
     docker ps | grep $SCENARIO_NAME
 }
 
 function down() {
     # Shutdown and remove containers
     banner "Shutdown and remove containers"
-    docker-compose -p once down
+    docker-compose -p $SCENARIO_NAME down
     docker ps
 
     # Cleanup docker
     banner "Cleanup docker"
+    docker image rm ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
+    docker image rm ${SCENARIO_DOCKER_IMAGENAME}:latest
     docker image prune -f
 
     # Test
@@ -66,9 +68,11 @@ function test() {
     # Test
     banner "Test"
     echo "Volumes:"
-    docker volume ls | grep $SCENARIO_NAME
+    docker volume ls | grep jenkins_home
+    echo "Images":
+    docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
     echo "Containers:"
-    docker ps | grep $SCENARIO_NAME
+    docker ps -all | grep $SCENARIO_RESOURCE_CONTAINERNAME
     echo "Files:"
     pwd
     tree -L 3 -a .

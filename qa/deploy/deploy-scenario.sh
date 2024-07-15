@@ -54,7 +54,6 @@ if [ -z "$1" ]; then
     echo "Example: $0 dev remove"
     echo
     echo "* up will call init and stop"
-    echo "* down will call init"
     echo "* remove will call down"
     echo
     echo "Available scenarios:"
@@ -287,9 +286,6 @@ function down() {
         exit 1
     fi
 
-    # Could be dangerous to init again
-    #init
-
     # Shutdown remotely
     banner "Shutdown remotely"
     callRemote ./scenario.sh down || true
@@ -319,8 +315,6 @@ function test() {
         echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
     fi
-
-    init
 
     # Test remote
     banner "Test remote"
