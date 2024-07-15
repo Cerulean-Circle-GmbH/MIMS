@@ -33,7 +33,7 @@ function checkURL() {
     logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
     up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
     if [ "$up" != "200" ]; then
-        log "$1 is not running (returned $up) - $comment"
+        log "NO: $1 is not running (returned $up) - $comment"
         return 1
     else
         log "OK: running: $1 - $comment"
@@ -55,12 +55,12 @@ function up() {
         logVerbose "Creating new keystore.pkcs12..."
         if [ -n "$certdir" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
             echo "Using certificates from $certdir"
-            ls -l $certdir
+            ls -l $certdir > $VERBOSEPIPE
             ln -s $certdir/fullchain.pem fullchain.pem
             ln -s $certdir/privkey.pem privkey.pem
-            openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem 
-            openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem 
-            openssl x509 -noout -text -inform pem -in fullchain.pem 
+            openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem > $VERBOSEPIPE 
+            openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem > $VERBOSEPIPE
+            openssl x509 -noout -text -inform pem -in fullchain.pem  > $VERBOSEPIPE
         else
             # TODO: Check whether mkcert is installed and create certificates instead of copying
             #mkcert -cert-file fullchain.pem -key-file privkey.pem server.localhost localhost 127.0.0.1 ::1
@@ -68,7 +68,7 @@ function up() {
             ln -s ../../certbot/fullchain.pem fullchain.pem
             ln -s ../../certbot/privkey.pem privkey.pem
         fi
-        openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123
+        openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123 > $VERBOSEPIPE
     fi
 
     # Workspace
@@ -77,11 +77,12 @@ function up() {
         logVerbose "Already existing workspace..."
     else
         logVerbose "Fetching workspace..."
+        RSYNC_VERBOSE="-q"
         if [ "$VERBOSITY" == "-v" ]; then
             RSYNC_VERBOSE="-v"
         fi
         rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTRDATAFILE WODA-current.tar.gz
-        tar xzf WODA-current.tar.gz
+        tar xzf WODA-current.tar.gz > $VERBOSEPIPE
     fi
 
     # structr.zip
@@ -90,7 +91,7 @@ function up() {
         logVerbose "Already existing structr.zip..."
     else
         logVerbose "Fetching structr.zip..."
-        curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip
+        curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip > $VERBOSEPIPE
     fi
 
     popd > /dev/null
@@ -98,12 +99,8 @@ function up() {
     # Create structr image
     banner "Create structr image"
     log "Building image..."
-    if [ "$VERBOSITY" == "-v" ]; then
-        docker-compose build
-        docker image ls
-    else
-        docker-compose build > /dev/null
-    fi
+    docker-compose build > $VERBOSEPIPE
+    docker image ls > $VERBOSEPIPE
 
     # Create and run container
     banner "Create and run container"
@@ -148,7 +145,7 @@ function up() {
         banner "Copy certificates to container"
         local CERT=$(cat $certdir/fullchain.pem)
         local KEY=$(cat $certdir/privkey.pem)
-        docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+        DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
             source /root/.once
             cd \$ONCE_DEFAULT_SCENARIO
             mv once.cert.pem once.cert.pem.bak
@@ -160,11 +157,13 @@ function up() {
             openssl x509 -noout -fingerprint -sha1 -inform pem -in once.cert.pem 
             openssl x509 -noout -text -inform pem -in once.cert.pem 
 EOF
+)
+        logVerbose "$DOCKEROUTPUT"
     fi
 
     # Reconfigure ONCE server and connect structr
     banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_ONCE_CONTAINER)"
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         source /root/.once
         export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
@@ -177,13 +176,15 @@ EOF
         echo "CF=\$CF"
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
+)
+    logVerbose "$DOCKEROUTPUT"
 
     # Checkout correct branch
     banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER)"
     local ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
-        git checkout $SCENARIO_SRC_BRANCH
+        git checkout $SCENARIO_SRC_BRANCH > /dev/null 2>&1
         git reset --hard
         git pull
         (
@@ -206,6 +207,8 @@ EOF
             cat \$ONCE_DEFAULT_SCENARIO/.once
         ) > ./installation-status.log
 EOF
+)
+    logVerbose "$DOCKEROUTPUT"
 
     private.restart.once
 }
@@ -225,13 +228,15 @@ function private.restart.once () {
     # Start ONCE server
     banner "Start ONCE server"
     #docker exec $SCENARIO_ONCE_CONTAINER bash -c "source /root/.once && once restart"
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
 cd /var/dev/EAMD.ucp
 source /root/.once
-once restart
+once restart > /dev/null 2>&1
 sleep 5
 once cat > restart.log
 EOF
+)
+    logVerbose "$DOCKEROUTPUT"
     log "ONCE server restarted"
 }
 
@@ -285,7 +290,9 @@ function test() {
 
     # Check EAMD.ucp git status
     banner "Check EAMD.ucp git status for $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-    curl http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
+    if [ "$VERBOSITY" == "-v" ]; then
+        curl http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
+    fi
 
     # Check running servers
     banner "Check running servers"
@@ -315,12 +322,15 @@ fi
 STEP=$1
 shift
 
+VERBOSEPIPE="/dev/null"
+
 # Parse all "-" args
 for i in "$@"
 do
 case $i in
     -v|--verbose)
     VERBOSITY=$i
+    $VERBOSEPIPE="/dev/stdout"
     ;;
     -s|--silent)
     VERBOSITY=$i
