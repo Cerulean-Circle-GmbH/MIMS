@@ -43,7 +43,7 @@ once restart
 
 * [What is Once.2023](#what-is-Once.2023)
 * [First steps](#first-steps)
-* [You are on dev branch](#dev-branch)
+* [You are on main branch](#dev-branch)
 * [Ups...I am a user](#wrong-here?)
 
 ## What is Once.2023
@@ -76,6 +76,19 @@ Open a terminal and type
 
 ```
 git clone git@github.com:Cerulean-Circle-GmbH/Once.2023.git
+
+### if you have the deploy key
+git clone githubCC.once2023:Cerulean-Circle-GmbH/Once.2023.git
+
+
+### with .ssh/config entry
+Host githubCC.once2023
+ User git
+ Port 22
+ HostName github.com
+ IdentityFile ~/.ssh/ids/once2023.githubCC/id_rsa
+
+
 ```
 no git?
 maybe you are not a developer? 
@@ -90,8 +103,13 @@ cd Once.2023
 ./check-system.sh
 ```
 
-## Dev branch
-This is the main development branch.
+## Main branch
+This is the main release branch.
+
+To switch to dev branch type
+```
+devTool commit
+```
 
 to release type
 ```
