@@ -1,5 +1,5 @@
 ## Source setup
-# This is the scenario component name which will be automatically filled. Default is ignored but needs not to be empty.
+# This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
 SCENARIO_SRC_COMPONENT="com/ceruleanCircle/EAM/2_systems/Jenkins"
 ## Server setup
 # What is the server, the scenario will be deployed?

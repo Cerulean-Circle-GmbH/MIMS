@@ -37,24 +37,27 @@ function checkURL() {
 
 # Usage
 if [ -z "$1" ]; then
-    echo "Usage: $0 <scenario> [init,updateconfig,up,start,stop,down,test,remove]"
+    echo "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,updateconfig]"
     echo
+    echo "        Lifecycle actions:"
     echo "          init   - init remote scenario dir"
-    echo "          updateconfig - update local scenario config"
     echo "          up     - Create and start scenario"
-    echo "          start  - Start scenario if already created"
     echo "          stop   - Stop scenario"
+    echo "          start  - Start scenario if stopped"
     echo "          down   - Stop and shut down scenario"
+    echo "          deinit - Cleanup/remove remote and local scenario dir (leave config untouched)"
+    echo
+    echo "        Service actions:"
     echo "          test   - Test the running scenario"
-    echo "          remove - Remove all remote and local scenario dir"
+    echo "          updateconfig - update local scenario config"
     echo
     echo "Example: $0 dev (defaults to: up,test)"
     echo "Example: $0 dev stop,start"
     echo "Example: $0 dev up"
-    echo "Example: $0 dev remove"
+    echo "Example: $0 dev deinit"
     echo
     echo "* up will call init and stop"
-    echo "* remove will call down"
+    echo "* deinit will call down"
     echo
     echo "Available scenarios:"
     cd $cwd && find Scenarios -name *.scenario | sed "s;Scenarios/;    ;" | sed "s/\.scenario//" | sed "s/ /\\ /g"
@@ -251,6 +254,8 @@ EOF
 
 function up() {
     init
+
+    # This should not be done. Instead we should check if the scenario is already running and if not start it.
     stop
 
     # Startup WODA with WODA.2023 container and check that startup is done
@@ -291,7 +296,7 @@ function down() {
     callRemote ./scenario.sh down || true
 }
 
-function remove() {
+function deinit() {
     if [ ! -f $SCENARIO_FILE_NAME ]; then
         echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
@@ -318,7 +323,13 @@ function test() {
 
     # Test remote
     banner "Test remote"
-    callRemote ./scenario.sh test
+    REMOTE_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    if ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_DIR}' ]"; then
+        echo "Scenario $SCENARIO_NAME is available on remote server."
+        callRemote ./scenario.sh test
+    else
+        echo "Scenario $SCENARIO_NAME is not available on remote server."
+    fi
 }
 
 DEFAULT_STEPS="test"
@@ -331,20 +342,20 @@ fi
 for STEP in $(echo $STEPS | sed "s/,/ /g"); do
     if [ "$STEP" == "init" ]; then
         init
-    elif [ "$STEP" == "updateconfig" ]; then
-        updateconfig
     elif [ "$STEP" == "up" ]; then
         up
-    elif [ "$STEP" == "start" ]; then
-        start
     elif [ "$STEP" == "stop" ]; then
         stop
+    elif [ "$STEP" == "start" ]; then
+        start
     elif [ "$STEP" == "down" ]; then
         down
-    elif [ "$STEP" == "remove" ]; then
-        remove
+    elif [ "$STEP" == "deinit" ]; then
+        deinit
     elif [ "$STEP" == "test" ]; then
         test
+    elif [ "$STEP" == "updateconfig" ]; then
+        updateconfig
     else
         echo "ERROR: Unknown step: $STEP"
         exit 1
