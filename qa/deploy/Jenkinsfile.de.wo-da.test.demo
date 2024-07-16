@@ -25,6 +25,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
+                        set -e
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/qa/deploy
                         sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/de/wo-da/test/demo.scenario

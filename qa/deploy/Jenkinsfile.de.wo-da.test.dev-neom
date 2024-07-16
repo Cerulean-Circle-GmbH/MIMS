@@ -25,6 +25,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
+                        set -e
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/qa/deploy
                         ./deploy-scenario.sh de/wo-da/test/dev-neom remove
