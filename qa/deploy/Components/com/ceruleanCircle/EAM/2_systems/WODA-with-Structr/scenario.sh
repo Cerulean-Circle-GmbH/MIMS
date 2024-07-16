@@ -2,22 +2,42 @@
 
 source .env
 
+# Log verbose
+function logVerbose() {
+    # Check for verbosity not equal to -v
+    if [ "$VERBOSITY" != "-v" ]; then
+        return
+    fi
+    echo "$@"
+}
+
+# Log
+function log() {
+    if [ "$VERBOSITY" == "-s" ]; then
+        return
+    fi
+    echo "$@"
+}
+
+# Banner
 function banner() {
-    echo
-    echo "--- $1"
-    echo
+    logVerbose
+    logVerbose "--- $1"
+    logVerbose
 }
 
 function checkURL() {
     comment=$1
     shift
-    echo
-    echo call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
+    logVerbose
+    logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
     up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
     if [ "$up" != "200" ]; then
-        echo "ERROR: $1 is not running (returned $up) - $comment"
+        log "NO: $1 is not running (returned $up) - $comment"
+        return 1
     else
-        echo "OK: running: $1 - $comment"
+        log "OK: running: $1 - $comment"
+        return 0
     fi
 }
 
@@ -30,83 +50,93 @@ function up() {
     # Keystore
     banner "Keystore"
     if [ -f "keystore.pkcs12" ]; then
-        echo "Already existing keystore.pkcs12..."
+        logVerbose "Already existing keystore.pkcs12..."
     else
-        echo "Creating new keystore.pkcs12..."
+        logVerbose "Creating new keystore.pkcs12..."
         if [ -n "$certdir" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
             echo "Using certificates from $certdir"
-            ls -l $certdir
+            ls -l $certdir > $VERBOSEPIPE
             ln -s $certdir/fullchain.pem fullchain.pem
             ln -s $certdir/privkey.pem privkey.pem
-            openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem 
-            openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem 
-            openssl x509 -noout -text -inform pem -in fullchain.pem 
+            openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem > $VERBOSEPIPE 
+            openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem > $VERBOSEPIPE
+            openssl x509 -noout -text -inform pem -in fullchain.pem  > $VERBOSEPIPE
         else
             # TODO: Check whether mkcert is installed and create certificates instead of copying
             #mkcert -cert-file fullchain.pem -key-file privkey.pem server.localhost localhost 127.0.0.1 ::1
-            echo "Linking commited fullchain.pem and privkey.pem..."
+            logVerbose "Linking commited fullchain.pem and privkey.pem..."
             ln -s ../../certbot/fullchain.pem fullchain.pem
             ln -s ../../certbot/privkey.pem privkey.pem
         fi
-        openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123
+        openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123 > $VERBOSEPIPE
     fi
 
     # Workspace
     banner "Workspace ($SCENARIO_SRC_STRUCTRDATAFILE)"
     if [ -d "WODA-current" ]; then
-        echo "Already existing workspace..."
+        logVerbose "Already existing workspace..."
     else
-        echo "Fetching workspace..."
-        rsync -avzP -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTRDATAFILE WODA-current.tar.gz
-        tar xzf WODA-current.tar.gz
+        logVerbose "Fetching workspace..."
+        RSYNC_VERBOSE="-q"
+        if [ "$VERBOSITY" == "-v" ]; then
+            RSYNC_VERBOSE="-v"
+        fi
+        rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTRDATAFILE WODA-current.tar.gz
+        tar xzf WODA-current.tar.gz > $VERBOSEPIPE
     fi
 
     # structr.zip
     banner "structr.zip"
     if [ -f "structr.zip" ]; then
-        echo "Already existing structr.zip..."
+        logVerbose "Already existing structr.zip..."
     else
-        echo "Fetching structr.zip..."
-        curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip
+        logVerbose "Fetching structr.zip..."
+        curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip > $VERBOSEPIPE
     fi
 
     popd > /dev/null
 
     # Create structr image
     banner "Create structr image"
-    docker-compose build
-    docker image ls
+    log "Building image..."
+    docker-compose build > $VERBOSEPIPE
+    docker image ls > $VERBOSEPIPE
 
     # Create and run container
     banner "Create and run container"
     docker-compose -p $SCENARIO_NAME up -d
-    docker ps
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker ps
+    fi
 
     # Wait for startup of container and installation of ONCE
     banner "Wait for startup of container and installation of ONCE"
     local found=""
-    echo
-    echo
-    echo
-    echo
-    echo
-    echo
+    log "Wait for startup of container..."
+    log
+    log
+    log
+    log
+    log
+    log
     while [ -z "$found" ]; do
         local UP='\033[7A'
         local LINEFEED='\033[0G'
         local STR=$(docker logs -n 5 $SCENARIO_ONCE_CONTAINER 2>&1)
-        echo -e "$LINEFEED$UP"
-        echo "== Wait for startup... ==========================================================="
-        while IFS= read -r line
-        do
-            local COLUMNS=80
-            printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
-        done < <(printf '%s\n' "$STR")
+        log -e "$LINEFEED$UP"
+        log "== Wait for startup... ==========================================================="
+        if [ "$VERBOSITY" != "-s" ]; then
+            while IFS= read -r line
+            do
+                local COLUMNS=80
+                printf "\e[2m%-${COLUMNS}s\e[0m\n" "${line:0:${COLUMNS}}"
+            done < <(printf '%s\n' "$STR")
+        fi
         sleep 0.3
         found=$(docker logs $SCENARIO_ONCE_CONTAINER 2>/dev/null | grep "Welcome to Web 4.0")
     done
-    echo "===================="
-    echo "Startup done ($found)"
+    logVerbose "===================="
+    log "Startup done ($found)"
 
     # TODO: Mount directory into container and let ONCE use it
     
@@ -115,7 +145,7 @@ function up() {
         banner "Copy certificates to container"
         local CERT=$(cat $certdir/fullchain.pem)
         local KEY=$(cat $certdir/privkey.pem)
-        docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+        DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
             source /root/.once
             cd \$ONCE_DEFAULT_SCENARIO
             mv once.cert.pem once.cert.pem.bak
@@ -127,11 +157,13 @@ function up() {
             openssl x509 -noout -fingerprint -sha1 -inform pem -in once.cert.pem 
             openssl x509 -noout -text -inform pem -in once.cert.pem 
 EOF
+)
+        logVerbose "$DOCKEROUTPUT"
     fi
 
     # Reconfigure ONCE server and connect structr
     banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_ONCE_CONTAINER)"
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         source /root/.once
         export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
@@ -144,13 +176,15 @@ EOF
         echo "CF=\$CF"
         cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
 EOF
+)
+    logVerbose "$DOCKEROUTPUT"
 
     # Checkout correct branch
     banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER)"
     local ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
-        git checkout $SCENARIO_SRC_BRANCH
+        git checkout $SCENARIO_SRC_BRANCH > /dev/null 2>&1
         git reset --hard
         git pull
         (
@@ -173,6 +207,8 @@ EOF
             cat \$ONCE_DEFAULT_SCENARIO/.once
         ) > ./installation-status.log
 EOF
+)
+    logVerbose "$DOCKEROUTPUT"
 
     private.restart.once
 }
@@ -181,7 +217,9 @@ function start() {
     # Start container
     banner "Start container"
     docker-compose -p $SCENARIO_NAME start
-    docker ps | grep $SCENARIO_NAME
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker ps | grep $SCENARIO_NAME
+    fi
 
     private.restart.once
 }
@@ -190,14 +228,16 @@ function private.restart.once () {
     # Start ONCE server
     banner "Start ONCE server"
     #docker exec $SCENARIO_ONCE_CONTAINER bash -c "source /root/.once && once restart"
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
 cd /var/dev/EAMD.ucp
 source /root/.once
-once restart
+once restart > /dev/null 2>&1
 sleep 5
 once cat > restart.log
 EOF
-    echo "ONCE server restarted"
+)
+    logVerbose "$DOCKEROUTPUT"
+    log "ONCE server restarted"
 }
 
 function stop() {
@@ -211,12 +251,16 @@ function down() {
     # Shutdown and remove containers
     banner "Shutdown and remove containers"
     docker-compose -p $SCENARIO_NAME down
-    docker ps
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker ps
+    fi
 
     # Cleanup docker
     banner "Cleanup docker"
     docker volume rm ${SCENARIO_NAME}_var_dev
-    docker volume ls
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker volume ls
+    fi
     docker image prune -f
 
     # Remove structr dir and other stuff
@@ -224,20 +268,31 @@ function down() {
 
     # Test
     banner "Test"
-    docker volume ls | grep $SCENARIO_NAME
-    tree -L 3 -a .
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker volume ls | grep $SCENARIO_NAME
+        tree -L 3 -a .
+    fi
 }
 
 function test() {
     # Test
-    banner "Test"
-    docker volume ls | grep $SCENARIO_NAME
-    docker ps | grep $SCENARIO_NAME
-    tree -L 3 -a .
+    # Print volumes, images, containers and files
+    if [ "$VERBOSITY" == "-v" ]; then
+        banner "Test"
+        log "Volumes:"
+        docker volume ls | grep $SCENARIO_NAME
+        log "Images:"
+        docker image ls | grep $SCENARIO_NAME
+        log "Containers:"
+        docker ps -all | grep $SCENARIO_NAME
+        tree -L 3 -a .
+    fi
 
     # Check EAMD.ucp git status
     banner "Check EAMD.ucp git status for $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-    curl http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
+    if [ "$VERBOSITY" == "-v" ]; then
+        curl http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
+    fi
 
     # Check running servers
     banner "Check running servers"
@@ -253,23 +308,62 @@ function test() {
     checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login  -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
+function printUsage() {
+    log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
+    exit 1
+}
+
 # Scenario vars
 if [ -z "$1" ]; then
-    echo "Usage: $0 (up,start,stop,down,test)"
+    printUsage
     exit 1
 fi
 
-if [ $1 = "up" ]; then
+STEP=$1
+shift
+
+VERBOSEPIPE="/dev/null"
+
+# Parse all "-" args
+for i in "$@"
+do
+case $i in
+    -v|--verbose)
+    VERBOSITY=$i
+    VERBOSEPIPE="/dev/stdout"
+    ;;
+    -s|--silent)
+    VERBOSITY=$i
+    ;;
+    -h|--help)
+    HELP=true
+    ;;
+    *)
+    # unknown option
+    log "Unknown option: $i"
+    printUsage
+    ;;
+esac
+done
+
+# Print help
+if [ "$HELP" = true ]; then
+    printUsage
+fi
+
+if [ $STEP = "up" ]; then
     up
-elif [ $1 = "start" ]; then
+elif [ $STEP = "start" ]; then
     start
-elif [ $1 = "stop" ]; then
+elif [ $STEP = "stop" ]; then
     stop
-elif [ $1 = "down" ]; then
+elif [ $STEP = "down" ]; then
     down
-elif [ $1 = "test" ]; then
+elif [ $STEP = "test" ]; then
     test
 else
-    echo "Usage: $0 (up,start,stop,down,test)"
+    printUsage
     exit 1
 fi
+
+exit $?

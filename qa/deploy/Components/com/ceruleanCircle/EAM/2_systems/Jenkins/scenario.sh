@@ -2,36 +2,59 @@
 
 source .env
 
+# Log verbose
+function logVerbose() {
+    # Check for verbosity not equal to -v
+    if [ "$VERBOSITY" != "-v" ]; then
+        return
+    fi
+    echo "$@"
+}
+
+# Log
+function log() {
+    if [ "$VERBOSITY" == "-s" ]; then
+        return
+    fi
+    echo "$@"
+}
+
+# Banner
 function banner() {
-    echo
-    echo "--- $1"
-    echo
+    logVerbose
+    logVerbose "--- $1"
+    logVerbose
 }
 
 function checkURL() {
     comment=$1
     shift
-    echo
-    echo call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
+    logVerbose
+    logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
     up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
     if [[ "$up" != "200" && "$up" != "302" ]]; then
-        echo "ERROR: $1 is not running (returned $up) - $comment"
+        log "$1 is not running (returned $up) - $comment"
+        return 1
     else
-        echo "OK: running: $1 - $comment"
+        log "OK: running: $1 - $comment"
+        return 0
     fi
 }
 
 function up() {
     # Create jenkins image
     banner "Create jenkins image"
-    docker build -t ${SCENARIO_DOCKER_IMAGENAME} .
+    log "Building image..."
+    docker build -t ${SCENARIO_DOCKER_IMAGENAME} . > $VERBOSEPIPE
     docker tag ${SCENARIO_DOCKER_IMAGENAME} ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
     docker tag ${SCENARIO_DOCKER_IMAGENAME} ${SCENARIO_DOCKER_IMAGENAME}:latest
 
     # Create and run container
     banner "Create and run container"
     docker-compose -p $SCENARIO_NAME up -d
-    docker ps
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker ps
+    fi
 }
 
 function start() {
@@ -51,7 +74,9 @@ function down() {
     # Shutdown and remove containers
     banner "Shutdown and remove containers"
     docker-compose -p $SCENARIO_NAME down
-    docker ps
+    if [ "$VERBOSITY" == "-v" ]; then
+        docker ps
+    fi
 
     # Cleanup docker
     banner "Cleanup docker"
@@ -61,44 +86,87 @@ function down() {
 
     # Test
     banner "Test"
-    tree -L 3 -a .
+    if [ "$VERBOSITY" == "-v" ]; then
+        tree -L 3 -a .
+    fi
 }
 
 function test() {
-    # Test
-    banner "Test"
-    echo "Volumes:"
-    docker volume ls | grep jenkins_home
-    echo "Images":
-    docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
-    echo "Containers:"
-    docker ps -all | grep $SCENARIO_RESOURCE_CONTAINERNAME
-    echo "Files:"
-    pwd
-    tree -L 3 -a .
+    # Print volumes, images, containers and files
+    if [ "$VERBOSITY" = "-v" ]; then
+        banner "Test"
+        log "Volumes:"
+        docker volume ls | grep jenkins_home
+        log "Images:"
+        docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
+        log "Containers:"
+        docker ps -all | grep $SCENARIO_RESOURCE_CONTAINERNAME
+        log "Files:"
+        pwd
+        tree -L 3 -a .
+    fi
 
     # Check EAMD.ucp git status
     banner "Check Jenkins $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
     checkURL "Jenkins (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/jenkins
+    return $? # Return the result of the last command
+}
+
+function printUsage() {
+    log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
+    exit 1
 }
 
 # Scenario vars
 if [ -z "$1" ]; then
-    echo "Usage: $0 (up,start,stop,down,test)"
+    printUsage
+fi
+
+STEP=$1
+shift
+
+VERBOSEPIPE="/dev/null"
+
+# Parse all "-" args
+for i in "$@"
+do
+case $i in
+    -v|--verbose)
+    VERBOSITY=$i
+    VERBOSEPIPE="/dev/stdout"
+    ;;
+    -s|--silent)
+    VERBOSITY=$i
+    ;;
+    -h|--help)
+    HELP=true
+    ;;
+    *)
+    # unknown option
+    log "Unknown option: $i"
+    printUsage
+    ;;
+esac
+done
+
+# Print help
+if [ "$HELP" = true ]; then
+    printUsage
+fi
+
+if [ $STEP = "up" ]; then
+    up
+elif [ $STEP = "start" ]; then
+    start
+elif [ $STEP = "stop" ]; then
+    stop
+elif [ $STEP = "down" ]; then
+    down
+elif [ $STEP = "test" ]; then
+    test
+else
+    printUsage
     exit 1
 fi
 
-if [ $1 = "up" ]; then
-    up
-elif [ $1 = "start" ]; then
-    start
-elif [ $1 = "stop" ]; then
-    stop
-elif [ $1 = "down" ]; then
-    down
-elif [ $1 = "test" ]; then
-    test
-else
-    echo "Usage: $0 (up,start,stop,down,test)"
-    exit 1
-fi
+exit $?

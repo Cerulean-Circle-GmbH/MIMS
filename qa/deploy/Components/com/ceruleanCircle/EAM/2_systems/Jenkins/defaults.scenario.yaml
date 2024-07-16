@@ -1,8 +1,8 @@
 scenario:
   ## Source setup
   src:
-    # What is the name of the scenario component (including namespace)?
-    component:
+    # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
+    component: .
 
   ## Server setup
   server:

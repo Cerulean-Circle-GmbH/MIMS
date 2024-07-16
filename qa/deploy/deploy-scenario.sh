@@ -5,60 +5,89 @@ pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
 popd > /dev/null
 
-# Check for keyfile
-if [[ -n "${keyfile}" ]]; then
-    echo "Use ${keyfile}"
-    use_key="-i ${keyfile}"
-fi
-
-function banner() {
-    echo
-    echo "####################################################################################################"
-    echo "## $@"
-    echo "####################################################################################################"
-    echo
+# Log verbose
+function logVerbose() {
+    # Check for verbosity not equal to -v
+    if [ "$VERBOSITY" != "-v" ]; then
+        return
+    fi
+    echo "$@"
 }
 
+# Log
+function log() {
+    if [ "$VERBOSITY" == "-s" ]; then
+        return
+    fi
+    echo "$@"
+}
+
+# Banner
+function banner() {
+    logVerbose
+    logVerbose "####################################################################################################"
+    logVerbose "## $@"
+    logVerbose "####################################################################################################"
+    logVerbose
+}
+
+# Call remote function
 function callRemote() {
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
 cd $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
 $@
 EOF
+    return $?
 }
 
-function checkURL() {
-    up=$(curl -k -s -o /dev/null -w "%{http_code}" $1)
-    if [ "$up" != "200" ]; then
-        echo "ERROR: $1 is not running (returned $up)"
-    else
-        echo "OK: running: $1"
-    fi
+isInited() {
+    REMOTE_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_DIR}' ]"
+    return $?
 }
 
-# Usage
-if [ -z "$1" ]; then
-    echo "Usage: $0 <scenario> [init,updateconfig,up,start,stop,down,test,remove]"
-    echo
-    echo "          init   - init remote scenario dir"
-    echo "          updateconfig - update local scenario config"
-    echo "          up     - Create and start scenario"
-    echo "          start  - Start scenario if already created"
-    echo "          stop   - Stop scenario"
-    echo "          down   - Stop and shut down scenario"
-    echo "          test   - Test the running scenario"
-    echo "          remove - Remove all remote and local scenario dir"
-    echo
-    echo "Example: $0 dev (defaults to: up,test)"
-    echo "Example: $0 dev stop,start"
-    echo "Example: $0 dev up"
-    echo "Example: $0 dev remove"
-    echo
-    echo "* up will call init and stop"
-    echo "* remove will call down"
-    echo
-    echo "Available scenarios:"
+function printUsage() {
+    log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,updateconfig] [-v|-s|-h]"
+    log
+    log "        Lifecycle actions:"
+    log "          init   - init remote scenario dir"
+    log "          up     - Create and start scenario"
+    log "          stop   - Stop scenario"
+    log "          start  - Start scenario if stopped"
+    log "          down   - Stop and shut down scenario"
+    log "          deinit - Cleanup/remove remote and local scenario dir (leave config untouched)"
+    log
+    log "        Service actions:"
+    log "          test   - Test the running scenario"
+    log "          updateconfig - update local scenario config"
+    log
+    log "        Options:"
+    log "          -v|--verbose - verbosee"
+    log "          -s|--silent  - silent"
+    log "          -h|--help    - help"
+    log
+    log "Example: $0 dev (defaults to: up,test)"
+    log "Example: $0 dev stop,start"
+    log "Example: $0 dev up"
+    log "Example: $0 dev deinit"
+    log
+    log "* up will call init and stop"
+    log "* deinit will call down"
+    log
+    log "Available scenarios:"
     cd $cwd && find Scenarios -name *.scenario | sed "s;Scenarios/;    ;" | sed "s/\.scenario//" | sed "s/ /\\ /g"
     exit 1
+}
+
+# Check for keyfile
+if [[ -n "${keyfile}" ]]; then
+    logVerbose "Use ${keyfile}"
+    use_key="-i ${keyfile}"
+fi
+
+# Scane for scenario
+if [ -z "$1" ]; then
+    printUsage
 fi
 SCENARIO_NAME=$(basename $1)
 SCENARIO_NAME_SPACE=$(dirname $1)
@@ -66,6 +95,41 @@ SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
 SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 shift
+
+# Default steps
+DEFAULT_STEPS="test"
+if [ -z "$1" ]; then
+    STEPS=$DEFAULT_STEPS
+else
+    STEPS=$1
+fi
+shift
+
+# Parse all "-" args
+for i in "$@"
+do
+case $i in
+    -v|--verbose)
+    VERBOSITY="-v"
+    ;;
+    -s|--silent)
+    VERBOSITY="-s"
+    ;;
+    -h|--help)
+    HELP=true
+    ;;
+    *)
+    # unknown option
+    log "Unknown option: $i"
+    printUsage
+    ;;
+esac
+done
+
+# Print help
+if [ -n "$HELP" ]; then
+    printUsage
+fi
 
 # ask with default
 function ask_with_default {
@@ -152,7 +216,7 @@ function parse_yaml {
 
 function doCopyConfig() {
     cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
-    echo "Please check $SCENARIO_FILE_NAME and commit it to git."
+    log "Please check $SCENARIO_FILE_NAME and commit it to git."
 }
 
 function updateconfig() {
@@ -169,7 +233,7 @@ function config() {
     mkdir -p $cwd/Scenarios/$SCENARIO_NAME_SPACE
 
     if [ -z "$SCENARIO_SRC_COMPONENT" ]; then
-        echo "Available component dirs:"
+        log "Available component dirs:"
         cd $cwd && find Components -name defaults.scenario.yaml | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
         SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir  :" "")
     fi
@@ -181,7 +245,6 @@ function config() {
 
     # Check $SCENARIO_FILE_NAME for missing variables
     local current_comment=""
-    local i_had_to_ask=false
     rm -rf $SCENARIO_FILE_NAME_TMP
     IFS=$'\n'
     for line in $(cat "$SCENARIO_DEFAULTS_ENV"); do
@@ -189,15 +252,14 @@ function config() {
             local variable=$(echo "$line" | cut -d "=" -f 1)
             local default=$(echo "$line" | cut -d "=" -f 2 | sed "s/^\"//" | sed "s/\"$//")
             local value=${!variable}
-            #echo
-            #echo "current_comment : \"$current_comment\""
-            #echo "variable        : \"$variable\""
-            #echo "default         : \"$default\""
-            #echo "value           : \"$value\""
+            #log
+            #log "current_comment : \"$current_comment\""
+            #log "variable        : \"$variable\""
+            #log "default         : \"$default\""
+            #log "value           : \"$value\""
             if [ -z "$value" ]; then
                 value=$(ask_with_default "$current_comment" "$default")
-                #echo "I ASKED AND GOT : \"$value\""
-                i_had_to_ask=true
+                #logVerbose "I ASKED AND GOT : \"$value\""
             fi
             echo "$variable=\"$value\"" >> $SCENARIO_FILE_NAME_TMP
         else
@@ -210,13 +272,15 @@ function config() {
     unset IFS
 
     # Update $SCENARIO_FILE_NAME if needed
-    if [ "$i_had_to_ask" = true ]; then
-        # TODO: Find another way to also ask if variables should be updated or are removed
-        echo
-        echo "I had to ask for some variables."
+    UPDATES=$(diff $SCENARIO_FILE_NAME $SCENARIO_FILE_NAME_TMP)
+    if [ -n "$UPDATES" ]; then
+        log
+        log "I found changes for some variables."
+        log "Changes:"
+        log "$UPDATES"
         SURE=$(ask_with_default "Should I update the scenario with the new values? (yes/no)?" "no")
         if [ -z `echo $SURE | grep -i y` ]; then
-            echo "Not updated."
+            log "Not updated."
         else
             doCopyConfig
         fi
@@ -240,60 +304,85 @@ function init() {
     done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env
 
     # Sync to remote
-    echo "ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG tree -L 3 -a $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME"
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG tree -L 3 -a $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
-        mkdir -p $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    if isInited; then
+        logVerbose "Scenario '$SCENARIO_NAME' is available on remote server."
+        if [ "$VERBOSITY" == "-v" ]; then
+            callRemote tree -L 3 -a .
+        fi
+    else
+        log "Scenario '$SCENARIO_NAME' is not yet available on remote server."
+        ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
+            mkdir -p $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
 EOF
-    rsync -avzP --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/ $SCENARIO_SERVER_SSHCONFIG:$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG tree -L 3 -a $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    fi
+    RSYNC_VERBOSE="-q"
+    if [ "$VERBOSITY" == "-v" ]; then
+        RSYNC_VERBOSE="-v"
+    fi
+    rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/ $SCENARIO_SERVER_SSHCONFIG:$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/
+    if [ "$VERBOSITY" == "-v" ]; then
+        callRemote tree -L 3 -a .
+    fi
+    log "Scenario '$SCENARIO_NAME' is now inited (available on remote server)."
 }
 
 function up() {
     init
-    stop
 
-    # Startup WODA with WODA.2023 container and check that startup is done
-    banner "Startup WODA with WODA.2023 container and check that startup is done"
-    callRemote ./scenario.sh up
+    if callRemote ./scenario.sh test $VERBOSITY; then
+        logVerbose "Scenario '$SCENARIO_NAME' is already running."
+        return 1
+    fi
+
+    # Startup scenario
+    banner "Startup scenario '$SCENARIO_NAME'"
+    callRemote ./scenario.sh up $VERBOSITY
+
+    log "Scenario '$SCENARIO_NAME' is now up (running on remote server)."
 }
 
 function start() {
     if [ ! -f $SCENARIO_FILE_NAME ]; then
-        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
     fi
 
     # Restart once server
     banner "Restart once server"
-    callRemote ./scenario.sh start
+    callRemote ./scenario.sh start $VERBOSITY
+
+    log "Scenario '$SCENARIO_NAME' is now started (running on remote server)."
 }
 
 function stop() {
     if [ ! -f $SCENARIO_FILE_NAME ]; then
-        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
     fi
 
     # Stop remotely
     banner "Stop remotely"
-    callRemote ./scenario.sh stop || true
+    callRemote ./scenario.sh stop $VERBOSITY || true
+
+    log "Scenario '$SCENARIO_NAME' is now stopped (on remote server)."
 }
 
 function down() {
     if [ ! -f $SCENARIO_FILE_NAME ]; then
-        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
     fi
 
     # Shutdown remotely
     banner "Shutdown remotely"
-    callRemote ./scenario.sh down || true
+    callRemote ./scenario.sh down $VERBOSITY || true
+
+    log "Scenario '$SCENARIO_NAME' is now down (server removed on remote server)."
 }
 
-function remove() {
+function deinit() {
     if [ ! -f $SCENARIO_FILE_NAME ]; then
-        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
     fi
 
@@ -308,45 +397,52 @@ cd $SCENARIO_SERVER_CONFIGSDIR
 rm -rf $SCENARIO_NAME_SPACE/$SCENARIO_NAME
 rmdir -p $SCENARIO_NAME_SPACE 2>/dev/null || true
 EOF
+
+    log "Scenario '$SCENARIO_NAME' is now deinited (removed from remote server)."
 }
 
 function test() {
     if [ ! -f $SCENARIO_FILE_NAME ]; then
-        echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         exit 1
     fi
 
     # Test remote
     banner "Test remote"
-    callRemote ./scenario.sh test
+    if isInited; then
+        logVerbose "Scenario '$SCENARIO_NAME' is available on remote server."
+        callRemote ./scenario.sh test $VERBOSITY
+        return $?
+    else
+        log "Scenario '$SCENARIO_NAME' is not available on remote server."
+        return 1
+    fi
 }
-
-DEFAULT_STEPS="test"
-if [ -z "$1" ]; then
-    STEPS=$DEFAULT_STEPS
-else
-    STEPS=$@
-fi
 
 for STEP in $(echo $STEPS | sed "s/,/ /g"); do
     if [ "$STEP" == "init" ]; then
         init
-    elif [ "$STEP" == "updateconfig" ]; then
-        updateconfig
     elif [ "$STEP" == "up" ]; then
         up
-    elif [ "$STEP" == "start" ]; then
-        start
     elif [ "$STEP" == "stop" ]; then
         stop
+    elif [ "$STEP" == "start" ]; then
+        start
     elif [ "$STEP" == "down" ]; then
         down
-    elif [ "$STEP" == "remove" ]; then
-        remove
+    elif [ "$STEP" == "deinit" ]; then
+        deinit
     elif [ "$STEP" == "test" ]; then
         test
+    elif [ "$STEP" == "updateconfig" ]; then
+        updateconfig
     else
-        echo "ERROR: Unknown step: $STEP"
+        log "ERROR: Unknown step: $STEP"
         exit 1
+    fi
+    RV=$? # return value of last command
+    if [ $RV -ne 0 ]; then
+        log "ERROR: Step '$STEP' failed with return value $RV"
+        exit $RV
     fi
 done
