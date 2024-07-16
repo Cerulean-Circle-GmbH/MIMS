@@ -274,10 +274,10 @@ function config() {
     # Update $SCENARIO_FILE_NAME if needed
     UPDATES=$(diff $SCENARIO_FILE_NAME $SCENARIO_FILE_NAME_TMP)
     if [ -n "$UPDATES" ]; then
-        log
-        log "I found changes for some variables."
-        log "Changes:"
-        log "$UPDATES"
+        echo
+        echo "I found changes for some variables."
+        echo "Changes:"
+        echo "$UPDATES"
         SURE=$(ask_with_default "Should I update the scenario with the new values? (yes/no)?" "no")
         if [ -z `echo $SURE | grep -i y` ]; then
             log "Not updated."
