@@ -112,20 +112,20 @@ function up() {
     # Wait for startup of container and installation of ONCE
     banner "Wait for startup of container and installation of ONCE"
     local found=""
-    logVerbose "Wait for startup of container..."
-    logVerbose
-    logVerbose
-    logVerbose
-    logVerbose
-    logVerbose
-    logVerbose
+    log "Wait for startup of container..."
+    log
+    log
+    log
+    log
+    log
+    log
     while [ -z "$found" ]; do
         local UP='\033[7A'
         local LINEFEED='\033[0G'
         local STR=$(docker logs -n 5 $SCENARIO_ONCE_CONTAINER 2>&1)
-        logVerbose -e "$LINEFEED$UP"
-        logVerbose "== Wait for startup... ==========================================================="
-        if [ "$VERBOSITY" == "-v" ]; then
+        log -e "$LINEFEED$UP"
+        log "== Wait for startup... ==========================================================="
+        if [ "$VERBOSITY" != "-s" ]; then
             while IFS= read -r line
             do
                 local COLUMNS=80
