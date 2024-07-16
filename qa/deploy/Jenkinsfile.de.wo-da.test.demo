@@ -31,9 +31,9 @@ pipeline {
                         sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/de/wo-da/test/demo.scenario
                         git status
                         git diff
-                        ./deploy-scenario.sh de/wo-da/test/demo remove
+                        ./deploy-scenario.sh de/wo-da/test/demo deinit
                         ./deploy-scenario.sh de/wo-da/test/demo up,test
-                        ./deploy-scenario.sh de/wo-da/test/demo test > $cwd/results/de.wo-da.test.demo.log
+                        ./deploy-scenario.sh de/wo-da/test/demo test -v > $cwd/results/de.wo-da.test.demo.log
                     '''
                 }
             }
