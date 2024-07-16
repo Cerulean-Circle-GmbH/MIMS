@@ -330,7 +330,7 @@ do
 case $i in
     -v|--verbose)
     VERBOSITY=$i
-    $VERBOSEPIPE="/dev/stdout"
+    VERBOSEPIPE="/dev/stdout"
     ;;
     -s|--silent)
     VERBOSITY=$i

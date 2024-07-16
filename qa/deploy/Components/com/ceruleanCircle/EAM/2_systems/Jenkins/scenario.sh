@@ -45,11 +45,7 @@ function up() {
     # Create jenkins image
     banner "Create jenkins image"
     log "Building image..."
-    if [ "$VERBOSITY" == "-v" ]; then
-        docker build -t ${SCENARIO_DOCKER_IMAGENAME} .
-    else
-        docker build -t ${SCENARIO_DOCKER_IMAGENAME} . > /dev/null
-    fi
+    docker build -t ${SCENARIO_DOCKER_IMAGENAME} . > $VERBOSEPIPE
     docker tag ${SCENARIO_DOCKER_IMAGENAME} ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
     docker tag ${SCENARIO_DOCKER_IMAGENAME} ${SCENARIO_DOCKER_IMAGENAME}:latest
 
@@ -129,12 +125,15 @@ fi
 STEP=$1
 shift
 
+VERBOSEPIPE="/dev/null"
+
 # Parse all "-" args
 for i in "$@"
 do
 case $i in
     -v|--verbose)
     VERBOSITY=$i
+    VERBOSEPIPE="/dev/stdout"
     ;;
     -s|--silent)
     VERBOSITY=$i
