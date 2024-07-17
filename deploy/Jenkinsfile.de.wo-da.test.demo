@@ -32,7 +32,7 @@ pipeline {
                         git status
                         git diff
                         ./deploy-scenario.sh de/wo-da/test/demo deinit
-                        ./deploy-scenario.sh de/wo-da/test/demo up,test
+                        ./deploy-scenario.sh de/wo-da/test/demo init,up,test
                         ./deploy-scenario.sh de/wo-da/test/demo test -v > $cwd/results/de.wo-da.test.demo.log
                     '''
                 }

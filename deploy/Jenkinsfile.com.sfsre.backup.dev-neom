@@ -29,7 +29,7 @@ pipeline {
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/deploy
                         ./deploy-scenario.sh com/sfsre/backup/dev-neom deinit
-                        ./deploy-scenario.sh com/sfsre/backup/dev-neom up,test
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom init,up,test
                         ./deploy-scenario.sh com/sfsre/backup/dev-neom test -v > $cwd/results/com.sfsre.backup.dev-neom.log
                     '''
                 }
