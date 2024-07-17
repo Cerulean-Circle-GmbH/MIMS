@@ -315,7 +315,7 @@ function init() {
 
     # Sync to remote
     if isInited; then
-        logVerbose "Scenario '$SCENARIO_NAME' is available on remote server. Will be updateed."
+        logVerbose "Scenario '$SCENARIO_NAME' is available on remote server. Will be updated."
         if [ "$VERBOSITY" == "-v" ]; then
             callRemote tree -L 3 -a .
         fi
