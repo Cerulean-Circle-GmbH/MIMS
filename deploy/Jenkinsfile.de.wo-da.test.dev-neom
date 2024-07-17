@@ -28,9 +28,9 @@ pipeline {
                         set -e
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/deploy
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom deinit
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom init,up,test
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom test -v > $cwd/results/de.wo-da.test.dev-neom.log
+                        ./scenario.deploy de/wo-da/test/dev-neom deinit
+                        ./scenario.deploy de/wo-da/test/dev-neom init,up,test
+                        ./scenario.deploy de/wo-da/test/dev-neom test -v > $cwd/results/de.wo-da.test.dev-neom.log
                     '''
                 }
             }
