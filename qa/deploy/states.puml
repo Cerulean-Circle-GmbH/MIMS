@@ -11,7 +11,6 @@ state "Running" as Running <<State>>
 state "Stopped" as Stopped <<State>>
 
 [*] --> Inited : init
-[*] -[dotted]-> Running : up(+init)
 Inited --> Running : up
 Stopped --> Running : start,up
 Running --> Stopped : stop
@@ -21,8 +20,8 @@ Running -[dotted]-> [*] : deinit(+down)
 Inited --> [*] : deinit
 Stopped -[dotted]-> [*] : deinit(+down)
 
-any_state --> any_state : init
-any_state --> any_state : updateconfig
-any_state --> any_state : test
+Inited --> Inited : init,\nupdateconfig,\ntest
+Running --> Running : init,\nupdateconfig,\ntest
+Stopped --> Stopped : init,\nupdateconfig,\ntest
 
 @enduml
