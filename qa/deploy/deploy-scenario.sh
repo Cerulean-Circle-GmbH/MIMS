@@ -93,6 +93,7 @@ fi
 
 # Scan for scenario
 if [ -z "$1" ]; then
+    log "Unknown scenario"
     printUsage
     exit 1
 fi
