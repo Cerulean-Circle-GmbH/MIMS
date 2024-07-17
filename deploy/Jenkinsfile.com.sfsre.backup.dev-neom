@@ -27,10 +27,10 @@ pipeline {
                     sh '''#!/usr/bin/bash
                         set -e
                         cwd=$(pwd)
-                        cd /var/dev/Once.2023/qa/deploy
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom deinit
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom up,test
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom test -v > $cwd/results/de.wo-da.test.dev-neom.log
+                        cd /var/dev/Once.2023/deploy
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom deinit
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom up,test
+                        ./deploy-scenario.sh com/sfsre/backup/dev-neom test -v > $cwd/results/com.sfsre.backup.dev-neom.log
                     '''
                 }
             }
