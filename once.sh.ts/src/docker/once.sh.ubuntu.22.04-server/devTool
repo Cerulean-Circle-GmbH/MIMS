@@ -343,7 +343,7 @@ usage() {
 }
 
 start() {
-    ../../../../check-system.sh silent
+    ../check-system.sh silent
     RETURN_VALUE=$?
     if [ $RETURN_VALUE -gt 0 ]; then
         log "system check did not go well:"
