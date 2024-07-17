@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'once.sh-builder'
-            args '-v once_jenkins:/var/dev -v once_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            args '-v once_jenkins:/var/dev -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
             reuseNode true
         }
     }
@@ -25,11 +25,12 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
+                        set -e
                         cwd=$(pwd)
                         cd /var/dev/Once.2023/qa/deploy
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom remove
+                        ./deploy-scenario.sh de/wo-da/test/dev-neom deinit
                         ./deploy-scenario.sh de/wo-da/test/dev-neom up,test
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom test > $cwd/results/de.wo-da.test.dev-neom.log
+                        ./deploy-scenario.sh de/wo-da/test/dev-neom test -v > $cwd/results/de.wo-da.test.dev-neom.log
                     '''
                 }
             }

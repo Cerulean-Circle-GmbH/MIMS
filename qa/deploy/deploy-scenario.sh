@@ -41,6 +41,13 @@ EOF
 }
 
 isInited() {
+    # Check if scenario file exists
+    if [ ! -f $SCENARIO_FILE_NAME ]; then
+        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+        return 1
+    fi
+
+    # Check if scenario is available on remote server
     REMOTE_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_DIR}' ]"
     return $?
@@ -76,7 +83,6 @@ function printUsage() {
     log
     log "Available scenarios:"
     cd $cwd && find Scenarios -name *.scenario | sed "s;Scenarios/;    ;" | sed "s/\.scenario//" | sed "s/ /\\ /g"
-    exit 1
 }
 
 # Check for keyfile
@@ -85,9 +91,11 @@ if [[ -n "${keyfile}" ]]; then
     use_key="-i ${keyfile}"
 fi
 
-# Scane for scenario
+# Scan for scenario
 if [ -z "$1" ]; then
+    log "Unknown scenario"
     printUsage
+    exit 1
 fi
 SCENARIO_NAME=$(basename $1)
 SCENARIO_NAME_SPACE=$(dirname $1)
@@ -122,6 +130,7 @@ case $i in
     # unknown option
     log "Unknown option: $i"
     printUsage
+    exit 1
     ;;
 esac
 done
@@ -129,6 +138,7 @@ done
 # Print help
 if [ -n "$HELP" ]; then
     printUsage
+    exit 0
 fi
 
 # ask with default
@@ -274,10 +284,10 @@ function config() {
     # Update $SCENARIO_FILE_NAME if needed
     UPDATES=$(diff $SCENARIO_FILE_NAME $SCENARIO_FILE_NAME_TMP)
     if [ -n "$UPDATES" ]; then
-        log
-        log "I found changes for some variables."
-        log "Changes:"
-        log "$UPDATES"
+        echo
+        echo "I found changes for some variables."
+        echo "Changes:"
+        echo "$UPDATES"
         SURE=$(ask_with_default "Should I update the scenario with the new values? (yes/no)?" "no")
         if [ -z `echo $SURE | grep -i y` ]; then
             log "Not updated."
@@ -305,7 +315,7 @@ function init() {
 
     # Sync to remote
     if isInited; then
-        logVerbose "Scenario '$SCENARIO_NAME' is available on remote server."
+        logVerbose "Scenario '$SCENARIO_NAME' is available on remote server. Will be updated."
         if [ "$VERBOSITY" == "-v" ]; then
             callRemote tree -L 3 -a .
         fi
@@ -327,10 +337,13 @@ EOF
 }
 
 function up() {
-    init
+    if ! isInited; then
+        log "Scenario '$SCENARIO_NAME' is not inited."
+        return 1
+    fi
 
     if callRemote ./scenario.sh test $VERBOSITY; then
-        logVerbose "Scenario '$SCENARIO_NAME' is already running."
+        log "Scenario '$SCENARIO_NAME' is already running."
         return 1
     fi
 
@@ -342,9 +355,14 @@ function up() {
 }
 
 function start() {
-    if [ ! -f $SCENARIO_FILE_NAME ]; then
-        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
-        exit 1
+    if ! isInited; then
+        log "Scenario '$SCENARIO_NAME' is not inited."
+        return 1
+    fi
+
+    if callRemote ./scenario.sh test $VERBOSITY; then
+        log "Scenario '$SCENARIO_NAME' is already running."
+        return 1
     fi
 
     # Restart once server
@@ -355,9 +373,9 @@ function start() {
 }
 
 function stop() {
-    if [ ! -f $SCENARIO_FILE_NAME ]; then
-        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
-        exit 1
+    if ! isInited; then
+        log "Scenario '$SCENARIO_NAME' is not inited."
+        return 1
     fi
 
     # Stop remotely
@@ -368,9 +386,9 @@ function stop() {
 }
 
 function down() {
-    if [ ! -f $SCENARIO_FILE_NAME ]; then
-        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
-        exit 1
+    if ! isInited; then
+        log "Scenario '$SCENARIO_NAME' is not inited."
+        return 1
     fi
 
     # Shutdown remotely
@@ -381,9 +399,9 @@ function down() {
 }
 
 function deinit() {
-    if [ ! -f $SCENARIO_FILE_NAME ]; then
-        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
-        exit 1
+    if ! isInited; then
+        log "Scenario '$SCENARIO_NAME' is not inited."
+        return 1
     fi
 
     down
@@ -402,9 +420,9 @@ EOF
 }
 
 function test() {
-    if [ ! -f $SCENARIO_FILE_NAME ]; then
-        log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
-        exit 1
+    if ! isInited; then
+        log "Scenario '$SCENARIO_NAME' is not inited."
+        return 1
     fi
 
     # Test remote
@@ -419,30 +437,38 @@ function test() {
     fi
 }
 
+RETVAL=0
 for STEP in $(echo $STEPS | sed "s/,/ /g"); do
     if [ "$STEP" == "init" ]; then
         init
+        RETVAL=$? # return value
     elif [ "$STEP" == "up" ]; then
         up
+        RETVAL=$? # return value
     elif [ "$STEP" == "stop" ]; then
         stop
+        RETVAL=$? # return value
     elif [ "$STEP" == "start" ]; then
         start
+        RETVAL=$? # return value
     elif [ "$STEP" == "down" ]; then
         down
+        RETVAL=$? # return value
     elif [ "$STEP" == "deinit" ]; then
         deinit
+        RETVAL=$? # return value
     elif [ "$STEP" == "test" ]; then
         test
+        RETVAL=$? # return value
     elif [ "$STEP" == "updateconfig" ]; then
         updateconfig
+        RETVAL=$? # return value
     else
         log "ERROR: Unknown step: $STEP"
         exit 1
     fi
-    RV=$? # return value of last command
-    if [ $RV -ne 0 ]; then
-        log "ERROR: Step '$STEP' failed with return value $RV"
-        exit $RV
+    if [ $RETVAL -ne 0 ]; then
+        log "ERROR: Step '$STEP' failed with return value: $RETVAL"
+        exit $RETVAL
     fi
 done

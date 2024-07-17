@@ -9,23 +9,6 @@ pipeline {
             }
         }
 
-        stage('build image once.jenkins') {
-            steps {
-                sh '''
-                    set -e
-                    BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                            --entrypoint "" once.sh-builder /bin/bash -c \
-                            "source ~/config/user.env &&
-                            git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
-                            cd Once.2023 &&
-                            git checkout $BRANCH &&
-                            cd once.sh.ts/src/docker/jenkins &&
-                            ./devTool docker.build"
-                    '''
-            }
-        }
-
         stage('build image once.sh-builder') {
             steps {
                 sh '''
