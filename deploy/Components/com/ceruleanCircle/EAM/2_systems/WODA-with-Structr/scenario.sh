@@ -72,7 +72,7 @@ function up() {
     fi
 
     # Workspace
-    banner "Workspace ($SCENARIO_SRC_STRUCTRDATAFILE)"
+    banner "Workspace ($SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE)"
     if [ -d "WODA-current" ]; then
         logVerbose "Already existing workspace..."
     else
@@ -81,7 +81,7 @@ function up() {
         if [ "$VERBOSITY" == "-v" ]; then
             RSYNC_VERBOSE="-v"
         fi
-        rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTRDATAFILE WODA-current.tar.gz
+        rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE WODA-current.tar.gz
         tar xzf WODA-current.tar.gz > $VERBOSEPIPE
     fi
 
@@ -101,6 +101,28 @@ function up() {
     log "Building image..."
     docker-compose build > $VERBOSEPIPE
     docker image ls > $VERBOSEPIPE
+
+    # Handle outer srcpath/volume
+    SCENARIO_ONCE_VOLUME=var_dev
+    if [ -n "$SCENARIO_RESOURCE_ONCE_SRCPATH" ]; then
+        SCENARIO_ONCE_VOLUME=$SCENARIO_RESOURCE_ONCE_SRCPATH
+    fi
+
+    # Handle outer config only when localhost
+    #SCENARIO_SRC_ONCE_OUTERCONFIG
+    # Create .gitconfig
+    #if [ ! -f $DOCKER_OUTER_CONFIG/.gitconfig ]; then
+    #    mkdir -p $DOCKER_OUTER_CONFIG
+    #    NAME=$(ask_with_default "Your full name  (for Git) :" "")
+    #    MAIL=$(ask_with_default "Your full email (for Git) :" "")
+    #    cat ../gitconfig.template | sed "s;##NAME##;$NAME;" | sed "s;##MAIL##;$MAIL;" > $DOCKER_OUTER_CONFIG/.gitconfig
+    #fi
+
+    # Create ssh keys
+    #if [ ! -f $DOCKER_OUTER_CONFIG/.ssh/id_rsa ]; then
+    #    mkdir -p $DOCKER_OUTER_CONFIG/.ssh
+    #    ssh-keygen -f $DOCKER_OUTER_CONFIG/.ssh/id_rsa
+    #fi
 
     # Create and run container
     banner "Create and run container"
@@ -184,7 +206,7 @@ EOF
     local ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
     DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
-        git checkout $SCENARIO_SRC_BRANCH > /dev/null 2>&1
+        git checkout $SCENARIO_SRC_ONCE_BRANCH > /dev/null 2>&1
         git reset --hard
         git pull
         (

@@ -73,9 +73,10 @@ function printUsage() {
     log "          -s|--silent  - silent"
     log "          -h|--help    - help"
     log
-    log "Example: $0 dev (defaults to: up,test)"
-    log "Example: $0 dev stop,start"
+    log "Example: $0 dev (defaults to: test)"
+    log "Example: $0 dev init"
     log "Example: $0 dev up"
+    log "Example: $0 dev stop,start"
     log "Example: $0 dev deinit"
     log
     log "* up will call init and stop"
@@ -189,6 +190,9 @@ function sourceEnv() {
     getVarFromOldVar SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS      SCENARIO_ONCE_REVERSE_PROXY_HTTPS_PORT
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTP     SCENARIO_STRUCTR_HTTP
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTPS    SCENARIO_STRUCTR_HTTPS
+    getVarFromOldVar SCENARIO_SRC_STRUCTR_TAG           SCENARIO_SRC_TAG
+    getVarFromOldVar SCENARIO_SRC_ONCE_BRANCH           SCENARIO_SRC_BRANCH
+    getVarFromOldVar SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE           SCENARIO_SRC_STRUCTRDATAFILE
 
     # Source other env files from component definition
     OTHER_ENV_FILES=$(find $cwd/Components/$SCENARIO_SRC_COMPONENT -name .env)
