@@ -27,10 +27,13 @@ pipeline {
                     sh '''#!/usr/bin/bash
                         set -e
                         cwd=$(pwd)
-                        cd /var/dev/Once.2023/qa/deploy
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom deinit
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom up,test
-                        ./deploy-scenario.sh de/wo-da/test/dev-neom test -v > $cwd/results/de.wo-da.test.dev-neom.log
+                        cd /var/dev/Once.2023/deploy
+                        sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/de/wo-da/test/demo.scenario
+                        git status
+                        git diff
+                        ./scenario.deploy de/wo-da/test/demo deinit
+                        ./scenario.deploy de/wo-da/test/demo init,up,test
+                        ./scenario.deploy de/wo-da/test/demo test -v > $cwd/results/de.wo-da.test.demo.log
                     '''
                 }
             }
