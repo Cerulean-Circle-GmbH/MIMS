@@ -1,6 +1,6 @@
 ## Source setup
 # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
-SCENARIO_SRC_COMPONENT="com/ceruleanCircle/EAM/2_systems/Certbot"
+SCENARIO_SRC_COMPONENT="org/eff/Certbot"
 ## Server setup
 # What is the server, the scenario will be deployed?
 SCENARIO_SERVER_NAME="test.wo-da.de"
@@ -9,7 +9,7 @@ SCENARIO_SERVER_SSHCONFIG="WODA.test"
 # What is the scenarios root directory on the server?
 SCENARIO_SERVER_CONFIGSDIR="/var/dev/ONCE.2023-Scenarios"
 # Where to find the servers certificate?
-SCENARIO_SERVER_CERTIFICATEDIR="/var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/conf"
+SCENARIO_SERVER_CERTIFICATEDIR="/tmp"
 ## Docker setup
 # What is the name of the docker image?
 SCENARIO_DOCKER_IMAGENAME="certbot/certbot"
