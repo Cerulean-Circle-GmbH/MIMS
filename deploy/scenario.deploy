@@ -400,11 +400,10 @@ function down() {
 
 function deinit() {
     if ! isInited; then
-        log "Scenario '$SCENARIO_NAME' is not inited."
-        return 1
+        log "Warning: Scenario '$SCENARIO_NAME' is not inited."
+    else
+        down
     fi
-
-    down
 
     # Remove locally and remotely
     banner "Remove locally and remotely"
