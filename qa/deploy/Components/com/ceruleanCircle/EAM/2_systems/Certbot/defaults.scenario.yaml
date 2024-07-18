@@ -21,10 +21,5 @@ scenario:
     imagename: certbot/certbot
     # What is the version of the docker image?
     imageversion: latest
-    # What is the network name of the docker container?
-    networkname: once-woda-network
-
-  ## Unique resources
-  resource:
-    # What is the name of the docker container?
-    containername: certbot
+    ## What is the network name of the docker container?
+    #networkname: once-woda-network

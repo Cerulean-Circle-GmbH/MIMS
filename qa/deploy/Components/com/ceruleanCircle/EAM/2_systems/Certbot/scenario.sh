@@ -86,12 +86,10 @@ function test() {
     # Print volumes, images, containers and files
     if [ "$VERBOSITY" = "-v" ]; then
         banner "Test"
-        log "Volumes:"
-        docker volume ls | grep $SCENARIO_SERVER_CERTIFICATEDIR
         log "Images:"
         docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
         log "Containers:"
-        docker ps -all | grep $SCENARIO_RESOURCE_CONTAINERNAME
+        docker ps -all | grep $SCENARIO_NAME
         log "Files:"
         pwd
         tree -L 3 -a .
@@ -100,7 +98,8 @@ function test() {
     # Check EAMD.ucp git status
     banner "Check Certbot $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
     # checkURL "Certbot (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/jenkins
-    return $? # Return the result of the last command
+    #return $? # Return the result of the last command
+    return 1
 }
 
 function printUsage() {
