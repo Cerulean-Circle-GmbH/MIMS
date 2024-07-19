@@ -8,8 +8,8 @@ pipeline {
     }
 
     environment {
-        TREE = 'com/neom/EAM'
-        NAME = 'com.neom.EAM'
+        TREE = 'com/neom'
+        NAME = 'com.neom'
     }
 
     options {
@@ -25,8 +25,9 @@ pipeline {
                     mkdir -p results
 
                     # Update known_hosts (only for bitbucket once in a while)
-                    #ssh-keygen -f "/root/.ssh/known_hosts" -R "bitbucket.org"
-                    #ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+                    # export GIT_SSH="ssh -o StrictHostKeyChecking=no"
+                    ssh-keygen -f "/root/.ssh/known_hosts" -R "bitbucket.org"
+                    ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
                     # Update EAMD
                     cd /var/dev
@@ -57,7 +58,7 @@ pipeline {
                     export LOG_DEVICE=$WORKSPACE/results/branch.txt
                     config save log
                     oo branches.check feature/neom dev/neom 6a7a3d3
-                    export LOG_DEVICE=/dev/tty
+                    export LOG_DEVICE=/dev/stdout
                     config save log
                     cat $WORKSPACE/results/branch.txt 
                     cat $WORKSPACE/results/branch.txt | ansi2html > $WORKSPACE/results/branch.html
