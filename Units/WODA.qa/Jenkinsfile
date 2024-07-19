@@ -21,6 +21,7 @@ pipeline {
         stage('Cleanup & update') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     rm -rf results
                     mkdir -p results
 
@@ -49,6 +50,7 @@ pipeline {
         stage('Start WODA') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     source ~/config/user.env
                     oo mode.dev
                     oo update
@@ -64,6 +66,7 @@ pipeline {
         stage('Check WODA status') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     source ~/config/user.env
                     cd /var/dev/EAMD.ucp
                     git reset --hard
@@ -77,6 +80,7 @@ pipeline {
         stage('Test WODA') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     source ~/config/user.env
                     source ~/.once
                     echo "MKT: Add environment variables to .once"

@@ -15,6 +15,7 @@ pipeline {
         stage('Cleanup & update') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     rm -rf results
                     mkdir -p results
                     cd /var/dev/Once.2023

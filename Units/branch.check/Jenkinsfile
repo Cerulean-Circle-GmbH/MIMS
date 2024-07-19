@@ -20,6 +20,7 @@ pipeline {
         stage('Cleanup & update') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     rm -rf results
                     mkdir -p results
 
@@ -44,6 +45,7 @@ pipeline {
         stage('Check branches') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     source ~/config/user.env
                     oo mode.dev
                     oo update
@@ -61,6 +63,7 @@ pipeline {
         stage('Create class svg (wavi)') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     TMP=/tmp/${TREE}
                     SOURCE=/var/dev/EAMD.ucp/Components/${TREE}
                     source ~/config/user.env
@@ -76,6 +79,7 @@ pipeline {
         stage('Create class svg (puml)') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     source ~/config/user.env
                     oo mode.dev
                     oo update
@@ -94,6 +98,7 @@ pipeline {
         stage('Static analysis of EAMD') {
             steps {
                 sh '''#!/usr/bin/bash
+                    set -e
                     source ~/config/user.env
                     oo mode.dev
                     oo update
