@@ -53,6 +53,24 @@ isInited() {
     return $?
 }
 
+function convert_to_namespace() {
+    local server_string="$1"
+    
+    # Split the server string into an array using '.' as a delimiter
+    IFS='.' read -r -a parts <<< "$server_string"
+    
+    # Reverse the array
+    local reversed_parts=()
+    for (( idx=${#parts[@]}-1 ; idx>=0 ; idx-- )) ; do
+        reversed_parts+=("${parts[idx]}")
+    done
+    
+    # Join the reversed parts with '/' as a delimiter
+    local namespace_string=$(IFS='/'; echo "${reversed_parts[*]}")
+    
+    echo "$namespace_string"
+}
+
 function printUsage() {
     log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,updateconfig] [-v|-s|-h]"
     log
@@ -99,6 +117,12 @@ if [ -z "$1" ]; then
 fi
 SCENARIO_NAME=$(basename $1)
 SCENARIO_NAME_SPACE=$(dirname $1)
+# Check that scenario name space exists
+if [[ $SCENARIO_NAME_SPACE == "." ]]; then
+    log "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
+    log "Namespace is currently: $SCENARIO_NAME_SPACE"
+    exit 1
+fi
 SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
 SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
@@ -345,6 +369,14 @@ function up() {
     if callRemote ./scenario.sh test $VERBOSITY; then
         log "Scenario '$SCENARIO_NAME' is already running."
         return 1
+    fi
+
+    # Check that scenario name fits the server
+    EXPECTED_NAMESPACE=$(convert_to_namespace $SCENARIO_SERVER_NAME)
+    if [ "$SCENARIO_NAME_SPACE" != "$EXPECTED_NAMESPACE" ]; then
+        log "WARNING: Scenario name space '$SCENARIO_NAME_SPACE' does not match server name '$SCENARIO_SERVER_NAME'"
+    else
+        log "Scenario name space '$SCENARIO_NAME_SPACE' matches server name '$SCENARIO_SERVER_NAME'"
     fi
 
     # Startup scenario
