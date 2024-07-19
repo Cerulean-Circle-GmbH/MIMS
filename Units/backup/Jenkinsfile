@@ -27,7 +27,7 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile'),
                                  string(credentialsId: 'jenkins4bitbucket', variable: 'BBTOKEN')]) {
                     sh '''#!/usr/bin/bash
-                        /var/dev/Once.2023/tools/backup/backupStructr.sh
+                        /var/dev/Once.2023/Units/backup/backupStructr.sh
                     '''
                 }
             }
@@ -36,7 +36,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
-                        /var/dev/Once.2023/tools/backup/backupJenkins.sh
+                        /var/dev/Once.2023/Units/backup/backupJenkins.sh
                     '''
                 }
             }
@@ -45,7 +45,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
-                        /var/dev/Once.2023/tools/backup/backupOnce.sh
+                        /var/dev/Once.2023/Units/backup/backupOnce.sh
                     '''
                 }
             }

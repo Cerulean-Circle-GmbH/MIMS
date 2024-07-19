@@ -27,7 +27,7 @@ pipeline {
                     sh '''#!/usr/bin/bash
                         set -e
                         cwd=$(pwd)
-                        cd /var/dev/Once.2023/deploy
+                        cd /var/dev/Once.2023
                         ./scenario.deploy com/sfsre/backup/dev-neom deinit
                         ./scenario.deploy com/sfsre/backup/dev-neom init,up,test
                         ./scenario.deploy com/sfsre/backup/dev-neom test -v > $cwd/results/com.sfsre.backup.dev-neom.log

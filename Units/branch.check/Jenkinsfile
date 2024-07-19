@@ -58,7 +58,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
-                    cd /var/dev/Once.2023/tools/generatePUML
+                    cd /var/dev/Once.2023/Units/generatePUML
                     rm -rf _*
                     npm install
                     ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom
@@ -74,7 +74,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env && oo mode.dev && oo update
-                    cd /var/dev/Once.2023/tools/staticAnalysis
+                    cd /var/dev/Once.2023/Units/staticAnalysis
                     ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
                     '''
             }

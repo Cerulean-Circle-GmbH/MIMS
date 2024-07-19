@@ -318,7 +318,7 @@ devTool.silent() # # switch to silent log
 
 devTool.test() # # build and run test container
 {
-    cd ../../../../once.sh.ts/test/environment/docker/ubuntu/20.04.sshd/
+    cd ../test/environment/docker/ubuntu/20.04.sshd/
     devTool.docker.build
     RETURN_VALUE=$?
     if [ $RETURN_VALUE -gt 0 ]; then

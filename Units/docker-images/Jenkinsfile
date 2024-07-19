@@ -20,7 +20,7 @@ pipeline {
                             git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
                             cd Once.2023 &&
                             git checkout $BRANCH &&
-                            cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-builder &&
+                            cd Units/docker-images/once.sh.ubuntu.22.04-builder &&
                             ./devTool docker.build"
                     '''
             }
@@ -37,7 +37,7 @@ pipeline {
                             git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
                             cd Once.2023 &&
                             git checkout $BRANCH &&
-                            cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+                            cd Units/docker-images/once.sh.ubuntu.22.04-server &&
                             ./devTool docker.build"
                     '''
             }
@@ -55,7 +55,7 @@ pipeline {
                                     git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
                                     cd Once.2023 &&
                                     git checkout $BRANCH &&
-                                    cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+                                    cd Units/docker-images/once.sh.ubuntu.22.04-server &&
                                     ./devTool docker.buildx.use &&
                                     docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW} &&
                                     devTool docker.buildx.push"
@@ -81,7 +81,7 @@ pipeline {
                                             git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
                                             cd Once.2023 &&
                                             git checkout $BRANCH &&
-                                            cd once.sh.ts/src/docker/once.sh.ubuntu.22.04-server &&
+                                            cd Units/docker-images/once.sh.ubuntu.22.04-server &&
                                             ./devTool docker.buildx.use &&
                                             docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW} &&
                                             devTool docker.buildx.push.latest"
