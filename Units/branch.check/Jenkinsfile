@@ -10,6 +10,8 @@ pipeline {
     environment {
         TREE = 'com/neom'
         NAME = 'com.neom'
+        // Ignore strict host key checking
+        GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
     }
 
     options {
@@ -25,9 +27,8 @@ pipeline {
                     mkdir -p results
 
                     # Update known_hosts (only for bitbucket once in a while)
-                    # export GIT_SSH="ssh -o StrictHostKeyChecking=no"
-                    ssh-keygen -f "/root/.ssh/known_hosts" -R "bitbucket.org"
-                    ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+                    #ssh-keygen -f "/root/.ssh/known_hosts" -R "bitbucket.org"
+                    #ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
                     # Update EAMD
                     cd /var/dev
