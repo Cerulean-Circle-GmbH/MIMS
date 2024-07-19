@@ -7,7 +7,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
-      - var_dev:/var/dev
+      - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
       - ${SCENARIO_RESOURCE_ONCE_HTTPS}:8443
@@ -22,7 +22,7 @@ services:
   woda-structr-server:
     container_name: ${SCENARIO_STRUCTR_CONTAINER}
     build: './structr'
-    image: woda-structr-server2.1.4
+    image: ${SCENARIO_STRUCTR_IMAGE}
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
     restart: unless-stopped
     env_file: '.env'
@@ -36,7 +36,7 @@ services:
       - ${SCENARIO_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
       - ${SCENARIO_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/
       - ${SCENARIO_STRUCTR_DIR}/snapshots/:/var/lib/structr/snapshots/
-      - ${SCENARIO_ONCE_VOLUME}:/var/dev
+      - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     environment:
       - PROXY_ADDRESS_FORWARDING=true

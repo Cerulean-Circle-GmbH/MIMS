@@ -41,11 +41,43 @@ function checkURL() {
     fi
 }
 
+function addToFile() {
+    local file=$1
+    local content=$2
+    if [ -f "$file" ]; then
+        cat $file | grep -v "$content" > $file.tmp
+        cat $file.tmp > $file
+        rm $file.tmp
+        # Add content to file with using $content as variable
+        echo "${content}=${!content}" >> $file
+        logVerbose "Added $content to $file"
+    fi
+}
+
+function calculateVolumeName() {
+    if [[ -n "$SCENARIO_RESOURCE_ONCE_VOLUME" && "$SCENARIO_RESOURCE_ONCE_VOLUME" != "none" ]]; then
+        SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
+    elif [[ -n "$SCENARIO_RESOURCE_ONCE_SRCPATH"  && "$SCENARIO_RESOURCE_ONCE_SRCPATH" != "none" ]]; then
+        SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
+        # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or "." add a "./"
+        if [[ ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^/ && ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^"." ]]; then
+            SCENARIO_ONCE_VOLUME_NAME="./$SCENARIO_ONCE_VOLUME_NAME"
+        fi
+    else
+        SCENARIO_ONCE_VOLUME_NAME=var_dev
+    fi
+    echo $SCENARIO_ONCE_VOLUME_NAME
+}
+
 function up() {
     mkdir -p structr/_data
     pushd structr/_data > /dev/null
 
     local certdir=$SCENARIO_SERVER_CERTIFICATEDIR
+
+    # Handle volume
+    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+    addToFile $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env SCENARIO_ONCE_VOLUME_NAME
 
     # Keystore
     banner "Keystore"
@@ -101,12 +133,6 @@ function up() {
     log "Building image..."
     docker-compose build > $VERBOSEPIPE
     docker image ls > $VERBOSEPIPE
-
-    # Handle outer srcpath/volume
-    SCENARIO_ONCE_VOLUME=var_dev
-    if [ -n "$SCENARIO_RESOURCE_ONCE_SRCPATH" ]; then
-        SCENARIO_ONCE_VOLUME=$SCENARIO_RESOURCE_ONCE_SRCPATH
-    fi
 
     # Handle outer config only when localhost
     #SCENARIO_SRC_ONCE_OUTERCONFIG
@@ -270,6 +296,14 @@ function stop() {
 }
 
 function down() {
+    # Handle volume
+    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+    addToFile $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env SCENARIO_ONCE_VOLUME_NAME
+    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
+    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
+        REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
+    fi
+
     # Shutdown and remove containers
     banner "Shutdown and remove containers"
     docker-compose -p $SCENARIO_NAME down
@@ -278,10 +312,16 @@ function down() {
     fi
 
     # Cleanup docker
-    banner "Cleanup docker"
-    docker volume rm ${SCENARIO_NAME}_var_dev
-    if [ "$VERBOSITY" == "-v" ]; then
-        docker volume ls
+    banner "Cleanup docker volumes and images"
+    if [[ -z "$SCENARIO_RESOURCE_ONCE_SRCPATH" || "$SCENARIO_RESOURCE_ONCE_SRCPATH" == "none" ]]; then
+        if [[ -z "$SCENARIO_RESOURCE_ONCE_VOLUME" || "$SCENARIO_RESOURCE_ONCE_VOLUME" == "none" ]]; then
+            docker volume rm ${REAL_VOLUME_NAME}
+            log "Removed volume ${REAL_VOLUME_NAME}"
+        else
+            log "Not removing volume ${SCENARIO_RESOURCE_ONCE_VOLUME}, seems to be custom volume"
+        fi
+    else
+        log "Not removing volume ${SCENARIO_RESOURCE_ONCE_VOLUME}, seems to be a path"
     fi
     docker image prune -f
 
@@ -291,7 +331,12 @@ function down() {
     # Test
     banner "Test"
     if [ "$VERBOSITY" == "-v" ]; then
-        docker volume ls | grep $SCENARIO_NAME
+        SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+        REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
+        if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
+            REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
+        fi
+        docker volume ls | grep ${REAL_VOLUME_NAME}
         tree -L 3 -a .
     fi
 }
@@ -302,11 +347,18 @@ function test() {
     if [ "$VERBOSITY" == "-v" ]; then
         banner "Test"
         log "Volumes:"
-        docker volume ls | grep $SCENARIO_NAME
+        SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+        REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
+        if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
+            REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
+        fi
+        docker volume ls | grep ${REAL_VOLUME_NAME}
         log "Images:"
-        docker image ls | grep $SCENARIO_NAME
+        docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
+        docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
         log "Containers:"
-        docker ps -all | grep $SCENARIO_NAME
+        docker ps | grep ${SCENARIO_ONCE_CONTAINER}
+        docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
         tree -L 3 -a .
     fi
 

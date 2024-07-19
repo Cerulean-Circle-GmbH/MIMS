@@ -11,8 +11,6 @@ scenario:
       # Which path should be used as outer config?
       outerconfig: ~
     structr:
-      # Which structr backup tag should be restored?
-      tag: latest
       # What is the URI of the struct data backup file (maybe tag dependent)?
       structrdatafile: backup.sfsre.com:/var/backups/structr/backup-structr-latest_WODA-current.tar.gz
 
@@ -30,8 +28,10 @@ scenario:
   ## Unique resources
   resource:
     once:
-      # Which ONCE source path should be mounted into the ONCE container? (relative to the scenarios root directory, leave empty to use default volume)
-      srcpath: _var_dev
+      # Which volume should be used (if srcpath is not set)?
+      volume: none
+      # Which ONCE source path should be mounted into the ONCE container? (e.g. _var_dev relative to the scenarios root directory, leave empty or '<none>' to use volume)
+      srcpath: none
       # What is the ONCE http port?
       http: 9380
       # What is the ONCE https port?
