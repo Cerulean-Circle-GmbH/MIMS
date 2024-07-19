@@ -22,21 +22,37 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     rm -rf results
                     mkdir -p results
-                    cd /var/dev && ( git clone 2cuBitbucket:donges/EAMD.ucp.git || true )
-                    cd EAMD.ucp && git reset --hard && git checkout dev/neom && git pull
-                    cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
-                    cd Once.2023 && git reset --hard && git checkout dev && git pull
+
+                    # Update EAMD
+                    cd /var/dev
+                    git clone 2cuBitbucket:donges/EAMD.ucp.git || true
+                    cd EAMD.ucp
+                    git reset --hard
+                    git checkout dev/neom
+                    git pull
+
+                    # Update Once.2023
+                    cd /var/dev
+                    git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true
+                    cd Once.2023
+                    git reset --hard
+                    git checkout dev
+                    git pull
                     '''
             }
         }
         stage('Check branches') {
             steps {
                 sh '''#!/usr/bin/bash
-                    source ~/config/user.env && oo mode.dev && oo update
+                    source ~/config/user.env
+                    oo mode.dev
+                    oo update
                     cd /var/dev/EAMD.ucp
-                    export LOG_DEVICE=$WORKSPACE/results/branch.txt && config save log
+                    export LOG_DEVICE=$WORKSPACE/results/branch.txt
+                    config save log
                     oo branches.check feature/neom dev/neom 6a7a3d3
-                    export LOG_DEVICE=/dev/tty && config save log
+                    export LOG_DEVICE=/dev/tty
+                    config save log
                     cat $WORKSPACE/results/branch.txt 
                     cat $WORKSPACE/results/branch.txt | ansi2html > $WORKSPACE/results/branch.html
                     '''
@@ -47,8 +63,11 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     TMP=/tmp/${TREE}
                     SOURCE=/var/dev/EAMD.ucp/Components/${TREE}
-                    source ~/config/user.env && oo mode.dev && oo update
-                    rm -rf $TMP && mkdir -p $TMP
+                    source ~/config/user.env
+                    oo mode.dev
+                    oo update
+                    rm -rf $TMP
+                    mkdir -p $TMP
                     rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
                     wavi $TMP $WORKSPACE/results/$NAME.wavi.svg
                     '''
@@ -57,7 +76,9 @@ pipeline {
         stage('Create class svg (puml)') {
             steps {
                 sh '''#!/usr/bin/bash
-                    source ~/config/user.env && oo mode.dev && oo update
+                    source ~/config/user.env
+                    oo mode.dev
+                    oo update
                     cd /var/dev/Once.2023/Units/generatePUML
                     rm -rf _*
                     npm install
@@ -73,7 +94,9 @@ pipeline {
         stage('Static analysis of EAMD') {
             steps {
                 sh '''#!/usr/bin/bash
-                    source ~/config/user.env && oo mode.dev && oo update
+                    source ~/config/user.env
+                    oo mode.dev
+                    oo update
                     cd /var/dev/Once.2023/Units/staticAnalysis
                     ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
                     '''

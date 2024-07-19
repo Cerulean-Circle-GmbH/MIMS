@@ -23,10 +23,25 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     rm -rf results
                     mkdir -p results
-                    cd /var/dev && ( git clone 2cuBitbucket:donges/EAMD.ucp.git || true )
-                    cd EAMD.ucp && git reset --hard && git fetch --prune && git checkout dev/neom && git pull
-                    cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
-                    cd Once.2023 && git reset --hard && git fetch --prune && git checkout dev && git pull
+
+                    # Update EAMD
+                    cd /var/dev
+                    git clone 2cuBitbucket:donges/EAMD.ucp.git || true
+                    cd EAMD.ucp
+                    git reset --hard
+                    git fetch --prune
+                    git checkout dev/neom
+                    git pull
+
+                    # Update Once.2023
+                    cd /var/dev
+                    git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true
+                    cd Once.2023
+                    git reset --hard
+                    git fetch --prune
+                    git checkout dev
+                    git pull
+
                     env sh -c "$(wget -O- https://raw.githubusercontent.com/Cerulean-Circle-GmbH/once.sh/dev/init/oosh)"
                     '''
             }
@@ -34,7 +49,9 @@ pipeline {
         stage('Start WODA') {
             steps {
                 sh '''#!/usr/bin/bash
-                    source ~/config/user.env && oo mode.dev && oo update
+                    source ~/config/user.env
+                    oo mode.dev
+                    oo update
                     once init
                     once domain.set localhost
                     once stage next
@@ -48,7 +65,11 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     source ~/config/user.env
-                    cd /var/dev/EAMD.ucp && git reset --hard && git fetch --prune && git checkout dev/neom && git pull
+                    cd /var/dev/EAMD.ucp
+                    git reset --hard
+                    git fetch --prune
+                    git checkout dev/neom
+                    git pull
                     once status
                     '''
             }

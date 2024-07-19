@@ -17,8 +17,12 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     rm -rf results
                     mkdir -p results
-                    cd /var/dev && ( git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true )
-                    cd Once.2023 && git reset --hard && git checkout dev && git pull
+                    cd /var/dev
+                    git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true
+                    cd Once.2023
+                    git reset --hard
+                    git checkout dev
+                    git pull
                     '''
             }
         }
