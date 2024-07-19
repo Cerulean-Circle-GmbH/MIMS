@@ -41,6 +41,7 @@ function checkURL() {
     fi
 }
 
+# TODO: Is this good practice?
 function addToFile() {
     local file=$1
     local content=$2
@@ -134,7 +135,7 @@ function up() {
     docker-compose build > $VERBOSEPIPE
     docker image ls > $VERBOSEPIPE
 
-    # Handle outer config only when localhost
+    # TODO: Handle outer config only when localhost
     #SCENARIO_SRC_ONCE_OUTERCONFIG
     # Create .gitconfig
     #if [ ! -f $DOCKER_OUTER_CONFIG/.gitconfig ]; then
