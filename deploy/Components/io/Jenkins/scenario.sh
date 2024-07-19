@@ -45,9 +45,7 @@ function up() {
     # Create jenkins image
     banner "Create jenkins image"
     log "Building image..."
-    docker build -t ${SCENARIO_DOCKER_IMAGENAME} . > $VERBOSEPIPE
-    docker tag ${SCENARIO_DOCKER_IMAGENAME} ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
-    docker tag ${SCENARIO_DOCKER_IMAGENAME} ${SCENARIO_DOCKER_IMAGENAME}:latest
+    docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
 
     # Create and run container
     banner "Create and run container"
@@ -80,8 +78,6 @@ function down() {
 
     # Cleanup docker
     banner "Cleanup docker"
-    docker image rm ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
-    docker image rm ${SCENARIO_DOCKER_IMAGENAME}:latest
     docker image prune -f
 
     # Test
@@ -96,11 +92,11 @@ function test() {
     if [ "$VERBOSITY" = "-v" ]; then
         banner "Test"
         log "Volumes:"
-        docker volume ls | grep jenkins_home
+        docker volume ls | grep ${SCENARIO_NAME}_jenkins_home
         log "Images:"
-        docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
+        docker image ls | grep ${SCENARIO_NAME}_jenkins_image
         log "Containers:"
-        docker ps -all | grep $SCENARIO_RESOURCE_CONTAINERNAME
+        docker ps -all | grep ${SCENARIO_NAME}_jenkins_container
         log "Files:"
         pwd
         tree -L 3 -a .
