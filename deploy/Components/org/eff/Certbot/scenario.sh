@@ -26,14 +26,13 @@ function banner() {
     logVerbose
 }
 
-function checkURL() {
+function checkContainer() {
     comment=$1
     shift
     logVerbose
-    logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
-    up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
-    if [[ "$up" != "200" && "$up" != "302" ]]; then
-        log "$1 is not running (returned $up) - $comment"
+    logVerbose call: docker ps \| grep "$@"
+    if [[ -z $(docker ps | grep "$@") ]]; then
+        log "$1 is not running - $comment"
         return 1
     else
         log "OK: running: $1 - $comment"
@@ -97,9 +96,8 @@ function test() {
 
     # Check EAMD.ucp git status
     banner "Check Certbot $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-    # checkURL "Certbot (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/jenkins
-    #return $? # Return the result of the last command
-    return 1
+    checkContainer "Certbot (docker)" certbot_container
+    return $? # Return the result of the last command
 }
 
 function printUsage() {
