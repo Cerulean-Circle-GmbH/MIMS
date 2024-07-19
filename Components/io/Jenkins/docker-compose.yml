@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  once.sh:
+    container_name: ${SCENARIO_NAME}_jenkins_container
+    image: ${SCENARIO_NAME}_jenkins_image
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_home:/var/jenkins_home
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
+      - "${SCENARIO_RESOURCE_AGENTPORT}:50000"
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
+volumes:
+  jenkins_home:
