@@ -362,7 +362,6 @@ function test() {
         log "Containers:"
         docker ps | grep ${SCENARIO_ONCE_CONTAINER}
         docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
-        tree -L 3 -a .
     fi
 
     # Check EAMD.ucp git status

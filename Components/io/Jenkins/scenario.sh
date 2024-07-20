@@ -97,9 +97,6 @@ function test() {
         docker image ls | grep ${SCENARIO_NAME}_jenkins_image
         log "Containers:"
         docker ps -all | grep ${SCENARIO_NAME}_jenkins_container
-        log "Files:"
-        pwd
-        tree -L 3 -a .
     fi
 
     # Check EAMD.ucp git status

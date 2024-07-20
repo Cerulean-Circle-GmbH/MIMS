@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# TODO: Add localenvvarset method (LOCALDIR, REMOTEDIR, ...)
 # TODO: If localhost: ssh config and scenario directory are not necessary
 # TODO: Branch: Allow none to not set a branch
 
@@ -35,11 +34,16 @@ function banner() {
     logVerbose
 }
 
-# Call remote function
-function callScript() {
+# Set some variables
+function setLocalEnvironemnt() {
     # Set config dirs
     LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
     REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+}
+
+# Call remote function
+function callScript() {
+    setLocalEnvironemnt
 
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
 cd $REMOTE_CONFIG_DIR
@@ -49,15 +53,13 @@ EOF
 }
 
 isInited() {
+    setLocalEnvironemnt
+
     # Check if scenario file exists
     if [ ! -f $SCENARIO_FILE_NAME ]; then
         log "ERROR: Scenario $SCENARIO_FILE_NAME not found"
         return 1
     fi
-
-    # Set config dirs
-    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
 
     # Check if scenario is available on remote server
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_CONFIG_DIR}' ]"
@@ -353,10 +355,7 @@ function config() {
 
 function init() {
     config
-
-    # Set config dirs
-    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    setLocalEnvironemnt
 
     # Setup scenario dir locally
     banner "Setup scenario dir locally and sync to remote"
@@ -495,6 +494,12 @@ function test() {
     if isInited; then
         logVerbose "Scenario '$SCENARIO_NAME' is available on remote server."
         callScript ./scenario.sh test $VERBOSITY
+        if [ "$VERBOSITY" == "-v" ]; then
+            callScript echo "Files:"
+            callScript hostname
+            callScript pwd
+            callScript tree -L 3 -a .
+        fi
         return $?
     else
         log "Scenario '$SCENARIO_NAME' is not available on remote server."
