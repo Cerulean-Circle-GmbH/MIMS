@@ -90,9 +90,6 @@ function test() {
         docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
         log "Containers:"
         docker ps -all | grep $SCENARIO_NAME
-        log "Files:"
-        pwd
-        tree -L 3 -a .
     fi
 
     # Check EAMD.ucp git status
