@@ -8,6 +8,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
       - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
+      - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
       - ${SCENARIO_RESOURCE_ONCE_HTTPS}:8443

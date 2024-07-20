@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source .env
+CONFIG_DIR=`pwd`
 
 # Log verbose
 function logVerbose() {
@@ -55,15 +56,49 @@ function addToFile() {
     fi
 }
 
-function calculateVolumeName() {
+# Set some variables
+function setEnvironment() {
+    # Handle volume
+    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+    addToFile $CONFIG_DIR/.env SCENARIO_ONCE_VOLUME_NAME
+    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
+    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
+        REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
+    fi
+
+    # Rsync verbosity
+    RSYNC_VERBOSE="-q"
+    if [ "$VERBOSITY" != "-s" ]; then
+        RSYNC_VERBOSE="-v"
+    fi
+}
+
+function isVolumeSet() {
     if [[ -n "$SCENARIO_RESOURCE_ONCE_VOLUME" && "$SCENARIO_RESOURCE_ONCE_VOLUME" != "none" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+function isSrcpathSet() {
+    if [[ -n "$SCENARIO_RESOURCE_ONCE_SRCPATH" && "$SCENARIO_RESOURCE_ONCE_SRCPATH" != "none" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+function calculateVolumeName() {
+	# Evaluate source path (on Windows only provide "volume")
+	OS_TEST=`echo $OS | grep -i win`
+    if [ isSrcpathSet ] && [ -z "$OS_TEST" ]; then
         SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
-    elif [[ -n "$SCENARIO_RESOURCE_ONCE_SRCPATH"  && "$SCENARIO_RESOURCE_ONCE_SRCPATH" != "none" ]]; then
-        SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
-        # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or "." add a "./"
+        # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or ".", add a "./"
         if [[ ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^/ && ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^"." ]]; then
+            # TODO: Test this
             SCENARIO_ONCE_VOLUME_NAME="./$SCENARIO_ONCE_VOLUME_NAME"
         fi
+    elif isVolumeSet; then
+        SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_VOLUME
     else
         SCENARIO_ONCE_VOLUME_NAME=var_dev
     fi
@@ -71,15 +106,13 @@ function calculateVolumeName() {
 }
 
 function up() {
+    setEnvironment
+
     mkdir -p structr/_data
     pushd structr/_data > /dev/null
 
-    # TODO: Handle none of certdir
+    # TODO: Remove certbot files from repository and create them or something
     local certdir=$SCENARIO_SERVER_CERTIFICATEDIR
-
-    # Handle volume
-    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
-    addToFile $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env SCENARIO_ONCE_VOLUME_NAME
 
     # Keystore
     banner "Keystore"
@@ -87,7 +120,7 @@ function up() {
         logVerbose "Already existing keystore.pkcs12..."
     else
         logVerbose "Creating new keystore.pkcs12..."
-        if [ -n "$certdir" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+        if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
             echo "Using certificates from $certdir"
             ls -l $certdir > $VERBOSEPIPE
             ln -s $certdir/fullchain.pem fullchain.pem
@@ -105,16 +138,13 @@ function up() {
         openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123 > $VERBOSEPIPE
     fi
 
+    # TODO: Use default structr server if file is a server or none
     # Workspace
     banner "Workspace ($SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE)"
     if [ -d "WODA-current" ]; then
         logVerbose "Already existing workspace..."
     else
         logVerbose "Fetching workspace..."
-        RSYNC_VERBOSE="-q"
-        if [ "$VERBOSITY" == "-v" ]; then
-            RSYNC_VERBOSE="-v"
-        fi
         rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE WODA-current.tar.gz
         tar xzf WODA-current.tar.gz > $VERBOSEPIPE
     fi
@@ -136,22 +166,19 @@ function up() {
     docker-compose build > $VERBOSEPIPE
     docker image ls > $VERBOSEPIPE
 
-    # TODO: Handle outer config only when localhost
-    #SCENARIO_SRC_ONCE_OUTERCONFIG
     # Create .gitconfig
-    #if [ ! -f $DOCKER_OUTER_CONFIG/.gitconfig ]; then
-    #    mkdir -p $DOCKER_OUTER_CONFIG
-    #    NAME=$(ask_with_default "Your full name  (for Git) :" "")
-    #    MAIL=$(ask_with_default "Your full email (for Git) :" "")
-    #    cat ../gitconfig.template | sed "s;##NAME##;$NAME;" | sed "s;##MAIL##;$MAIL;" > $DOCKER_OUTER_CONFIG/.gitconfig
-    #fi
-    # TODO: Create configs if not available?
+    if [ $SCENARIO_SRC_ONCE_OUTERCONFIG != "none" ] && [ ! -f $SCENARIO_SRC_ONCE_OUTERCONFIG/.gitconfig ]; then
+        mkdir -p $SCENARIO_SRC_ONCE_OUTERCONFIG
+        NAME=$(ask_with_default "Your full name  (for Git) :" "")
+        MAIL=$(ask_with_default "Your full email (for Git) :" "")
+        cat ../gitconfig.template | sed "s;##NAME##;$NAME;" | sed "s;##MAIL##;$MAIL;" > $SCENARIO_SRC_ONCE_OUTERCONFIG/.gitconfig
+    fi
 
     # Create ssh keys
-    #if [ ! -f $DOCKER_OUTER_CONFIG/.ssh/id_rsa ]; then
-    #    mkdir -p $DOCKER_OUTER_CONFIG/.ssh
-    #    ssh-keygen -f $DOCKER_OUTER_CONFIG/.ssh/id_rsa
-    #fi
+    if [ ! -f $SCENARIO_SRC_ONCE_OUTERCONFIG/.ssh/id_rsa ]; then
+        mkdir -p $SCENARIO_SRC_ONCE_OUTERCONFIG/.ssh
+        ssh-keygen -f $SCENARIO_SRC_ONCE_OUTERCONFIG/.ssh/id_rsa
+    fi
 
     # Create and run container
     banner "Create and run container"
@@ -189,10 +216,10 @@ function up() {
     logVerbose "===================="
     log "Startup done ($found)"
 
-    # TODO: Mount directory into container and let ONCE use it
+    # TODO: Mount certdir directory into container and let ONCE use it
     
     # Copy certificates to container
-    if [ -n "$certdir" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+    if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
         banner "Copy certificates to container"
         local CERT=$(cat $certdir/fullchain.pem)
         local KEY=$(cat $certdir/privkey.pem)
@@ -231,35 +258,37 @@ EOF
     logVerbose "$DOCKEROUTPUT"
 
     # Checkout correct branch
-    banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER)"
-    local ENV_CONTENT=$(<$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env)
-    DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
-        cd /var/dev/EAMD.ucp
-        git checkout $SCENARIO_SRC_ONCE_BRANCH > /dev/null 2>&1
-        git reset --hard
-        git pull
-        (
-            date && echo
-            git status && echo
-            echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/
-            echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
-            echo https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/
-            echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/
-            echo https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/
-            echo
-            echo "$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env:"
-            echo "$ENV_CONTENT"
-            echo
-            echo "/root/.once:"
-            cat /root/.once
-            echo
-            source /root/.once
-            echo "\$ONCE_DEFAULT_SCENARIO/.once:"
-            cat \$ONCE_DEFAULT_SCENARIO/.once
-        ) > ./installation-status.log
+    if [ -n "$SCENARIO_SRC_ONCE_BRANCH" ] && [ "$SCENARIO_SRC_ONCE_BRANCH" != "none" ]; then
+        banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER)"
+        local ENV_CONTENT=$(<$CONFIG_DIR/.env)
+        DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+            cd /var/dev/EAMD.ucp
+            git checkout $SCENARIO_SRC_ONCE_BRANCH > /dev/null 2>&1
+            git reset --hard
+            git pull
+            (
+                date && echo
+                git status && echo
+                echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/
+                echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/apps/neom/CityManagement.html
+                echo https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/
+                echo http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/
+                echo https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/
+                echo
+                echo "$CONFIG_DIR/.env:"
+                echo "$ENV_CONTENT"
+                echo
+                echo "/root/.once:"
+                cat /root/.once
+                echo
+                source /root/.once
+                echo "\$ONCE_DEFAULT_SCENARIO/.once:"
+                cat \$ONCE_DEFAULT_SCENARIO/.once
+            ) > ./installation-status.log
 EOF
-)
-    logVerbose "$DOCKEROUTPUT"
+    )
+        logVerbose "$DOCKEROUTPUT"
+    fi
 
     private.restart.once
 }
@@ -280,11 +309,11 @@ function private.restart.once () {
     banner "Start ONCE server"
     #docker exec $SCENARIO_ONCE_CONTAINER bash -c "source /root/.once && once restart"
     DOCKEROUTPUT=$(docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
-cd /var/dev/EAMD.ucp
-source /root/.once
-once restart > /dev/null 2>&1
-sleep 5
-once cat > restart.log
+        cd /var/dev/EAMD.ucp
+        source /root/.once
+        once restart > /dev/null 2>&1
+        sleep 5
+        once cat > restart.log
 EOF
 )
     logVerbose "$DOCKEROUTPUT"
@@ -299,13 +328,7 @@ function stop() {
 }
 
 function down() {
-    # Handle volume
-    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
-    addToFile $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env SCENARIO_ONCE_VOLUME_NAME
-    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
-    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
-        REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
-    fi
+    setEnvironment
 
     # Shutdown and remove containers
     banner "Shutdown and remove containers"
@@ -316,8 +339,8 @@ function down() {
 
     # Cleanup docker
     banner "Cleanup docker volumes and images"
-    if [[ -z "$SCENARIO_RESOURCE_ONCE_SRCPATH" || "$SCENARIO_RESOURCE_ONCE_SRCPATH" == "none" ]]; then
-        if [[ -z "$SCENARIO_RESOURCE_ONCE_VOLUME" || "$SCENARIO_RESOURCE_ONCE_VOLUME" == "none" ]]; then
+    if ! isSrcpathSet; then
+        if ! isVolumeSet; then
             docker volume rm ${REAL_VOLUME_NAME}
             log "Removed volume ${REAL_VOLUME_NAME}"
         else
