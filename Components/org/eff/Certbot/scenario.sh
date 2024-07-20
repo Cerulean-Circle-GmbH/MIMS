@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-source .env
+# 'source' isn't available on all systems, so use . instead
+. .env
 
 # Log verbose
 function logVerbose() {

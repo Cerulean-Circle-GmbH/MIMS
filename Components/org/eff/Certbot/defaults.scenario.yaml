@@ -13,7 +13,7 @@ scenario:
     # What is the scenarios root directory on the server?
     configsdir: /var/dev/ONCE.2023-Scenarios
     # Where to find the servers certificate?
-    # certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/
+    #certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/
     certificatedir: /tmp
 
   ## Docker setup

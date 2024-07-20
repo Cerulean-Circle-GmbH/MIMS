@@ -9,6 +9,7 @@ SCENARIO_SERVER_SSHCONFIG="WODA.test"
 # What is the scenarios root directory on the server?
 SCENARIO_SERVER_CONFIGSDIR="/var/dev/ONCE.2023-Scenarios"
 # Where to find the servers certificate?
+# certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/
 SCENARIO_SERVER_CERTIFICATEDIR="/tmp"
 ## Docker setup
 # What is the name of the docker image?
