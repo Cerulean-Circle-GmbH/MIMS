@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# TODO: Add localenvvarset method (LOCALDIR, REMOTEDIR, ...)
 # TODO: If localhost: ssh config and scenario directory are not necessary
 # TODO: Branch: Allow none to not set a branch
 
@@ -35,9 +36,13 @@ function banner() {
 }
 
 # Call remote function
-function callRemote() {
+function callScript() {
+    # Set config dirs
+    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
-cd $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+cd $REMOTE_CONFIG_DIR
 $@
 EOF
     return $?
@@ -50,9 +55,12 @@ isInited() {
         return 1
     fi
 
+    # Set config dirs
+    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+
     # Check if scenario is available on remote server
-    REMOTE_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_DIR}' ]"
+    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_CONFIG_DIR}' ]"
     return $?
 }
 
@@ -346,35 +354,40 @@ function config() {
 function init() {
     config
 
+    # Set config dirs
+    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+
     # Setup scenario dir locally
     banner "Setup scenario dir locally and sync to remote"
-    rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    mkdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/
+    rm -rf $LOCAL_CONFIG_DIR
+    mkdir -p $LOCAL_CONFIG_DIR
+    cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $LOCAL_CONFIG_DIR/
     ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat $SCENARIO_FILE_NAME_TMP $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//")
     for ENV_VAR in $ENVIROMENT_VARIABLES; do
         echo "$ENV_VAR=${!ENV_VAR}"
-    done > $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/.env
+    done > $LOCAL_CONFIG_DIR/.env
 
     # Sync to remote
     if isInited; then
         logVerbose "Scenario '$SCENARIO_NAME' is available on remote server. Will be updated."
         if [ "$VERBOSITY" == "-v" ]; then
-            callRemote tree -L 3 -a .
+            callScript tree -L 3 -a .
         fi
     else
         log "Scenario '$SCENARIO_NAME' is not yet available on remote server."
+        REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
         ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
-            mkdir -p $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+            mkdir -p $REMOTE_CONFIG_DIR
 EOF
     fi
     RSYNC_VERBOSE="-q"
     if [ "$VERBOSITY" == "-v" ]; then
         RSYNC_VERBOSE="-v"
     fi
-    rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/ $SCENARIO_SERVER_SSHCONFIG:$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME/
+    rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $LOCAL_CONFIG_DIR/ $SCENARIO_SERVER_SSHCONFIG:$REMOTE_CONFIG_DIR/
     if [ "$VERBOSITY" == "-v" ]; then
-        callRemote tree -L 3 -a .
+        callScript tree -L 3 -a .
     fi
     log "Scenario '$SCENARIO_NAME' is now inited (available on remote server)."
 }
@@ -385,7 +398,7 @@ function up() {
         return 1
     fi
 
-    if callRemote ./scenario.sh test $VERBOSITY; then
+    if callScript ./scenario.sh test $VERBOSITY; then
         log "Scenario '$SCENARIO_NAME' is already running."
         return 1
     fi
@@ -400,7 +413,7 @@ function up() {
 
     # Startup scenario
     banner "Startup scenario '$SCENARIO_NAME'"
-    callRemote ./scenario.sh up $VERBOSITY
+    callScript ./scenario.sh up $VERBOSITY
 
     log "Scenario '$SCENARIO_NAME' is now up (running on remote server)."
 }
@@ -411,14 +424,14 @@ function start() {
         return 1
     fi
 
-    if callRemote ./scenario.sh test $VERBOSITY; then
+    if callScript ./scenario.sh test $VERBOSITY; then
         log "Scenario '$SCENARIO_NAME' is already running."
         return 1
     fi
 
     # Restart once server
     banner "Restart once server"
-    callRemote ./scenario.sh start $VERBOSITY
+    callScript ./scenario.sh start $VERBOSITY
 
     log "Scenario '$SCENARIO_NAME' is now started (running on remote server)."
 }
@@ -431,7 +444,7 @@ function stop() {
 
     # Stop remotely
     banner "Stop remotely"
-    callRemote ./scenario.sh stop $VERBOSITY || true
+    callScript ./scenario.sh stop $VERBOSITY || true
 
     log "Scenario '$SCENARIO_NAME' is now stopped (on remote server)."
 }
@@ -444,7 +457,7 @@ function down() {
 
     # Shutdown remotely
     banner "Shutdown remotely"
-    callRemote ./scenario.sh down $VERBOSITY || true
+    callScript ./scenario.sh down $VERBOSITY || true
 
     log "Scenario '$SCENARIO_NAME' is now down (server removed on remote server)."
 }
@@ -456,9 +469,11 @@ function deinit() {
         down
     fi
 
+    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+
     # Remove locally and remotely
     banner "Remove locally and remotely"
-    rm -rf $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    rm -rf $LOCAL_CONFIG_DIR
     rmdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE 2>/dev/null || true
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
 cd $SCENARIO_SERVER_CONFIGSDIR
@@ -479,7 +494,7 @@ function test() {
     banner "Test remote"
     if isInited; then
         logVerbose "Scenario '$SCENARIO_NAME' is available on remote server."
-        callRemote ./scenario.sh test $VERBOSITY
+        callScript ./scenario.sh test $VERBOSITY
         return $?
     else
         log "Scenario '$SCENARIO_NAME' is not available on remote server."
