@@ -74,6 +74,7 @@ function up() {
     mkdir -p structr/_data
     pushd structr/_data > /dev/null
 
+    # TODO: Handle none of certdir
     local certdir=$SCENARIO_SERVER_CERTIFICATEDIR
 
     # Handle volume
@@ -144,6 +145,7 @@ function up() {
     #    MAIL=$(ask_with_default "Your full email (for Git) :" "")
     #    cat ../gitconfig.template | sed "s;##NAME##;$NAME;" | sed "s;##MAIL##;$MAIL;" > $DOCKER_OUTER_CONFIG/.gitconfig
     #fi
+    # TODO: Create configs if not available?
 
     # Create ssh keys
     #if [ ! -f $DOCKER_OUTER_CONFIG/.ssh/id_rsa ]; then

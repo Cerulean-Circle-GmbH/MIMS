@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO: If localhost: ssh config and scenario directory are not necessary
+# TODO: Branch: Allow none to not set a branch
+
 # Get current dir
 pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
@@ -300,6 +303,14 @@ function config() {
                 #logVerbose "I ASKED AND GOT : \"$value\""
             fi
             echo "$variable=\"$value\"" >> $SCENARIO_FILE_NAME_TMP
+
+            # Preset some variables
+            if [[ "$variable" == "SCENARIO_SERVER_NAME" && "$value" == "localhost" ]]; then
+                SCENARIO_SERVER_SSHCONFIG="none"
+                SCENARIO_SERVER_CONFIGSDIR="none"
+                log "Preset SCENARIO_SERVER_SSHCONFIG=$SCENARIO_SERVER_SSHCONFIG"
+                log "Preset SCENARIO_SERVER_CONFIGSDIR=$SCENARIO_SERVER_CONFIGSDIR"
+            fi
         else
             echo $line >> $SCENARIO_FILE_NAME_TMP
             if [[ $line =~ ^[[:space:]]*# ]]; then
