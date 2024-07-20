@@ -307,7 +307,7 @@ function config() {
 
     # Update $SCENARIO_FILE_NAME if needed
     UPDATES=$(diff $SCENARIO_FILE_NAME $SCENARIO_FILE_NAME_TMP)
-    if [ -n "$UPDATES" ]; then
+    if [[ ! -f $SCENARIO_FILE_NAME || -n "$UPDATES" ]]; then
         echo
         echo "I found changes for some variables."
         echo "Changes:"
