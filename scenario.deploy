@@ -284,6 +284,7 @@ function parse_yaml {
 
 function doCopyConfig() {
     cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
+    rm -f $SCENARIO_FILE_NAME_TMP
     log "Please check $SCENARIO_FILE_NAME and commit it to git."
 }
 
@@ -367,6 +368,9 @@ function config() {
             else
                 doCopyConfig
             fi
+        else
+            # Scenario files are equal, so the .tmp file can be deleted
+            rm -f $SCENARIO_FILE_NAME_TMP
         fi
     fi
 
@@ -388,7 +392,7 @@ function init() {
         echo "$ENV_VAR=${!ENV_VAR}"
     done > $LOCAL_CONFIG_DIR/.env
 
-    if [ ! isLocal ]; then
+    if ! isLocal; then
         # Sync to remote
         if isInited; then
             logVerbose "Scenario '$SCENARIO_NAME' is available on remote server. Will be updated."
@@ -510,7 +514,7 @@ function deinit() {
     banner "Remove locally and remotely"
     rm -rf $LOCAL_CONFIG_DIR
     rmdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE 2>/dev/null || true
-    if [ ! isLocal ]; then
+    if ! isLocal; then
         ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
             cd $SCENARIO_SERVER_CONFIGSDIR
             rm -rf $SCENARIO_NAME_SPACE/$SCENARIO_NAME
