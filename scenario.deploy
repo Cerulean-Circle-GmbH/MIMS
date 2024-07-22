@@ -31,11 +31,16 @@ function banner() {
     logVerbose
 }
 
-# Set some variables
-function setEnvironment() {
-    # Set config dirs
-    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
-    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+function checkNamespace() {
+    # Check that scenario name fits the server
+    EXPECTED_NAMESPACE=$(convert_to_namespace $SCENARIO_SERVER_NAME)
+    if [ "$SCENARIO_NAME_SPACE" != "$EXPECTED_NAMESPACE" ]; then
+        log "WARNING: Scenario name space '$SCENARIO_NAME_SPACE' does not match server name '$SCENARIO_SERVER_NAME'"
+        return 1
+    else
+        log "Scenario name space '$SCENARIO_NAME_SPACE' matches server name '$SCENARIO_SERVER_NAME'"
+        return 0
+    fi
 }
 
 # Check if it is local
@@ -48,8 +53,6 @@ function isLocal() {
 
 # Call remote function
 function callScript() {
-    setEnvironment
-
     if isLocal; then
         cd $LOCAL_CONFIG_DIR
         $@
@@ -64,8 +67,6 @@ EOF
 }
 
 function isInited() {
-    setEnvironment
-
     # Check if scenario file exists
     if [ ! -f $SCENARIO_FILE_NAME ]; then
         echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
@@ -254,6 +255,10 @@ function sourceEnv() {
     for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
         source $OTHER_ENV_FILE
     done
+
+    # Set config dirs
+    LOCAL_CONFIG_DIR=$SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+    REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
 }
 
 sourceEnv
@@ -345,6 +350,11 @@ function config() {
                 SCENARIO_SRC_ONCE_OUTERCONFIG="none"
                 logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
             fi
+
+            # Check namespace
+            if [[ "$variable" == "SCENARIO_SERVER_NAME" ]]; then
+                checkNamespace
+            fi
         else
             echo $line >> $SCENARIO_FILE_NAME_TMP
             if [[ $line =~ ^[[:space:]]*# ]]; then
@@ -379,7 +389,6 @@ function config() {
 
 function init() {
     config
-    setEnvironment
 
     # Setup scenario dir locally
     banner "Setup scenario dir locally and sync to remote"
@@ -437,14 +446,7 @@ function up() {
         return 1
     fi
 
-    # TODO: Funktioniert das?
-    # Check that scenario name fits the server
-    EXPECTED_NAMESPACE=$(convert_to_namespace $SCENARIO_SERVER_NAME)
-    if [ "$SCENARIO_NAME_SPACE" != "$EXPECTED_NAMESPACE" ]; then
-        log "WARNING: Scenario name space '$SCENARIO_NAME_SPACE' does not match server name '$SCENARIO_SERVER_NAME'"
-    else
-        log "Scenario name space '$SCENARIO_NAME_SPACE' matches server name '$SCENARIO_SERVER_NAME'"
-    fi
+    checkNamespace
 
     # Startup scenario
     banner "Startup scenario '$SCENARIO_NAME'"
@@ -503,8 +505,6 @@ function down() {
 }
 
 function deinit() {
-    setEnvironment
-
     if ! isInited; then
         log "Warning: Scenario '$SCENARIO_NAME' is not inited."
     else
