@@ -1,0 +1,405 @@
+#!/usr/bin/env bash
+#http://www.etalabs.net/sh_tricks.html
+
+source .env
+
+# Set RELEASE_TAG
+BRANCH=`git symbolic-ref --short -q HEAD`
+if [[ ${BRANCH} == "main" || ${BRANCH} == "main"* ]]; then
+    DOCKER_IMAGE_RELEASE_TAG=""
+elif [[ ${BRANCH} == "test" || ${BRANCH} == "test"* ]]; then
+    DOCKER_IMAGE_RELEASE_TAG="-test"
+else
+    DOCKER_IMAGE_RELEASE_TAG="-dev"
+fi
+
+log() 
+{
+    echo "$@" >$LOG_DEVICE
+    return $?
+}
+
+log_part() 
+{
+    printf "$@" >$LOG_DEVICE
+    return $?
+}
+
+devTool.docker() # <dockerCmd:status> # builds the dockerfile 
+{
+    local dockerCmd=$1
+    shift
+    devTool.docker.$dockerCmd "$@"
+    return $?
+}
+
+devTool.parameter.completion.dockerCmd() # <dockerCmd> # builds the dockerfile 
+{
+    cat ${BASH_SOURCE[0]} | line find "devTool.docker\." | line replace "devTool.docker\." | line replace "().*$"
+    return $?
+}
+
+devTool.docker.buildx.use() # # creates, uses and starts a "myoncebuilder" buildx environment
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    
+    # Install buildx if necessary
+    if [ ! -f ~/.docker/cli-plugins/docker-buildx ]; then
+        DOCKER_BUILDX_DIR=~/buildx
+        mkdir -p ${DOCKER_BUILDX_DIR}
+        pushd ${DOCKER_BUILDX_DIR}
+        export DOCKER_BUILDKIT=1
+        docker build --platform=local -o . "https://github.com/docker/buildx.git#v0.10"
+        mkdir -p ~/.docker/cli-plugins
+        mv buildx ~/.docker/cli-plugins/docker-buildx
+        popd
+    fi
+
+    # Create myoncebuilder
+    MYBUILDER=myoncebuilder
+    docker buildx ls
+    docker buildx create --name ${MYBUILDER}
+    docker buildx use ${MYBUILDER}
+    docker buildx inspect ${MYBUILDER} --bootstrap
+    return $?
+}
+
+devTool.docker.buildx.build() # # builds the multi architecture images with manifest and tags current version
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    # skip: linux/arm/v7
+    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION}${DOCKER_IMAGE_RELEASE_TAG} .
+    return $?
+}
+
+devTool.docker.buildx.push() # # builds and pushes the multi architecture images with manifest and tags current version
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+
+    # skip: linux/arm/v7
+    docker buildx build --platform linux/arm64/v8,linux/amd64 --tag ${DOCKER_REMOTE_REPOSITORY}:${DOCKER_IMAGE_VERSION}${DOCKER_IMAGE_RELEASE_TAG} . --push
+    return $?
+}
+
+devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture images with manifest and tags latest
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    export DOCKER_IMAGE_VERSION=latest
+    devTool.docker.buildx.push
+    return $?
+}
+
+devTool.docker.build.progressplain() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile with --progress=plain to give the full build output
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    PROGRESS_PLAIN_ARGUMENT="--progress=plain"
+    devTool.docker.build "$@"
+    return $?
+}
+
+devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile and tags it with the version in .env
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+
+    # Clean variables (because the once.sh installation could be installed
+    # in a different branch or another location)
+    unset OOSH_INSTALL_SOURCE
+    unset OOSH_BRANCH
+
+    # Set 1 of the 2 variables in your shell to install a local oosh or one from a specific branch
+    #export OOSH_INSTALL_SOURCE=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev
+
+    # klappt nicht: once: command not found (in ~/config/user.env CONFIG="/root/config")
+    #export OOSH_BRANCH="feature/neom/N1-418-test-086d8c0-on-oosh-repository-in-dev-branch"
+
+    # klappt nicht (erster von Marcels Änderungen): in "once init" console.log: command not found
+    #export OOSH_BRANCH="7f96c9379c49bcced884e6a3b2863565b072b3db"
+
+    # klappt (erster vor Marcels Änderungen)
+    #export OOSH_BRANCH="728840c212fc2ce1fd40530c227b1cbfc267ca0a"
+
+    cwd=`pwd`
+    OOSH_TAR=$cwd/entrypoint/_oosh.tar
+    OOSH_TAR_ENVFILE=$cwd/entrypoint/_env
+    rm -rf ${OOSH_TAR} ${OOSH_TAR_ENVFILE}
+    # Create tar of local oosh dev
+    if [ ! -z ${OOSH_INSTALL_SOURCE} ] && [ -d ${OOSH_INSTALL_SOURCE} ]; then
+        pushd ${OOSH_INSTALL_SOURCE}
+        tar -cf ${OOSH_TAR} .
+        popd
+        echo "export OOSH_TAR=/root/entrypoint/_oosh.tar" > ${OOSH_TAR_ENVFILE}
+    elif [ ! -z ${OOSH_BRANCH} ]; then
+        echo "export OOSH_BRANCH=${OOSH_BRANCH}" > ${OOSH_TAR_ENVFILE}
+    fi
+
+    docker build ${PROGRESS_PLAIN_ARGUMENT} -t ${DOCKER_IMAGE_NAME} .
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        return $RETURN_VALUE
+    fi
+    docker tag ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${DOCKER_IMAGE_RELEASE_TAG}
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        return $RETURN_VALUE
+    fi
+    docker tag ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_NAME}:latest
+    return $?
+}
+
+devTool.docker.up() # # starts up the service from the dockerfile (using docker compose)
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    docker-compose -p once up
+    return $?
+}
+
+devTool.docker.up.detach() # # starts up the service from the dockerfile (using docker compose) and detach
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    docker-compose -p once up -d
+    return $?
+}
+
+devTool.docker.down() # # stops the service from the dockerfile (using docker compose) and removes container
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    docker-compose -p once down
+    return $?
+}
+
+devTool.docker.status() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    docker ps
+    return $?
+}
+
+devTool.docker.clean() # # starts/runs the dockerfile 
+{
+    docker image rm -f ${DOCKER_IMAGE_NAME}
+    #docker system prune -a
+    return $?
+}
+
+devTool.docker.down() # # stops and shuts down the service from the dockerfile (using docker compose) 
+{
+    echo "function "${FUNCNAME[0]} "$@"
+    if [ -z ${DOCKER_IMAGE_NAME} ]; then
+        error.log "DOCKER_IMAGE_NAME not set. Maybe incorrect .env sourced?"
+        return 22
+    fi
+    docker-compose down
+    return $?
+}
+
+
+devTool.status() # # pulls the update from git
+{
+    git status
+    return $?
+}
+
+devTool.config() # # shows the config
+{
+    cat .env
+    echo "====== applied:  "
+    docker-compose config
+    return $?
+}
+
+devTool.config.edit() # # pulls the update from git
+{
+    editor .env
+}
+
+devTool.commit() # # commiting Once.2023
+{
+    local branch=$( git branch | line find "\*" )
+    important.log "git barnch is: $branch"
+
+    local stash=""
+    if [ "$branch" = "* dev" ]; then
+            if [ -z "$(git status --porcelain)" ]; then 
+            # Working directory clean
+            important.log "branch is clean...nothing to commit.
+            "
+            return 0
+        else 
+            git add *
+            git commit
+            git push
+        fi
+        success.log "comitted $(basename $PWD) $@"
+    else
+        error.log "not on the dev branch"
+    
+        if [ -z "$(git status --porcelain)" ]; then 
+            # Working directory clean
+            important.log "switching branch...
+            "
+        else 
+            # Uncommitted changes
+            important.log "Uncommitted changes...
+
+            stashing
+            "
+            git stash 
+            stash=true
+        fi
+        git checkout dev
+        if [ -n $stash ]; then
+            git stash pop
+        fi
+        git status
+        success.log "switched $(basename $PWD) to dev branch"
+    fi
+
+    return $?
+}
+
+devTool.release() # # releases by merging dev into main
+{
+    local branch=$( git branch | line find "\*" )
+    important.log "git barnch is: $branch"
+    if [ "$branch" = "* dev" ]; then
+        devTool.commit
+        git checkout main
+        git merge dev
+        git push
+
+    else
+        warn.log "not in dev branch"
+        git status
+    fi
+
+    return $?
+}
+
+
+devTool.update() # # pulls the update from git
+{
+    git pull
+    return $?
+}
+
+devTool.fail() # # fails
+{
+    exit 1
+}
+
+devTool.silent() # # switch to silent log
+{
+    LOG_DEVICE=/dev/null
+}
+
+devTool.test() # # build and run test container
+{
+    cd ../test/environment/docker/ubuntu/20.04.sshd/
+    devTool.docker.build
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        return $RETURN_VALUE
+    fi
+    devTool.docker.run
+    return $?
+}
+
+usage() {
+    console.log "$0 
+    "
+    console.log "to supress output, next time type"
+    console.log "  $0 silent
+    
+    to get completion type
+
+    c2 devTool [Press TAB]
+    "
+
+    return $?
+}
+
+start() {
+    ../check-system.sh silent
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        log "system check did not go well:"
+        log "Error: $(errno $RETURN_VALUE)"
+        exit $RETURN_VALUE
+    fi
+    source this
+    this.start "$@"
+    RETURN_VALUE=$?
+    if [ $RETURN_VALUE -gt 0 ]; then
+        return $RETURN_VALUE
+    fi
+
+    # LOG_DEVICE=/dev/tty
+    # #log "parameters: $@"
+    # if [ -n "$1" ]; then
+    #     #log "got parameters: $@"
+    #     while [ -n $1 ]; do
+    #         case $1 in
+    #             fail)
+    #                 return 1
+    #                 ;;
+    #             error)
+    #                 shift
+    #                 return "$1"
+    #                 ;;
+    #             silent)
+    #                 LOG_DEVICE=/dev/null
+    #                 ;;
+    #             mode)
+    #                 log "got: mode"
+    #                 ;;
+    #             *)
+    #                 #this.call "$@"
+    #                 # local cmd=$1
+    #                 # shift
+    #                 log "processing: devTool.$cmd $@"
+    #                 this.start "$@"
+    #                 #devTool.$cmd "$@"
+    #                 ;;
+    #         esac
+    #         shift
+    #         #log "next parameter: =$1="
+    #         if [ -z "$1" ]; then
+    #             log ciao
+    #             return 0
+    #         fi
+    #     done
+    #     #return 0
+    # else
+    #     usage
+    #     return 0
+    # fi
+
+    return $?
+}
+
+
+start "$@"

@@ -1,0 +1,50 @@
+scenario:
+  ## Source setup
+  src:
+    # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
+    component: .
+    once:
+      # Which ONCE docker image should be used?
+      image: donges/once:latest
+      # Which ONCE branch should be restored (maybe tag dependent)?
+      branch: none
+      # Which path should be used as outer config?
+      outerconfig: ~
+    structr:
+      # What is the URI of the struct data backup file (maybe tag dependent)?
+      structrdatafile: backup.sfsre.com:/var/backups/structr/backup-structr-latest_WODA-current.tar.gz
+
+  ## Server setup
+  server:
+    # What is the server, the scenario will be deployed?
+    name: test.wo-da.de
+    # What is the SSH config the server can be connected with?
+    sshconfig: WODA.test
+    # What is the scenarios root directory on the server?
+    configsdir: /var/dev/ONCE.2023-Scenarios
+    # Where to find the servers certificate?
+    certificatedir: none
+
+  ## Unique resources
+  resource:
+    once:
+      # Which volume should be used (if srcpath is not set, none means a temporary volume will be created)?
+      volume: none
+      # Which ONCE source path should be mounted into the ONCE container? (e.g. _var_dev relative to the scenarios root directory, leave empty or '<none>' to use volume)
+      srcpath: none
+      # What is the ONCE http port?
+      http: 8080
+      # What is the ONCE https port?
+      https: 8443
+      # What is the ONCE container SSH port?
+      ssh: 8022
+      reverseproxy:
+        # What is the ONCE reverse proxy http port?
+        http: 5002
+        # What is the ONCE reverse proxy https port?
+        https: 5005
+    structr:
+      # What is the STRUCTR http port?
+      http: 9382
+      # What is the STRUCTR https port?
+      https: 9383
