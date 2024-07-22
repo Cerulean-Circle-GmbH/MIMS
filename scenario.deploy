@@ -63,7 +63,7 @@ EOF
     fi
 }
 
-isInited() {
+function isInited() {
     setEnvironment
 
     # Check if scenario file exists
@@ -159,6 +159,7 @@ SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
 SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 shift
 
+# TODO: Main code und function code trennen
 # Default steps
 DEFAULT_STEPS="test"
 if [ -z "$1" ]; then
@@ -283,7 +284,9 @@ function parse_yaml {
 }
 
 function doCopyConfig() {
-    cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
+    if [ -f $SCENARIO_FILE_NAME_TMP ]; then
+        cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
+    fi
     rm -f $SCENARIO_FILE_NAME_TMP
     log "Please check $SCENARIO_FILE_NAME and commit it to git."
 }
@@ -437,6 +440,7 @@ function up() {
         return 1
     fi
 
+    # TODO: Funktioniert das?
     # Check that scenario name fits the server
     EXPECTED_NAMESPACE=$(convert_to_namespace $SCENARIO_SERVER_NAME)
     if [ "$SCENARIO_NAME_SPACE" != "$EXPECTED_NAMESPACE" ]; then

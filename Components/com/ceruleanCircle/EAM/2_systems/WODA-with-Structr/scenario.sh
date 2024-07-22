@@ -12,6 +12,8 @@ function logVerbose() {
     echo "$@"
 }
 
+# TODO: error() mit stderr
+
 # Log
 function log() {
     if [ "$VERBOSITY" == "-s" ]; then
@@ -45,17 +47,18 @@ function checkURL() {
 # TODO: Is this good practice?
 function addToFile() {
     local file=$1
-    local content=$2
+    local envvar=$2
     if [ -f "$file" ]; then
-        cat $file | grep -v "$content" > $file.tmp
+        cat $file | grep -v "$envvar" > $file.tmp
         cat $file.tmp > $file
         rm $file.tmp
-        # Add content to file with using $content as variable
-        echo "${content}=${!content}" >> $file
-        logVerbose "Added $content to $file"
+        # Add envvar to file with using $envvar as variable
+        echo "${envvar}=${!envvar}" >> $file
+        logVerbose "Added $envvar to $file"
     fi
 }
 
+# TODO: Ist das überall da, wo gebraucht?
 # Set some variables
 function setEnvironment() {
     # Handle volume
@@ -90,6 +93,7 @@ function isSrcpathSet() {
 function calculateVolumeName() {
 	# Evaluate source path (on Windows only provide "volume")
 	OS_TEST=`echo $OS | grep -i win`
+    # TODO: Ist die klammer um isSrcpathSet und isVolumeSet richtig?
     if [ isSrcpathSet ] && [ -z "$OS_TEST" ]; then
         SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
         # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or ".", add a "./"
@@ -171,6 +175,7 @@ function up() {
         mkdir -p $SCENARIO_SRC_ONCE_OUTERCONFIG
         NAME=$(ask_with_default "Your full name  (for Git) :" "")
         MAIL=$(ask_with_default "Your full email (for Git) :" "")
+        # TODO: Check if gitconfig.template exists
         cat ../gitconfig.template | sed "s;##NAME##;$NAME;" | sed "s;##MAIL##;$MAIL;" > $SCENARIO_SRC_ONCE_OUTERCONFIG/.gitconfig
     fi
 
@@ -341,6 +346,7 @@ function down() {
     banner "Cleanup docker volumes and images"
     if ! isSrcpathSet; then
         if ! isVolumeSet; then
+            # TODO: Wird das volume auch gelöscht, wenn es ein Pfad ist oder ist ein default volume da, wenn es nicht sollte?
             docker volume rm ${REAL_VOLUME_NAME}
             log "Removed volume ${REAL_VOLUME_NAME}"
         else
@@ -357,6 +363,7 @@ function down() {
     # Test
     banner "Test"
     if [ "$VERBOSITY" == "-v" ]; then
+        # TODO: Schon in setEnvironment?
         SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
         REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
         if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
@@ -373,6 +380,8 @@ function test() {
     if [ "$VERBOSITY" == "-v" ]; then
         banner "Test"
         log "Volumes:"
+
+        # TODO: Schon in setEnvironment?
         SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
         REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
         if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
