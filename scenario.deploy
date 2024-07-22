@@ -31,6 +31,7 @@ function banner() {
     logVerbose
 }
 
+# Check namespace (server vs. scenario name space)
 function checkNamespace() {
     # Check that scenario name fits the server
     EXPECTED_NAMESPACE=$(convert_to_namespace $SCENARIO_SERVER_NAME)
@@ -51,7 +52,7 @@ function isLocal() {
     return 1
 }
 
-# Call remote function
+# Call script on local or remote server
 function callScript() {
     if isLocal; then
         cd $LOCAL_CONFIG_DIR
@@ -66,6 +67,7 @@ EOF
     fi
 }
 
+# Check if scenario is inited
 function isInited() {
     # Check if scenario file exists
     if [ ! -f $SCENARIO_FILE_NAME ]; then
@@ -84,6 +86,7 @@ function isInited() {
     fi
 }
 
+# Convert server string to namespace
 function convert_to_namespace() {
     local server_string="$1"
     
@@ -102,6 +105,7 @@ function convert_to_namespace() {
     echo "$namespace_string"
 }
 
+# Print usage
 function printUsage() {
     log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,updateconfig] [-v|-s|-h]"
     log
@@ -134,69 +138,6 @@ function printUsage() {
     log "Available scenarios:"
     cd $cwd && find Scenarios -name *.scenario | sed "s;Scenarios/;    ;" | sed "s/\.scenario//" | sed "s/ /\\ /g"
 }
-
-# Check for keyfile
-if [[ -n "${keyfile}" ]]; then
-    logVerbose "Use ${keyfile}"
-    use_key="-i ${keyfile}"
-fi
-
-# Scan for scenario
-if [ -z "$1" ]; then
-    log "Unknown scenario"
-    printUsage
-    exit 1
-fi
-SCENARIO_NAME=$(basename $1)
-SCENARIO_NAME_SPACE=$(dirname $1)
-# Check that scenario name space exists
-if [[ $SCENARIO_NAME_SPACE == "." ]]; then
-    echo "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
-    echo "Namespace is currently: $SCENARIO_NAME_SPACE"
-    exit 1
-fi
-SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
-SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
-SCENARIOS_DIR_LOCAL=$cwd/_scenarios
-shift
-
-# TODO: Main code und function code trennen
-# Default steps
-DEFAULT_STEPS="test"
-if [ -z "$1" ]; then
-    STEPS=$DEFAULT_STEPS
-else
-    STEPS=$1
-fi
-shift
-
-# Parse all "-" args
-for i in "$@"
-do
-case $i in
-    -v|--verbose)
-    VERBOSITY="-v"
-    ;;
-    -s|--silent)
-    VERBOSITY="-s"
-    ;;
-    -h|--help)
-    HELP=true
-    ;;
-    *)
-    # unknown option
-    log "Unknown option: $i"
-    printUsage
-    exit 1
-    ;;
-esac
-done
-
-# Print help
-if [ -n "$HELP" ]; then
-    printUsage
-    exit 0
-fi
 
 # ask with default
 function ask_with_default {
@@ -261,8 +202,7 @@ function sourceEnv() {
     REMOTE_CONFIG_DIR=$SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
 }
 
-sourceEnv
-
+# Parse defaults.scenario.yaml
 function parse_yaml {
    local prefix=$2
    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
@@ -288,6 +228,7 @@ function parse_yaml {
    }'
 }
 
+# Copy scenario config
 function doCopyConfig() {
     if [ -f $SCENARIO_FILE_NAME_TMP ]; then
         cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
@@ -295,11 +236,7 @@ function doCopyConfig() {
     log "Please check $SCENARIO_FILE_NAME and commit it to git."
 }
 
-function updateconfig() {
-    config
-    doCopyConfig
-}
-
+# Configure scenario
 function config() {
     sourceEnv
 
@@ -387,6 +324,7 @@ function config() {
     sourceEnv
 }
 
+# Init scenario
 function init() {
     config
 
@@ -435,6 +373,7 @@ EOF
     fi
 }
 
+# Startup scenario
 function up() {
     if ! isInited; then
         log "Scenario '$SCENARIO_NAME' is not inited."
@@ -460,6 +399,7 @@ function up() {
     log "Scenario '$SCENARIO_NAME' is now up (running on remote server)."
 }
 
+# Start scenario
 function start() {
     if ! isInited; then
         log "Scenario '$SCENARIO_NAME' is not inited."
@@ -478,6 +418,7 @@ function start() {
     log "Scenario '$SCENARIO_NAME' is now started (running on remote server)."
 }
 
+# Stop scenario
 function stop() {
     if ! isInited; then
         log "Scenario '$SCENARIO_NAME' is not inited."
@@ -491,6 +432,7 @@ function stop() {
     log "Scenario '$SCENARIO_NAME' is now stopped (on remote server)."
 }
 
+# Shutdown scenario
 function down() {
     if ! isInited; then
         log "Scenario '$SCENARIO_NAME' is not inited."
@@ -504,6 +446,7 @@ function down() {
     log "Scenario '$SCENARIO_NAME' is now down (server removed on remote server)."
 }
 
+# Cleanup / Deinstall scenario
 function deinit() {
     if ! isInited; then
         log "Warning: Scenario '$SCENARIO_NAME' is not inited."
@@ -527,6 +470,7 @@ EOF
     fi
 }
 
+# Test scenario
 function test() {
     if ! isInited; then
         log "Scenario '$SCENARIO_NAME' is not inited."
@@ -550,6 +494,78 @@ function test() {
         return 1
     fi
 }
+
+# Update local scenario config
+function updateconfig() {
+    config
+    doCopyConfig
+}
+
+### MAIN ###
+
+# Check for keyfile
+if [[ -n "${keyfile}" ]]; then
+    logVerbose "Use ${keyfile}"
+    use_key="-i ${keyfile}"
+fi
+
+# Scan for scenario
+if [ -z "$1" ]; then
+    log "Unknown scenario"
+    printUsage
+    exit 1
+fi
+SCENARIO_NAME=$(basename $1)
+SCENARIO_NAME_SPACE=$(dirname $1)
+# Check that scenario name space exists
+if [[ $SCENARIO_NAME_SPACE == "." ]]; then
+    echo "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
+    echo "Namespace is currently: $SCENARIO_NAME_SPACE"
+    exit 1
+fi
+SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
+SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
+SCENARIOS_DIR_LOCAL=$cwd/_scenarios
+shift
+
+sourceEnv
+
+# Default steps
+DEFAULT_STEPS="test"
+if [ -z "$1" ]; then
+    STEPS=$DEFAULT_STEPS
+else
+    STEPS=$1
+fi
+shift
+
+# Parse all "-" args
+for i in "$@"
+do
+case $i in
+    -v|--verbose)
+    VERBOSITY="-v"
+    ;;
+    -s|--silent)
+    VERBOSITY="-s"
+    ;;
+    -h|--help)
+    HELP=true
+    ;;
+    *)
+    # unknown option
+    log "Unknown option: $i"
+    printUsage
+    exit 1
+    ;;
+esac
+done
+
+# Print help
+if [ -n "$HELP" ]; then
+    printUsage
+    exit 0
+fi
 
 RETVAL=0
 for STEP in $(echo $STEPS | sed "s/,/ /g"); do
