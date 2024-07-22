@@ -144,12 +144,12 @@ function up() {
 
     # TODO: Use default structr server if file is a server or none
     # Workspace
-    banner "Workspace ($SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE)"
+    banner "Workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
     if [ -d "WODA-current" ]; then
         logVerbose "Already existing workspace..."
     else
         logVerbose "Fetching workspace..."
-        rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE WODA-current.tar.gz
+        rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE WODA-current.tar.gz
         tar xzf WODA-current.tar.gz > $VERBOSEPIPE
     fi
 
