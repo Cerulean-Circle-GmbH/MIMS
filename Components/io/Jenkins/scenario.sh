@@ -45,7 +45,7 @@ function up() {
     # Create jenkins image
     banner "Create jenkins image"
     log "Building image..."
-    docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
+    docker build -t ${SCENARIO_NAME}_image . > $VERBOSEPIPE
 
     # Create and run container
     banner "Create and run container"
@@ -92,11 +92,11 @@ function test() {
     if [ "$VERBOSITY" = "-v" ]; then
         banner "Test"
         log "Volumes:"
-        docker volume ls | grep ${SCENARIO_NAME}_jenkins_home
+        docker volume ls | grep ${SCENARIO_NAME}_home
         log "Images:"
-        docker image ls | grep ${SCENARIO_NAME}_jenkins_image
+        docker image ls | grep ${SCENARIO_NAME}_image
         log "Containers:"
-        docker ps -all | grep ${SCENARIO_NAME}_jenkins_container
+        docker ps -all | grep ${SCENARIO_NAME}_container
     fi
 
     # Check EAMD.ucp git status
