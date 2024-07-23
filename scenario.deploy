@@ -390,7 +390,7 @@ function init() {
     rm -rf $LOCAL_CONFIG_DIR
     mkdir -p $LOCAL_CONFIG_DIR
     cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $LOCAL_CONFIG_DIR/
-    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat $SCENARIO_FILE_NAME_TMP $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//")
+    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat $SCENARIO_FILE_NAME $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//")
     for ENV_VAR in $ENVIROMENT_VARIABLES; do
         echo "$ENV_VAR=${!ENV_VAR}"
     done > $LOCAL_CONFIG_DIR/.env
