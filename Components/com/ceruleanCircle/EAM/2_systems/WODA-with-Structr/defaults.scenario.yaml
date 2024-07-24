@@ -3,6 +3,8 @@ scenario:
   src:
     # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
     component: .
+    # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
+    cachedir: ~/.cache/ONCE.2023-Scenarios
     once:
       # Which ONCE docker image should be used?
       image: donges/once:latest
@@ -12,7 +14,7 @@ scenario:
       outerconfig: ~
     structr:
       # What is the URI of the struct data backup file (maybe tag dependent)?
-      structrdatafile: backup.sfsre.com:/var/backups/structr/backup-structr-latest_WODA-current.tar.gz
+      datafile: backup.sfsre.com:/var/backups/structr/backup-structr-latest_WODA-current.tar.gz
 
   ## Server setup
   server:
@@ -23,7 +25,7 @@ scenario:
     # What is the scenarios root directory on the server?
     configsdir: /var/dev/ONCE.2023-Scenarios
     # Where to find the servers certificate?
-    certificatedir: none
+    certificatedir: /tmp/conf/live/test.wo-da.de
 
   ## Unique resources
   resource:

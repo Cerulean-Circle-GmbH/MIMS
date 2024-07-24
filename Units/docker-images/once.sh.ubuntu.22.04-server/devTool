@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 #http://www.etalabs.net/sh_tricks.html
 
-source .env
+# 'source' isn't available on all systems, so use . instead
+. .env
+
+# Check docker-compose command
+if [ ! -x "$(command -v docker-compose)" ]; then
+  # Switch from "docker-compose" to "docker compose"
+  shopt -s expand_aliases # enables expanding aliases for current script
+  alias docker-compose='docker compose'
+fi
 
 # Set RELEASE_TAG
-BRANCH=`git symbolic-ref --short -q HEAD`
+BRANCH=$(git symbolic-ref --short -q HEAD)
 if [[ ${BRANCH} == "main" || ${BRANCH} == "main"* ]]; then
     DOCKER_IMAGE_RELEASE_TAG=""
 elif [[ ${BRANCH} == "test" || ${BRANCH} == "test"* ]]; then
@@ -130,7 +138,7 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
     # klappt (erster vor Marcels Änderungen)
     #export OOSH_BRANCH="728840c212fc2ce1fd40530c227b1cbfc267ca0a"
 
-    cwd=`pwd`
+    cwd=$(pwd)
     OOSH_TAR=$cwd/entrypoint/_oosh.tar
     OOSH_TAR_ENVFILE=$cwd/entrypoint/_env
     rm -rf ${OOSH_TAR} ${OOSH_TAR_ENVFILE}
