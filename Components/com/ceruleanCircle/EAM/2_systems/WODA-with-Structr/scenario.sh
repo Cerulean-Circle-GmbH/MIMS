@@ -135,20 +135,17 @@ function up() {
         logVerbose "Creating new keystore.pkcs12..."
         if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
             echo "Using certificates from $certdir"
-            ls -l $certdir > $VERBOSEPIPE
-            ln -s $certdir/fullchain.pem fullchain.pem
-            ln -s $certdir/privkey.pem privkey.pem
+            ls -l "$certdir" > $VERBOSEPIPE
+            ln -s "$certdir/fullchain.pem" fullchain.pem
+            ln -s "$certdir/privkey.pem" privkey.pem
             openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem > $VERBOSEPIPE 
             openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem > $VERBOSEPIPE
             openssl x509 -noout -text -inform pem -in fullchain.pem  > $VERBOSEPIPE
+
+            openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123 > $VERBOSEPIPE
         else
-            # TODO: Check whether mkcert is installed and create certificates instead of copying
-            #mkcert -cert-file fullchain.pem -key-file privkey.pem server.localhost localhost 127.0.0.1 ::1
-            logVerbose "Linking commited fullchain.pem and privkey.pem..."
-            ln -s ../../certbot/fullchain.pem fullchain.pem
-            ln -s ../../certbot/privkey.pem privkey.pem
+            echo "ERROR: No certificates found!"
         fi
-        openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123 > $VERBOSEPIPE
     fi
 
     # TODO: Use default structr server if file is a server or none
