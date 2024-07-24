@@ -1,7 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-source .env
-CONFIG_DIR=`pwd`
+# 'source' isn't available on all systems, so use . instead
+. .env
+CONFIG_DIR=$(pwd)
+
+# Check docker-compose command
+if [ ! -x "$(command -v docker-compose)" ]; then
+  # Switch from "docker-compose" to "docker compose"
+  shopt -s expand_aliases # enables expanding aliases for current script
+  alias docker-compose='docker compose'
+fi
 
 # Log verbose
 function logVerbose() {
@@ -92,7 +100,7 @@ function isSrcpathSet() {
 
 function calculateVolumeName() {
 	# Evaluate source path (on Windows only provide "volume")
-	OS_TEST=`echo $OS | grep -i win`
+	OS_TEST=$(echo $OS | grep -i win)
     # TODO: Ist die klammer um isSrcpathSet und isVolumeSet richtig?
     if [ isSrcpathSet ] && [ -z "$OS_TEST" ]; then
         SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
@@ -113,6 +121,7 @@ function up() {
     setEnvironment
 
     mkdir -p structr/_data
+    mkdir -p $SCENARIO_SRC_CACHEDIR
     pushd structr/_data > /dev/null
 
     # TODO: Remove certbot files from repository and create them or something
@@ -149,17 +158,19 @@ function up() {
         logVerbose "Already existing workspace..."
     else
         logVerbose "Fetching workspace..."
-        rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE WODA-current.tar.gz
-        tar xzf WODA-current.tar.gz > $VERBOSEPIPE
+        if [ ! -f "${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz" ]; then
+            rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
+        fi
+        tar xzf ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz -C ./ > $VERBOSEPIPE
     fi
 
     # structr.zip
     banner "structr.zip"
-    if [ -f "structr.zip" ]; then
+    if [ -f "${SCENARIO_SRC_CACHEDIR}/structr.zip" ]; then
         logVerbose "Already existing structr.zip..."
     else
         logVerbose "Fetching structr.zip..."
-        curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ./structr.zip > $VERBOSEPIPE
+        curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o  ${SCENARIO_SRC_CACHEDIR}/structr.zip > $VERBOSEPIPE
     fi
 
     popd > /dev/null

@@ -3,6 +3,8 @@ scenario:
   src:
     # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
     component: .
+    # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
+    cachedir: ~/.cache/ONCE.2023-Scenarios
     once:
       # Which ONCE docker image should be used?
       image: donges/once:latest
