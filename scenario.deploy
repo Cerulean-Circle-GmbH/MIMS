@@ -189,7 +189,7 @@ function sourceEnv() {
     getVarFromOldVar SCENARIO_RESOURCE_STRUCTR_HTTPS    SCENARIO_STRUCTR_HTTPS
     getVarFromOldVar SCENARIO_SRC_STRUCTR_TAG           SCENARIO_SRC_TAG
     getVarFromOldVar SCENARIO_SRC_ONCE_BRANCH           SCENARIO_SRC_BRANCH
-    getVarFromOldVar SCENARIO_SRC_STRUCTR_STRUCTRDATAFILE           SCENARIO_SRC_STRUCTRDATAFILE
+    getVarFromOldVar SCENARIO_SRC_STRUCTR_DATAFILE      SCENARIO_SRC_STRUCTRDATAFILE
 
     # Source other env files from component definition
     OTHER_ENV_FILES=$(find $cwd/Components/$SCENARIO_SRC_COMPONENT -name .env)
@@ -313,7 +313,7 @@ function config() {
             echo "Changes:"
             echo "$UPDATES"
             SURE=$(ask_with_default "Should I update the scenario with the new values? (yes/no)?" "no")
-            if [ -z `echo $SURE | grep -i y` ]; then
+            if [ -z $(echo $SURE | grep -i y) ]; then
                 log "Not updated."
             else
                 doCopyConfig

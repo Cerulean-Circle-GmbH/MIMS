@@ -1,6 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-source .env
+# 'source' isn't available on all systems, so use . instead
+. .env
+
+# Check docker-compose command
+if [ ! -x "$(command -v docker-compose)" ]; then
+  # Switch from "docker-compose" to "docker compose"
+  shopt -s expand_aliases # enables expanding aliases for current script
+  alias docker-compose='docker compose'
+fi
 
 # Log verbose
 function logVerbose() {
