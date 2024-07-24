@@ -170,6 +170,9 @@ function up() {
         curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o  ${SCENARIO_SRC_CACHEDIR}/structr.zip > $VERBOSEPIPE
     fi
 
+    if [ ! -f "./structr.zip" ]; then
+        cp "${SCENARIO_SRC_CACHEDIR}/structr.zip" .
+    fi
     popd > /dev/null
 
     # Create structr image

@@ -20,7 +20,7 @@ ENV defaultServer="${SCENARIO_STRUCTR_SERVER}"
 RUN apk add unzip git tree ncurses openssh-client bash curl wget
 RUN mkdir ${WORK_DIR}
 WORKDIR ${WORK_DIR}
-ADD ../../_cache/structr.zip /
+ADD _data/structr.zip /
 RUN unzip -q /structr.zip -d /var/lib && rm /structr.zip
 # Necessary hotfix for schema saving (JavaScript ESX changes)
 RUN sed -i 's;+/,;+/g,;g' /var/lib/structr/structr/js/schema.js
