@@ -233,6 +233,7 @@ function doCopyConfig() {
     if [ -f $SCENARIO_FILE_NAME_TMP ]; then
         cp -f $SCENARIO_FILE_NAME_TMP $SCENARIO_FILE_NAME
     fi
+    rm -f $SCENARIO_FILE_NAME_TMP
     log "Please check $SCENARIO_FILE_NAME and commit it to git."
 }
 
@@ -317,6 +318,8 @@ function config() {
             else
                 doCopyConfig
             fi
+        else
+            rm -f $SCENARIO_FILE_NAME_TMP
         fi
     fi
 
@@ -333,8 +336,7 @@ function init() {
     rm -rf $LOCAL_CONFIG_DIR
     mkdir -p $LOCAL_CONFIG_DIR
     cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $LOCAL_CONFIG_DIR/
-    # TODO: Eigentlich müsste die Datei $SCENARIO_FILE_NAME_TMP mal gelöscht werden, ist aber tricky, da sie auch als Vorlage für die nächste init dienen könnte
-    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat $SCENARIO_FILE_NAME_TMP $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//")
+    ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
     for ENV_VAR in $ENVIROMENT_VARIABLES; do
         echo "$ENV_VAR=${!ENV_VAR}"
     done > $LOCAL_CONFIG_DIR/.env
