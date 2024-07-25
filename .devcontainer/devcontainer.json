@@ -20,7 +20,8 @@
         "mads-hartmann.bash-ide-vscode",
         "mkhl.shfmt",
         "ms-azuretools.vscode-docker",
-        "rogalmic.bash-debug"
+        "rogalmic.bash-debug",
+        "Gruntfuggly.todo-tree"
       ]
     }
   },
