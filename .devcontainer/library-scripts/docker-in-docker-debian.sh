@@ -267,7 +267,12 @@ else
             pip3 install --disable-pip-version-check --no-cache-dir --user pipx
             pipx_bin=/tmp/pip-tmp/bin/pipx
         fi
-        ${pipx_bin} install --pip-args '--no-cache-dir --force-reinstall' docker-compose
+        
+        ## See https://github.com/yaml/pyyaml/issues/736
+        # create a constraint file that limits the Cython version to one that should work
+        echo 'Cython < 3.0' > /tmp/constraint.txt
+        PIP_CONSTRAINT=/tmp/constraint.txt \
+            ${pipx_bin} install --pip-args '--no-cache-dir --force-reinstall' docker-compose
         rm -rf /tmp/pip-tmp
     else
         compose_v1_version="1"
