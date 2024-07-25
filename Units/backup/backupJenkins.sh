@@ -1,10 +1,10 @@
 #!/bin/bash
 
 banner() {
-    echo
-    echo "============================================="
-    echo $1
-    echo "============================================="
+  echo
+  echo "============================================="
+  echo $1
+  echo "============================================="
 }
 
 # Work in build dir
@@ -16,8 +16,8 @@ date=$(date +%Y-%m-%d-%H_%M)
 tarfile=backup-jenkins-${date}.tar.gz
 rm -rf backup-jenkins-*
 if [[ -n "${keyfile}" ]]; then
-    echo "Use ${keyfile}"
-    use_key="-i ${keyfile}"
+  echo "Use ${keyfile}"
+  use_key="-i ${keyfile}"
 fi
 
 # Create tar
