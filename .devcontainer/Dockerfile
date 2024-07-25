@@ -42,6 +42,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 # Install additional OS packages
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends \
+  bash-completion \
   editorconfig \
   nodejs \
   shfmt

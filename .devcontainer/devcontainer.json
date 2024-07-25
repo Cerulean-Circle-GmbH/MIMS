@@ -2,7 +2,10 @@
   "name": "Bash (Community)",
   "dockerFile": "Dockerfile",
   "runArgs": ["--name", "ONCE.2023_devcontainer", "--init", "--privileged"],
-  "mounts": ["source=dind-var-lib-docker,target=/var/lib/docker,type=volume"],
+  "mounts": [
+    "source=dind-var-lib-docker,target=/var/lib/docker,type=volume",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+  ],
   "overrideCommand": false,
 
   // Configure tool-specific properties.
