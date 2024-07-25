@@ -1,10 +1,10 @@
 #!/bin/bash
 
 banner() {
-    echo
-    echo "============================================="
-    echo $1
-    echo "============================================="
+  echo
+  echo "============================================="
+  echo $1
+  echo "============================================="
 }
 
 # Work in build dir
@@ -14,8 +14,8 @@ cd _build
 # Initialization
 date=$(date +%Y-%m-%d-%H_%M)
 if [[ -n "${keyfile}" ]]; then
-    echo "Use ${keyfile}"
-    use_key="-i ${keyfile}"
+  echo "Use ${keyfile}"
+  use_key="-i ${keyfile}"
 fi
 
 # Create sql.gz

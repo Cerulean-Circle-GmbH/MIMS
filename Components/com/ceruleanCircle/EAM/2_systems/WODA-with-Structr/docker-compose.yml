@@ -22,11 +22,11 @@ services:
       ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}
   woda-structr-server:
     container_name: ${SCENARIO_STRUCTR_CONTAINER}
-    build: './structr'
+    build: "./structr"
     image: ${SCENARIO_STRUCTR_IMAGE}
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
     restart: unless-stopped
-    env_file: '.env'
+    env_file: ".env"
     ports:
       - ${SCENARIO_RESOURCE_STRUCTR_HTTP}:8082
       - ${SCENARIO_RESOURCE_STRUCTR_HTTPS}:8083
