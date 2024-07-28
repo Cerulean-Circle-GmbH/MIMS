@@ -69,12 +69,14 @@ function addToFile() {
 # Set some variables
 function setEnvironment() {
   # Handle volume
-  SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+  calculateVolumeName
   addToFile $CONFIG_DIR/.env SCENARIO_ONCE_VOLUME_NAME
   REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
   if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
     REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
   fi
+
+  logVerbose "REAL_VOLUME_NAME=$REAL_VOLUME_NAME"
 
   # Rsync verbosity
   RSYNC_VERBOSE="-q"
@@ -100,20 +102,35 @@ function isSrcpathSet() {
 function calculateVolumeName() {
   # Evaluate source path (on Windows only provide "volume")
   IS_WIN_OS=$(echo $OS | grep -i win)
+
+  # Verbose
+  if [ "$VERBOSITY" == "-v" ]; then
+    if isSrcpathSet; then
+      echo "isSrcpathSet YES - $SCENARIO_RESOURCE_ONCE_SRCPATH"
+    else
+      echo "isSrcpathSet NO - $SCENARIO_RESOURCE_ONCE_SRCPATH"
+    fi
+    if isVolumeSet; then
+      echo "isVolumeSet YES - $SCENARIO_RESOURCE_ONCE_VOLUME"
+    else
+      echo "isVolumeSet NO - $SCENARIO_RESOURCE_ONCE_VOLUME"
+    fi
+  fi
+
   # TODO: Ist die klammer um isSrcpathSet und isVolumeSet richtig?
-  if [ isSrcpathSet ] && [ -z "$IS_WIN_OS" ]; then
-    VN=$SCENARIO_RESOURCE_ONCE_SRCPATH
-    # If VN doesn't start with "/" or ".", add a "./"
-    if [[ ! "$VN" =~ ^/ && ! "$VN" =~ ^"." ]]; then
+  if isSrcpathSet && [ -z "$IS_WIN_OS" ]; then
+    SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
+    # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or ".", add a "./"
+    if [[ ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^/ && ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^"." ]]; then
       # TODO: Test this
-      VN="./$VN"
+      SCENARIO_ONCE_VOLUME_NAME="./$SCENARIO_ONCE_VOLUME_NAME"
     fi
   elif isVolumeSet; then
-    VN=$SCENARIO_RESOURCE_ONCE_VOLUME
+    SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_VOLUME
   else
-    VN=var_dev
+    SCENARIO_ONCE_VOLUME_NAME=var_dev
   fi
-  echo $VN
+  logVerbose "SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_ONCE_VOLUME_NAME"
 }
 
 function up() {
