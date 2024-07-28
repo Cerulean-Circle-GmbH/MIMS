@@ -66,7 +66,6 @@ function addToFile() {
   fi
 }
 
-# TODO: Ist das überall da, wo gebraucht?
 # Set some variables
 function setEnvironment() {
   # Handle volume
@@ -100,21 +99,21 @@ function isSrcpathSet() {
 
 function calculateVolumeName() {
   # Evaluate source path (on Windows only provide "volume")
-  OS_TEST=$(echo $OS | grep -i win)
+  IS_WIN_OS=$(echo $OS | grep -i win)
   # TODO: Ist die klammer um isSrcpathSet und isVolumeSet richtig?
-  if [ isSrcpathSet ] && [ -z "$OS_TEST" ]; then
-    SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
-    # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or ".", add a "./"
-    if [[ ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^/ && ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^"." ]]; then
+  if [ isSrcpathSet ] && [ -z "$IS_WIN_OS" ]; then
+    VN=$SCENARIO_RESOURCE_ONCE_SRCPATH
+    # If VN doesn't start with "/" or ".", add a "./"
+    if [[ ! "$VN" =~ ^/ && ! "$VN" =~ ^"." ]]; then
       # TODO: Test this
-      SCENARIO_ONCE_VOLUME_NAME="./$SCENARIO_ONCE_VOLUME_NAME"
+      VN="./$VN"
     fi
   elif isVolumeSet; then
-    SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_VOLUME
+    VN=$SCENARIO_RESOURCE_ONCE_VOLUME
   else
-    SCENARIO_ONCE_VOLUME_NAME=var_dev
+    VN=var_dev
   fi
-  echo $SCENARIO_ONCE_VOLUME_NAME
+  echo $VN
 }
 
 function up() {
@@ -377,34 +376,25 @@ function down() {
   # Test
   banner "Test"
   if [ "$VERBOSITY" == "-v" ]; then
-    # TODO: Schon in setEnvironment?
-    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
-    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
-    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
-      REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
-    fi
     docker volume ls | grep ${REAL_VOLUME_NAME}
     tree -L 3 -a .
   fi
 }
 
 function test() {
+  setEnvironment
+
   # Test
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-
-    # TODO: Schon in setEnvironment?
-    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
-    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
-    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
-      REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
-    fi
     docker volume ls | grep ${REAL_VOLUME_NAME}
+
     log "Images:"
     docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
     docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
+
     log "Containers:"
     docker ps | grep ${SCENARIO_ONCE_CONTAINER}
     docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
