@@ -163,6 +163,16 @@ function getVarFromOldVar() {
 
 # Source env files
 function sourceEnv() {
+  # Check that scenario name space exists
+  if [[ $SCENARIO_NAME_SPACE == "." ]]; then
+    echo "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
+    echo "Namespace is currently: $SCENARIO_NAME_SPACE"
+    exit 1
+  fi
+  SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
+  SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
+  SCENARIOS_DIR_LOCAL=$cwd/_scenarios
+
   # Source scenario env file (tmp)
   if [ -f $SCENARIO_FILE_NAME_TMP ]; then
     source $SCENARIO_FILE_NAME_TMP
@@ -520,20 +530,8 @@ if [ -z "$1" ]; then
   printUsage
   exit 1
 fi
-SCENARIO_NAME=$(basename $1)
-SCENARIO_NAME_SPACE=$(dirname $1)
-# Check that scenario name space exists
-if [[ $SCENARIO_NAME_SPACE == "." ]]; then
-  echo "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
-  echo "Namespace is currently: $SCENARIO_NAME_SPACE"
-  exit 1
-fi
-SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
-SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
-SCENARIOS_DIR_LOCAL=$cwd/_scenarios
+SCENARIO_STRING=$1
 shift
-
-sourceEnv
 
 # Default steps
 DEFAULT_STEPS="test"
@@ -570,6 +568,10 @@ if [ -n "$HELP" ]; then
   printUsage
   exit 0
 fi
+
+SCENARIO_NAME=$(basename $SCENARIO_STRING)
+SCENARIO_NAME_SPACE=$(dirname $SCENARIO_STRING)
+sourceEnv
 
 RETVAL=0
 for STEP in $(echo $STEPS | sed "s/,/ /g"); do
