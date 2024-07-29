@@ -161,6 +161,14 @@ function getVarFromOldVar() {
   fi
 }
 
+# Unset variables by filter
+unsetVariablesByFilter() {
+  local filter=$1
+  for var in $(compgen -v | grep $filter); do
+    unset $var
+  done
+}
+
 # Source env files
 function sourceEnv() {
   # Check that scenario name is set
@@ -544,7 +552,7 @@ if [ -z "$1" ]; then
   printUsage
   exit 1
 fi
-SCENARIO_STRING=$1
+SCENARIOS_STRING=$1
 shift
 
 # Default steps
@@ -584,27 +592,30 @@ if [ -n "$HELP" ]; then
 fi
 
 # Collect scenarios to run
-SCENARIO_LIST=""
+SCENARIOS_LIST=""
 for s in ${AVAILABLE_SCENARIOS}; do
-  if [[ $s == $SCENARIO_STRING ]]; then
-    SCENARIO_LIST="$SCENARIO_LIST
+  if [[ $s == $SCENARIOS_STRING ]]; then
+    SCENARIOS_LIST="$SCENARIOS_LIST
 $s"
   fi
 done
-if [ -z "$SCENARIO_LIST" ]; then
-  log "Unknown scenario: $SCENARIO_STRING"
+if [ -z "$SCENARIOS_LIST" ]; then
+  log "Unknown scenario: $SCENARIOS_STRING"
   SURE=$(ask_with_default "Do you want to continue with this scenario and create a new one? (yes/no)" "no")
   if [ -z $(echo $SURE | grep -i y) ]; then
     exit 1
   fi
-  SCENARIO_LIST=$SCENARIO_STRING
+  SCENARIOS_LIST=$SCENARIOS_STRING
 fi
 
 # Run scenarios
-log "Run scenarios: $SCENARIO_LIST"
+log "Run scenarios: $SCENARIOS_LIST"
 
 ALLRETVAL=0
-for s in $SCENARIO_LIST; do
+for s in $SCENARIOS_LIST; do
+  # Reset SCENARIO_* variables (MUST NOT unset SCENARIOS_LIST nor SCENARIOS_STRING)
+  unsetVariablesByFilter SCENARIO_
+
   SCENARIO_NAME=$(basename $s)
   SCENARIO_NAME_SPACE=$(dirname $s)
   sourceEnv
