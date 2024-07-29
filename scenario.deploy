@@ -139,7 +139,7 @@ function printUsage() {
   log "* deinit will call down"
   log
   log "Available scenarios:"
-  cd $cwd && find Scenarios -name *.scenario | sed "s;Scenarios/;    ;" | sed "s/\.scenario//" | sed "s/ /\\ /g"
+  log "$AVAILABLE_SCENARIOS"
 }
 
 # ask with default
@@ -163,12 +163,23 @@ function getVarFromOldVar() {
 
 # Source env files
 function sourceEnv() {
-  # Check that scenario name space exists
-  if [[ $SCENARIO_NAME_SPACE == "." ]]; then
+  # Check that scenario name is set
+  if [ -z $SCENARIO_NAME ]; then
+    echo "ERROR: Scenario name must be set"
+    exit 1
+  fi
+  # SCEANRIO_NAME must not conatin an asterisk
+  if [[ $SCENARIO_NAME == *"*"* ]]; then
+    echo "ERROR: Scenario name must not contain an asterisk"
+    exit 1
+  fi
+  # Check that scenario name space exists (means: is not ".")
+  if [ $SCENARIO_NAME_SPACE == "." ]; then
     echo "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
     echo "Namespace is currently: $SCENARIO_NAME_SPACE"
     exit 1
   fi
+
   SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
   SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
   SCENARIOS_DIR_LOCAL=$cwd/_scenarios
@@ -495,7 +506,7 @@ function test() {
   # Test remote
   banner "Test remote"
   if isInited; then
-    logVerbose "Scenario '$SCENARIO_NAME' is available on remote server."
+    log "Scenario '$SCENARIO_NAME' is available on remote server."
     callScript ./scenario.sh test $VERBOSITY
     if [ "$VERBOSITY" == "-v" ]; then
       callScript hostname
@@ -523,6 +534,9 @@ if [[ -n "${keyfile}" ]]; then
   logVerbose "Use ${keyfile}"
   use_key="-i ${keyfile}"
 fi
+
+# Check for available scenarios
+AVAILABLE_SCENARIOS=$(find $cwd/Scenarios -name "*.scenario" | sed "s;$cwd/Scenarios/;;" | sed "s/.scenario//" | sed "s/ /\\ /g")
 
 # Scan for scenario
 if [ -z "$1" ]; then
@@ -569,42 +583,68 @@ if [ -n "$HELP" ]; then
   exit 0
 fi
 
-SCENARIO_NAME=$(basename $SCENARIO_STRING)
-SCENARIO_NAME_SPACE=$(dirname $SCENARIO_STRING)
-sourceEnv
-
-RETVAL=0
-for STEP in $(echo $STEPS | sed "s/,/ /g"); do
-  if [ "$STEP" == "init" ]; then
-    init
-    RETVAL=$? # return value
-  elif [ "$STEP" == "up" ]; then
-    up
-    RETVAL=$? # return value
-  elif [ "$STEP" == "stop" ]; then
-    stop
-    RETVAL=$? # return value
-  elif [ "$STEP" == "start" ]; then
-    start
-    RETVAL=$? # return value
-  elif [ "$STEP" == "down" ]; then
-    down
-    RETVAL=$? # return value
-  elif [ "$STEP" == "deinit" ]; then
-    deinit
-    RETVAL=$? # return value
-  elif [ "$STEP" == "test" ]; then
-    test
-    RETVAL=$? # return value
-  elif [ "$STEP" == "updateconfig" ]; then
-    updateconfig
-    RETVAL=$? # return value
-  else
-    echo "ERROR: Unknown step: $STEP"
-    exit 1
-  fi
-  if [ $RETVAL -ne 0 ]; then
-    echo "ERROR: Step '$STEP' failed with return value: $RETVAL"
-    exit $RETVAL
+# Collect scenarios to run
+SCENARIO_LIST=""
+for s in ${AVAILABLE_SCENARIOS}; do
+  if [[ $s == $SCENARIO_STRING ]]; then
+    SCENARIO_LIST="$SCENARIO_LIST
+$s"
   fi
 done
+if [ -z "$SCENARIO_LIST" ]; then
+  log "Unknown scenario: $SCENARIO_STRING"
+  SURE=$(ask_with_default "Do you want to continue with this scenario and create a new one? (yes/no)" "no")
+  if [ -z $(echo $SURE | grep -i y) ]; then
+    exit 1
+  fi
+  SCENARIO_LIST=$SCENARIO_STRING
+fi
+
+# Run scenarios
+log "Run scenarios: $SCENARIO_LIST"
+
+ALLRETVAL=0
+for s in $SCENARIO_LIST; do
+  SCENARIO_NAME=$(basename $s)
+  SCENARIO_NAME_SPACE=$(dirname $s)
+  sourceEnv
+
+  RETVAL=0
+  for STEP in $(echo $STEPS | sed "s/,/ /g"); do
+    if [ "$STEP" == "init" ]; then
+      init
+      RETVAL=$? # return value
+    elif [ "$STEP" == "up" ]; then
+      up
+      RETVAL=$? # return value
+    elif [ "$STEP" == "stop" ]; then
+      stop
+      RETVAL=$? # return value
+    elif [ "$STEP" == "start" ]; then
+      start
+      RETVAL=$? # return value
+    elif [ "$STEP" == "down" ]; then
+      down
+      RETVAL=$? # return value
+    elif [ "$STEP" == "deinit" ]; then
+      deinit
+      RETVAL=$? # return value
+    elif [ "$STEP" == "test" ]; then
+      test
+      RETVAL=$? # return value
+    elif [ "$STEP" == "updateconfig" ]; then
+      updateconfig
+      RETVAL=$? # return value
+    else
+      echo "ERROR: Unknown step: $STEP"
+      exit 1
+    fi
+    if [ $RETVAL -ne 0 ]; then
+      ALLRETVAL=$RETVAL
+    fi
+  done
+done
+if [ $ALLRETVAL -ne 0 ]; then
+  echo "ERROR: '$STEPS' failed with return value: $ALLRETVAL"
+  exit $ALLRETVAL
+fi
