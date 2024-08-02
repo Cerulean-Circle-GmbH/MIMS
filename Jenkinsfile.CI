@@ -1,0 +1,64 @@
+pipeline {
+    // Sollte in einem once.sh-light container gemacht werden not any?
+    agent any
+
+    stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
+        stage('show env') {
+            steps {
+                sh "env"
+            }
+        }
+
+    }
+    post {
+        success {
+            script {
+                updateGitHubCommitStatus('success', 'Build succeeded')
+            }
+        }
+        failure {
+            script {
+                updateGitHubCommitStatus('failure', 'Build failed')
+            }
+        }
+        unstable {
+            script {
+                updateGitHubCommitStatus('failure', 'Build unstable')
+            }
+        }
+        always {
+            script {
+                // Optional: Weitere Aktionen, die immer ausgeführt werden
+            }
+        }
+    }
+}
+
+def updateGitHubCommitStatus(String state, String description) {
+    def context = 'continuous-integration/jenkins'
+    def gitCommit = env.GIT_COMMIT
+    def repoUrl = 'https://api.github.com/repos/username/repository/statuses/' + gitCommit
+    def payload = [
+        state       : state,
+        target_url  : env.BUILD_URL,
+        description : description,
+        context     : context
+    ]
+    def payloadJson = groovy.json.JsonOutput.toJson(payload)
+
+    withCredentials([string(credentialsId: 'GithubPersonalAccessToken', variable: 'GITHUB_TOKEN')]) {
+        sh """curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '${payloadJson}' \
+              ${repoUrl}"""
+    }
+}
