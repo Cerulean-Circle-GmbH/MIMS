@@ -3,6 +3,15 @@ pipeline {
     agent any
 
     stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
         stage('show env') {
             steps {
                 sh "env"
