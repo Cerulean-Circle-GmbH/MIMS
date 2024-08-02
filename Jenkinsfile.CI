@@ -12,6 +12,13 @@ pipeline {
             }
         }
 
+        stage('Checkout') {
+            steps {
+                // Checkout des Branches oder Pull Requests
+                checkout scm
+            }
+        }
+
         stage('show env') {
             steps {
                 sh "env"
