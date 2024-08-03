@@ -42,11 +42,6 @@ pipeline {
                 updateGitHubCommitStatus('failure', 'Build unstable')
             }
         }
-        always {
-            script {
-                // Optional: Weitere Aktionen, die immer ausgeführt werden
-            }
-        }
     }
 }
 
