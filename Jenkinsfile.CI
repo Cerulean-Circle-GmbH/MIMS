@@ -49,7 +49,7 @@ pipeline {
 def updateGitHubCommitStatus(String state, String description) {
     def context = 'continuous-integration/jenkins'
     def gitCommit = env.GIT_COMMIT
-    def repoUrl = 'https://api.github.com/repos/username/repository/statuses/' + gitCommit
+    def repoUrl = 'https://api.github.com/repos//Cerulean-Circle-GmbH/Once.2023/statuses/' + gitCommit
     def payload = [
         state       : state,
         target_url  : env.BUILD_URL,
