@@ -101,6 +101,21 @@ pipeline {
                     '''
             }
         }
+
+        stage('Deploy dev/neom with latest structr server') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        pwd
+                        git branch -vv
+                        ./scenario.deploy com/sfsre/backup/dev-neom deinit
+                        ./scenario.deploy com/sfsre/backup/dev-neom init,up,test
+                        ./scenario.deploy com/sfsre/backup/dev-neom test -v > results/com.sfsre.backup.dev-neom.log
+                    '''
+                }
+            }
+        }
     }
     post {
         success {
