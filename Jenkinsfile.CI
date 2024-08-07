@@ -109,6 +109,7 @@ pipeline {
                         set -e
                         pwd
                         git branch -vv
+                        git config --global --add safe.directory .
                         ./scenario.deploy com/sfsre/backup/dev-neom deinit
                         ./scenario.deploy com/sfsre/backup/dev-neom init,up,test
                         ./scenario.deploy com/sfsre/backup/dev-neom test -v > results/com.sfsre.backup.dev-neom.log
