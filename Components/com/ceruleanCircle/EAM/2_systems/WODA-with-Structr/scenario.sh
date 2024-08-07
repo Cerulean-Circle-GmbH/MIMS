@@ -66,16 +66,17 @@ function addToFile() {
   fi
 }
 
-# TODO: Ist das überall da, wo gebraucht?
 # Set some variables
 function setEnvironment() {
   # Handle volume
-  SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
+  calculateVolumeName
   addToFile $CONFIG_DIR/.env SCENARIO_ONCE_VOLUME_NAME
   REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
   if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
     REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
   fi
+
+  logVerbose "REAL_VOLUME_NAME=$REAL_VOLUME_NAME"
 
   # Rsync verbosity
   RSYNC_VERBOSE="-q"
@@ -100,9 +101,24 @@ function isSrcpathSet() {
 
 function calculateVolumeName() {
   # Evaluate source path (on Windows only provide "volume")
-  OS_TEST=$(echo $OS | grep -i win)
+  IS_WIN_OS=$(echo $OS | grep -i win)
+
+  # Verbose
+  if [ "$VERBOSITY" == "-v" ]; then
+    if isSrcpathSet; then
+      echo "isSrcpathSet YES - $SCENARIO_RESOURCE_ONCE_SRCPATH"
+    else
+      echo "isSrcpathSet NO - $SCENARIO_RESOURCE_ONCE_SRCPATH"
+    fi
+    if isVolumeSet; then
+      echo "isVolumeSet YES - $SCENARIO_RESOURCE_ONCE_VOLUME"
+    else
+      echo "isVolumeSet NO - $SCENARIO_RESOURCE_ONCE_VOLUME"
+    fi
+  fi
+
   # TODO: Ist die klammer um isSrcpathSet und isVolumeSet richtig?
-  if [ isSrcpathSet ] && [ -z "$OS_TEST" ]; then
+  if isSrcpathSet && [ -z "$IS_WIN_OS" ]; then
     SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
     # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or ".", add a "./"
     if [[ ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^/ && ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^"." ]]; then
@@ -114,7 +130,7 @@ function calculateVolumeName() {
   else
     SCENARIO_ONCE_VOLUME_NAME=var_dev
   fi
-  echo $SCENARIO_ONCE_VOLUME_NAME
+  logVerbose "SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_ONCE_VOLUME_NAME"
 }
 
 function up() {
@@ -377,34 +393,25 @@ function down() {
   # Test
   banner "Test"
   if [ "$VERBOSITY" == "-v" ]; then
-    # TODO: Schon in setEnvironment?
-    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
-    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
-    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
-      REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
-    fi
     docker volume ls | grep ${REAL_VOLUME_NAME}
     tree -L 3 -a .
   fi
 }
 
 function test() {
+  setEnvironment
+
   # Test
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-
-    # TODO: Schon in setEnvironment?
-    SCENARIO_ONCE_VOLUME_NAME=$(calculateVolumeName)
-    REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
-    if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
-      REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
-    fi
     docker volume ls | grep ${REAL_VOLUME_NAME}
+
     log "Images:"
     docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
     docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
+
     log "Containers:"
     docker ps | grep ${SCENARIO_ONCE_CONTAINER}
     docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
