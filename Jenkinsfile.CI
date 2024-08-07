@@ -19,6 +19,16 @@ pipeline {
     }
 
     stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                  updateGitHubCommitStatus('pending', 'Build in progress')
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
         stage('build image once.sh-builder') {
             steps {
                 sh '''
@@ -33,16 +43,6 @@ pipeline {
                             cd Units/docker-images/once.sh.ubuntu.22.04-builder &&
                             ./devTool docker.build"
                     '''
-            }
-        }
-
-        stage('Print Checkout') {
-            steps {
-                script {
-                  updateGitHubCommitStatus('pending', 'Build in progress')
-                    def scmVars = checkout scm
-                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
-                }
             }
         }
 
