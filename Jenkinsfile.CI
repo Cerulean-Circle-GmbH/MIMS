@@ -18,7 +18,6 @@ pipeline {
                 sh "env"
             }
         }
-
     }
     post {
         success {
