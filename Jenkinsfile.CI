@@ -19,6 +19,56 @@ pipeline {
     }
 
     stages {
+        stage('build image once.sh-builder') {
+            steps {
+                sh '''
+                    set -e
+                    BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                            --entrypoint "" once.sh-builder /bin/bash -c \
+                            "source ~/config/user.env &&
+                            git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                            cd Once.2023 &&
+                            git checkout $BRANCH &&
+                            cd Units/docker-images/once.sh.ubuntu.22.04-builder &&
+                            ./devTool docker.build"
+                    '''
+            }
+        }
+
+        stage('Print Checkout') {
+            steps {
+                script {
+                  updateGitHubCommitStatus('pending', 'Build in progress')
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
+        stage('build image once.sh-server') {
+            steps {
+                sh '''
+                    set -e
+                    BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                            --entrypoint "" once.sh-builder /bin/bash -c \
+                            "source ~/config/user.env &&
+                            git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
+                            cd Once.2023 &&
+                            git checkout $BRANCH &&
+                            cd Units/docker-images/once.sh.ubuntu.22.04-server &&
+                            ./devTool docker.build"
+                    '''
+            }
+        }
+
+        stage('show env') {
+            steps {
+                sh "env"
+            }
+        }
+
         stage('Cleanup & update') {
             steps {
                 sh '''#!/usr/bin/bash
@@ -115,56 +165,6 @@ pipeline {
                     cd /var/dev/Once.2023/Units/staticAnalysis
                     ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
                     '''
-            }
-        }
-
-        stage('Print Checkout') {
-            steps {
-                script {
-                  updateGitHubCommitStatus('pending', 'Build in progress')
-                    def scmVars = checkout scm
-                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
-                }
-            }
-        }
-
-        stage('build image once.sh-builder') {
-            steps {
-                sh '''
-                    set -e
-                    BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                            --entrypoint "" once.sh-builder /bin/bash -c \
-                            "source ~/config/user.env &&
-                            git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
-                            cd Once.2023 &&
-                            git checkout $BRANCH &&
-                            cd Units/docker-images/once.sh.ubuntu.22.04-builder &&
-                            ./devTool docker.build"
-                    '''
-            }
-        }
-
-        stage('build image once.sh-server') {
-            steps {
-                sh '''
-                    set -e
-                    BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                            --entrypoint "" once.sh-builder /bin/bash -c \
-                            "source ~/config/user.env &&
-                            git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git &&
-                            cd Once.2023 &&
-                            git checkout $BRANCH &&
-                            cd Units/docker-images/once.sh.ubuntu.22.04-server &&
-                            ./devTool docker.build"
-                    '''
-            }
-        }
-
-        stage('show env') {
-            steps {
-                sh "env"
             }
         }
     }
