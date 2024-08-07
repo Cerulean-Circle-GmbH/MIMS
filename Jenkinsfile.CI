@@ -71,8 +71,8 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     set -e
-                    rm -rf results
-                    mkdir -p results
+                    rm -rf _results
+                    mkdir -p _results
 
                     # Update known_hosts (only for bitbucket once in a while)
                     #ssh-keygen -f "/root/.ssh/known_hosts" -R "bitbucket.org"
@@ -97,7 +97,7 @@ pipeline {
                     oo mode.dev
                     oo update
                     cd Units/staticAnalysis
-                    ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
+                    ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/_results/staticAnalysis.txt
                     '''
             }
         }
@@ -109,10 +109,9 @@ pipeline {
                         set -e
                         pwd
                         git branch -vv
-                        git config --global --add safe.directory .
                         ./scenario.deploy com/sfsre/backup/dev-neom deinit
                         ./scenario.deploy com/sfsre/backup/dev-neom init,up,test
-                        ./scenario.deploy com/sfsre/backup/dev-neom test -v > results/com.sfsre.backup.dev-neom.log
+                        ./scenario.deploy com/sfsre/backup/dev-neom test -v > _results/com.sfsre.backup.dev-neom.log
                     '''
                 }
             }
@@ -135,7 +134,7 @@ pipeline {
             }
         }
         always {
-            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
+            archiveArtifacts artifacts: '_results/*', onlyIfSuccessful: true
         }
     }
 }
