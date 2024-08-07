@@ -99,62 +99,6 @@ pipeline {
             }
         }
 
-        stage('Check branches') {
-            steps {
-                sh '''#!/usr/bin/bash
-                    set -e
-                    source ~/config/user.env
-                    oo mode.dev
-                    oo update
-                    cd /var/dev/EAMD.ucp
-                    export LOG_DEVICE=$WORKSPACE/results/branch.txt
-                    config save log
-                    oo branches.check feature/neom dev/neom 6a7a3d3
-                    export LOG_DEVICE=/dev/stdout
-                    config save log
-                    cat $WORKSPACE/results/branch.txt
-                    cat $WORKSPACE/results/branch.txt | ansi2html > $WORKSPACE/results/branch.html
-                    '''
-            }
-        }
-
-        stage('Create class svg (wavi)') {
-            steps {
-                sh '''#!/usr/bin/bash
-                    set -e
-                    TMP=/tmp/${TREE}
-                    SOURCE=/var/dev/EAMD.ucp/Components/${TREE}
-                    source ~/config/user.env
-                    oo mode.dev
-                    oo update
-                    rm -rf $TMP
-                    mkdir -p $TMP
-                    rsync -a --include='*.js' --include='*/' --exclude='*' $SOURCE/ $TMP/
-                    wavi $TMP $WORKSPACE/results/$NAME.wavi.svg
-                    '''
-            }
-        }
-
-        stage('Create class svg (puml)') {
-            steps {
-                sh '''#!/usr/bin/bash
-                    set -e
-                    source ~/config/user.env
-                    oo mode.dev
-                    oo update
-                    cd /var/dev/Once.2023/Units/generatePUML
-                    rm -rf _*
-                    npm install
-                    ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom
-                    export PLANTUML_LIMIT_SIZE=18192
-                    plantuml _test.puml -tsvg
-                    plantuml _test.puml -tpng
-                    mv _test.svg $WORKSPACE/results/$NAME.puml.svg
-                    mv _test.png $WORKSPACE/results/$NAME.puml.png
-                    '''
-            }
-        }
-
         stage('Static analysis of EAMD') {
             steps {
                 sh '''#!/usr/bin/bash
@@ -162,6 +106,8 @@ pipeline {
                     source ~/config/user.env
                     oo mode.dev
                     oo update
+                    pwd
+                    tree -L 3 .
                     cd /var/dev/Once.2023/Units/staticAnalysis
                     ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
                     '''
@@ -183,6 +129,9 @@ pipeline {
             script {
                 updateGitHubCommitStatus('failure', 'Build unstable')
             }
+        }
+        always {
+            archiveArtifacts artifacts: 'results/*', onlyIfSuccessful: true
         }
     }
 }
