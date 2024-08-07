@@ -8,8 +8,6 @@ pipeline {
     }
 
     environment {
-        TREE = 'com/neom'
-        NAME = 'com.neom'
         // Ignore strict host key checking
         GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
     }
@@ -69,7 +67,7 @@ pipeline {
             }
         }
 
-        stage('Cleanup & update') {
+        stage('Cleanup & update (dev/neom)') {
             steps {
                 sh '''#!/usr/bin/bash
                     set -e
@@ -87,14 +85,6 @@ pipeline {
                     git reset --hard
                     git checkout dev/neom
                     git pull
-
-                    # Update Once.2023
-                    cd /var/dev
-                    git clone 2cuGitHub:Cerulean-Circle-GmbH/Once.2023.git || true
-                    cd Once.2023
-                    git reset --hard
-                    git checkout dev
-                    git pull
                     '''
             }
         }
@@ -106,9 +96,7 @@ pipeline {
                     source ~/config/user.env
                     oo mode.dev
                     oo update
-                    pwd
-                    tree -L 3 .
-                    cd /var/dev/Once.2023/Units/staticAnalysis
+                    cd Units/staticAnalysis
                     ./staticAnalysis.sh /var/dev/EAMD.ucp | tee $WORKSPACE/results/staticAnalysis.txt
                     '''
             }

@@ -1,5 +1,5 @@
 pipeline {
-    // Sollte in einem once.sh-light container gemacht werden not any?
+    // TODO: Sollte in einem once.sh-light container gemacht werden not any? ABer nur, wenn der schon da ist (Chicken/Egg Problem)
     agent any
 
     stages {
