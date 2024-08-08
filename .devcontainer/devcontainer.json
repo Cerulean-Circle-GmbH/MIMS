@@ -33,17 +33,18 @@
       "extensions": [
         "eamodio.gitlens",
         "esbenp.prettier-vscode",
+        "fill-labs.dependi",
+        "Gruntfuggly.todo-tree",
         "jebbs.plantuml",
         "mads-hartmann.bash-ide-vscode",
         "mkhl.shfmt",
         "ms-azuretools.vscode-docker",
-        "rogalmic.bash-debug",
-        "Gruntfuggly.todo-tree",
-        "vadimcn.vscode-lldb",
         "mutantdino.resourcemonitor",
+        "rogalmic.bash-debug",
         "rust-lang.rust-analyzer",
         "tamasfe.even-better-toml",
-        "fill-labs.dependi"
+        "thenuprojectcontributors.vscode-nushell-lang",
+        "vadimcn.vscode-lldb"
       ]
     }
   },

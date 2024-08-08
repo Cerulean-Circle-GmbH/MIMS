@@ -25,7 +25,7 @@ RUN cargo build --release
 ################
 ##### Runtime
 # Note: You can use any Debian/Ubuntu based image you want.
-FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04 AS runtime 
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04 AS runtime
 
 # [Option] Install zsh
 ARG INSTALL_ZSH="true"
@@ -109,3 +109,8 @@ RUN cargo install cross --git https://github.com/cross-rs/cross
 
 # Copy Nushell binary from builder image
 COPY --from=builder /usr/src/nushell/target/release/nu /usr/local/bin
+COPY nushell/* /home/vscode/.config/nushell/
+RUN chown vscode -R /home/vscode/.config/nushell
+
+# Fix cargo registry for user vscode
+RUN chown vscode -R /usr/local/cargo/registry
