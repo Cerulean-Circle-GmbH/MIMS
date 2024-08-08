@@ -1,0 +1,58 @@
+#!/usr/bin/env nu
+
+use std assert
+use std log
+
+# set log level
+$env.NU_LOG_LEVEL = "WARN"
+
+# main command
+def main [] {
+  print $"Manage once scenarios on local or remote servers.
+
+(ansi green)Usage:(ansi reset) scenario list
+       scenario deploy
+  "
+}
+
+# main subcommand "list"
+def "main list" [] {
+  let base = $env.FILE_PWD | path expand
+  let scenarios = glob ./Scenarios/**/*.{scenario,env} | sort # glob .. --exclude [**/localhost/*]
+  print $"Available scenarios: "
+  $scenarios | each { |it| str replace $"($base)/Scenarios/" "" }
+}
+
+# main subcommand "deploy"
+def "main deploy" [
+  scenario: string, # Use available scenario, e.g localhost/dev
+  action: string  # Actions [init,up,start,stop,down,deinit,test,updateconfig]
+  --verbose (-v) # Set verbosity for command
+  --silent (-s) # Set silent mode for command
+] {
+    if $verbose {
+      # set log level to debug
+      $env.NU_LOG_LEVEL = "DEBUG"
+    }
+
+    if $silent {
+      # set log level to silent one - can this be disabled completely?
+      $env.NU_LOG_LEVEL = "CRT"
+    }
+
+    for $_action in ($action | split words) {
+      log debug $"Found action ($_action)"
+
+      match $_action {
+      "init" => (print $"Call ($scenario) ($_action)"),
+      "up" => (print $"Call ($scenario) ($_action)"),
+      "start" => (print $"Call ($scenario) ($_action)"),
+      "stop" => (print $"Call ($scenario) ($_action)"),
+      "down" => (print $"Call ($scenario) ($_action)"),
+      "deinit" => (print $"Call ($scenario) ($_action)"),
+      "test" => (print $"Call ($scenario) ($_action)"),
+      "updateconfig" => (print $"Call ($scenario) ($_action)"),
+      _ => (print $"Unknown action ($_action)")
+    }
+    }
+}
