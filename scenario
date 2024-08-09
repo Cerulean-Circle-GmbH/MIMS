@@ -5,6 +5,7 @@ use std assert
 # global script vars
 $env.SCENARIO_SRC_COMPONENT = ""
 $env.SCENARIO_NAME = ""
+$env.SCENARIO_DEFAULTS_ENV = []
 $env.SILENTLY = false
 $env.VERBOSITY = false
 
@@ -55,7 +56,31 @@ def get_scenarios [] {
   $scenarios | each { |it| str replace $"($base)/Scenarios/" "" }
 }
 
-# run with --env to keep the env variables defined inside the script scope
+def parse_yaml [file: string] {
+  let yaml_content = (open $file)
+
+  # run with --env to keep the env variables defined inside the script's global scope
+  def --env recursive_parse [data, parent = ""] {
+    # set separator character
+    mut separator = ""
+    if ($parent | is-not-empty) {
+      $separator = "_"
+    }
+
+    for node in ($data | transpose key value) {
+      if ($node.value | describe | str starts-with "record") {
+        recursive_parse $node.value $"($parent)($separator)($node.key)"
+      } else {
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV | append $"($parent | str upcase)($separator)($node.key | str upcase) = ($node.value)")
+      }
+    }
+  }
+
+  recursive_parse $yaml_content
+  $env.SCENARIO_DEFAULTS_ENV
+}
+
+# run with --env to keep the env variables defined inside the script's global scope
 def --env config [] {
   # Configure scenario
   banner $"Configure scenario"
@@ -71,6 +96,8 @@ def --env config [] {
   }
 
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
+  let base = $env.FILE_PWD | path expand
+  print (parse_yaml $"($base)/Components/($env.SCENARIO_SRC_COMPONENT)/defaults.scenario.yaml")
   # TODO: This is next to implement!
 }
 
