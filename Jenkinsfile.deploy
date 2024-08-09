@@ -21,7 +21,12 @@ pipeline {
                     // Could be de/wo-da/test/demo; com/sfsre/backup/dev-neom; de/wo-da/test/dev-neom
                     sh '''#!/usr/bin/bash
                         set -e
-                        sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/${SCENARIO_FULL_NAME}.scenario
+                        if [ -z "$SCENARIO_SRC_TAG" ]; then
+                            echo "SCENARIO_SRC_TAG is not set"
+                        else
+                            echo "SCENARIO_SRC_TAG is set to $SCENARIO_SRC_TAG"
+                            sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/${SCENARIO_FULL_NAME}.scenario
+                        fi
                         mkdir -p $WORKSPACE/_results
                         ./scenario.deploy ${SCENARIO_FULL_NAME} deinit
                         ./scenario.deploy ${SCENARIO_FULL_NAME} init,up,test
