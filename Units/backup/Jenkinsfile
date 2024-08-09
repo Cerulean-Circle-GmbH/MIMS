@@ -15,7 +15,6 @@ pipeline {
         stage('Print Checkout') {
             steps {
                 script {
-                    updateGitHubCommitStatus('pending', 'Build in progress')
                     def scmVars = checkout scm
                     echo "Checked out branch: ${scmVars.GIT_BRANCH}"
                 }
