@@ -17,6 +17,15 @@ pipeline {
     }
 
     stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
         stage('Cleanup & update') {
             steps {
                 sh '''#!/usr/bin/bash

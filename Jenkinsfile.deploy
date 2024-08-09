@@ -12,6 +12,15 @@ pipeline {
     }
 
     stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
         stage('Deploy dev/neom with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {

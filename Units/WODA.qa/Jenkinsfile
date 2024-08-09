@@ -20,11 +20,11 @@ pipeline {
     stages {
         stage('Cleanup & update (dev/neom)') {
             steps {
-                // TODO: Job must clean completely before start
                 sh '''#!/usr/bin/bash
                     set -e
                     source ~/config/user.env
                     Units/cleanupAndUpdateEAMD.sh dev/neom
+                    find $WORKSPACE -name "_*" | xargs rm -rf
                     mkdir -p $WORKSPACE/_results
                     oo mode.dev
                     oo update

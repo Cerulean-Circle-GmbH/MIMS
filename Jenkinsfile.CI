@@ -26,7 +26,6 @@ pipeline {
 
         stage('Cleanup & update (dev/neom)') {
             steps {
-                // TODO: Job must clean completely before start
                 sh '''#!/usr/bin/bash
                     set -e
                     Units/cleanupAndUpdateEAMD.sh dev/neom
