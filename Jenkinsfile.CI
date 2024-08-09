@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'once.sh-builder'
-            args '-v once_jenkins:/var/dev  -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user developking'
+            args '-v once_jenkins:/var/dev  -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
             reuseNode true
         }
     }
@@ -29,6 +29,7 @@ pipeline {
                     set -e
                     Units/cleanupAndUpdateEAMD.sh dev/neom
                     mkdir -p $WORKSPACE/_results
+                    git config --global --add safe.directory "*"
                     '''
             }
         }
@@ -37,6 +38,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     set -e
+                    source ~/config/user.env
                     cd Units/docker-images/once.sh.ubuntu.22.04-builder
                     ./devTool docker.build
                     '''
@@ -47,6 +49,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/bash
                     set -e
+                    source ~/config/user.env
                     cd Units/docker-images/once.sh.ubuntu.22.04-server
                     ./devTool docker.build
                     '''
