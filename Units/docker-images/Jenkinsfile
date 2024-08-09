@@ -21,6 +21,8 @@ pipeline {
             steps {
                 sh '''
                     set -e
+                    git config --global --add safe.directory "*"
+                    source ~/config/user.env
                     cd Units/docker-images/once.sh.ubuntu.22.04-builder
                     ./devTool docker.build
                     '''
@@ -31,6 +33,7 @@ pipeline {
             steps {
                 sh '''
                     set -e
+                    source ~/config/user.env
                     cd Units/docker-images/once.sh.ubuntu.22.04-server
                     ./devTool docker.build
                     '''
@@ -42,9 +45,11 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
                     sh '''
                         set -e
+                        source ~/config/user.env
+                        cd Units/docker-images/once.sh.ubuntu.22.04-server
                         ./devTool docker.buildx.use
                         docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
-                        devTool docker.buildx.push
+                        ./devTool docker.buildx.push
                         '''
                 }
             }
@@ -55,6 +60,8 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
                     sh '''#!/bin/bash
                         set -e
+                        source ~/config/user.env
+                        cd Units/docker-images/once.sh.ubuntu.22.04-server
                         BRANCH=`echo $GIT_BRANCH | sed "s;origin/;;"`
                         if [[ "$RELEASE_CMD" == "release" ]]; then
                             if [[ $BRANCH != "main" ]]; then
@@ -64,7 +71,7 @@ pipeline {
                                 cd Units/docker-images/once.sh.ubuntu.22.04-server
                                 ./devTool docker.buildx.use
                                 docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
-                                devTool docker.buildx.push.latest
+                                ./devTool docker.buildx.push.latest
                             fi
                         elif [ ! -z "$RELEASE_CMD" ]; then
                             echo "RELEASE_CMD has the wrong value: $RELEASE_CMD"
