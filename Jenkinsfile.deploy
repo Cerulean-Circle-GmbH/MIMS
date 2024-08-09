@@ -27,7 +27,7 @@ pipeline {
                         mkdir -p $WORKSPACE/_results
                         ./scenario.deploy ${SCENARIO_FULL_NAME} deinit
                         ./scenario.deploy ${SCENARIO_FULL_NAME} init,up,test
-                        ./scenario.deploy ${SCENARIO_FULL_NAME} test -v > $WORKSPACE/_results/${echo ${SCENARIO_FULL_NAME} | sed "s;/;./g"}.log
+                        ./scenario.deploy ${SCENARIO_FULL_NAME} test -v > $WORKSPACE/_results/$(echo ${SCENARIO_FULL_NAME} | sed "s;/;.;g").log
                     '''
                 }
             }
