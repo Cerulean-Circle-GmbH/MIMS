@@ -19,7 +19,7 @@ pipeline {
 
         stage('build image once.sh-builder') {
             steps {
-                sh '''
+                sh '''#!/usr/bin/bash
                     set -e
                     git config --global --add safe.directory "*"
                     source ~/config/user.env
@@ -31,7 +31,7 @@ pipeline {
 
         stage('build image once.sh-server') {
             steps {
-                sh '''
+                sh '''#!/usr/bin/bash
                     set -e
                     source ~/config/user.env
                     cd Units/docker-images/once.sh.ubuntu.22.04-server
@@ -43,7 +43,7 @@ pipeline {
         stage('build & deploy image once.sh-server multi-branch') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
-                    sh '''
+                    sh '''#!/usr/bin/bash
                         set -e
                         source ~/config/user.env
                         cd Units/docker-images/once.sh.ubuntu.22.04-server
