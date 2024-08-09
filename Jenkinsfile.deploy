@@ -23,6 +23,7 @@ pipeline {
                             echo "SCENARIO_SRC_TAG is set to $SCENARIO_SRC_TAG"
                             sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/${SCENARIO_FULL_NAME}.scenario
                         fi
+                        find . -name "_*" | xargs rm -rf
                         mkdir -p $WORKSPACE/_results
                         ./scenario.deploy ${SCENARIO_FULL_NAME} deinit
                         ./scenario.deploy ${SCENARIO_FULL_NAME} init,up,test
