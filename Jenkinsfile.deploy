@@ -15,10 +15,6 @@ pipeline {
         stage('Deploy dev/neom with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
-                    // TODO: Job must clean completely before start
-                    // Take SCENARIO_SRC_TAG from Jenkins Job
-                    // Take SCENARIO_FULL_NAME from Jenkins Job
-                    // Could be de/wo-da/test/demo; com/sfsre/backup/dev-neom; de/wo-da/test/dev-neom
                     sh '''#!/usr/bin/bash
                         set -e
                         if [ -z "$SCENARIO_SRC_TAG" ]; then
