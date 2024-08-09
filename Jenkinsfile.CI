@@ -58,6 +58,21 @@ pipeline {
             }
         }
 
+        stage('build & deploy image once.sh-server multi-branch') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        source ~/config/user.env
+                        cd Units/docker-images/once.sh.ubuntu.22.04-server
+                        ./devTool docker.buildx.use
+                        docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
+                        ./devTool docker.buildx.push
+                        '''
+                }
+            }
+        }
+
         stage('Deploy dev/neom with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
