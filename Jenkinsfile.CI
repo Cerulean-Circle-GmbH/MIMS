@@ -30,6 +30,7 @@ pipeline {
                 sh '''#!/usr/bin/bash
                     set -e
                     Units/cleanupAndUpdateEAMD.sh dev/neom
+                    find $WORKSPACE -name "_*" | xargs rm -rf
                     mkdir -p $WORKSPACE/_results
                     git config --global --add safe.directory "*"
                     '''

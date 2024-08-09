@@ -24,7 +24,6 @@ pipeline {
 
         stage('Backup structr') {
             steps {
-                // TODO: Job must clean completely before start
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile'),
                                  string(credentialsId: 'jenkins4bitbucket', variable: 'BBTOKEN')]) {
                     sh '''#!/usr/bin/bash
@@ -59,6 +58,7 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
                         set -e
+                        find $WORKSPACE -name "_*" | xargs rm -rf
                         mkdir -p $WORKSPACE/_results
                         ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "tree /var/backups" > $WORKSPACE/_results/tree.txt
                         ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "du -skh /var/backups/*" > $WORKSPACE/_results/du.txt
