@@ -67,11 +67,13 @@ def parse_yaml [file: string] {
       $separator = "_"
     }
 
+    # TODO: YAML comments are ignored
     for node in ($data | transpose key value) {
       if ($node.value | describe | str starts-with "record") {
         recursive_parse $node.value $"($parent)($separator)($node.key)"
       } else {
-        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV | append $"($parent | str upcase)($separator)($node.key | str upcase) = ($node.value)")
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV
+          | append $"($parent | str upcase)($separator)($node.key | str upcase) = ($node.value)")
       }
     }
   }
@@ -97,11 +99,12 @@ def --env config [] {
 
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
   let base = $env.FILE_PWD | path expand
-  print (parse_yaml $"($base)/Components/($env.SCENARIO_SRC_COMPONENT)/defaults.scenario.yaml")
+  parse_yaml $"($base)/Components/($env.SCENARIO_SRC_COMPONENT)/defaults.scenario.yaml"
+    | save -f $"($base)/Components/($env.SCENARIO_SRC_COMPONENT)/_defaults.scenario.sh"
   # TODO: This is next to implement!
 }
 
-# main command
+# Manage once scenarios on local or remote servers.
 def main [] {
   print_unsilent $"Manage once scenarios on local or remote servers.
 
@@ -110,36 +113,36 @@ def main [] {
   "
 }
 
-# main subcommand "list"
+# List available once scenarios.
 def "main list" [] {
   print_unsilent $"Available scenarios:"
   print_unsilent (get_scenarios)
 }
 
-# main subcommand "deploy"
+# Deploy once scenarios on local or remote servers.
 def "main deploy" [
   action: string  # Actions [init,up,start,stop,down,deinit,test,updateconfig]
   scenario: string = "", # Set scenario name under which component will be deployed, e.g localhost/dev
   --verbose (-v) # Set verbosity for command
   --silent (-s) # Set silent mode for command
 ] {
-    if $verbose {
-      # set print level to debug
-      $env.VERBOSITY = true
-      $env.SILENTLY = false
-    }
+  if $verbose {
+    # set print level to debug
+    $env.VERBOSITY = true
+    $env.SILENTLY = false
+  }
 
-    if $silent {
-      # set print level to silent
-      $env.VERBOSITY = false
-      $env.SILENTLY = true
-    }
+  if $silent {
+    # set print level to silent
+    $env.VERBOSITY = false
+    $env.SILENTLY = true
+  }
 
-    $env.SCENARIO_NAME = $scenario
-    config
+  $env.SCENARIO_NAME = $scenario
+  config
 
-    for $_action in ($action | split words) {
-      match $_action {
+  for $_action in ($action | split words) {
+    match $_action {
       "init" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
       "up" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
       "start" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
@@ -150,5 +153,5 @@ def "main deploy" [
       "updateconfig" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
       _ => (print_verbose $"Unknown action ($_action)")
     }
-    }
+  }
 }
