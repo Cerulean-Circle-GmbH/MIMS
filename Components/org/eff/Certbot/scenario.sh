@@ -51,6 +51,7 @@ function checkContainer() {
 function up() {
   # Create and run container
   banner "Create and run container"
+  docker-compose pull
   docker-compose -p $SCENARIO_NAME up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps

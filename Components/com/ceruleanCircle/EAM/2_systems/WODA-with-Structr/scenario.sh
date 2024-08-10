@@ -194,6 +194,7 @@ function up() {
   # Create structr image
   banner "Create structr image"
   log "Building image..."
+  docker pull ${SCENARIO_SRC_ONCE_IMAGE}
   docker-compose build > $VERBOSEPIPE
   docker image ls > $VERBOSEPIPE
 
@@ -214,6 +215,7 @@ function up() {
 
   # Create and run container
   banner "Create and run container"
+  docker-compose pull
   docker-compose -p $SCENARIO_NAME up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
