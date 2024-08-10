@@ -71,7 +71,9 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   bash-completion \
   editorconfig \
   nodejs \
-  shfmt
+  shfmt \
+  # Clean up
+  && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
 
 # Install prettier via npm
 RUN npm install --global prettier
@@ -114,3 +116,13 @@ RUN chown vscode -R /home/vscode/.config/nushell
 
 # Fix cargo registry for user vscode
 RUN chown vscode -R /usr/local/cargo/registry
+
+# Install necessary tools for Nushell multi completer
+RUN echo "deb [trusted=yes] https://apt.fury.io/rsteube/ /" > /etc/apt/sources.list.d/fury.list
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends \
+  carapace-bin \
+  fish \
+  zoxide \
+  # Clean up
+  && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
