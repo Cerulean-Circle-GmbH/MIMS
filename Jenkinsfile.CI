@@ -1,0 +1,129 @@
+pipeline {
+    agent {
+        docker {
+            image 'once.sh-builder'
+            args '-v once_jenkins:/var/dev  -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            // docker run --rm -v .:/root/src -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash -c "source ~/config/user.env && cd src/Units/docker-images/once.sh.ubuntu.22.04-server && ./devTool docker.build"
+            // docker run --rm -v .:/root/src -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash -c "source ~/config/user.env && cd src/Units/docker-images/once.sh.ubuntu.22.04-builder && docker build -t once.sh-builder.inner ."
+            reuseNode true
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                    updateGitHubCommitStatus('pending', 'Build in progress')
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
+        stage('Cleanup & update (dev/neom)') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    set -e
+                    Units/cleanupAndUpdateEAMD.sh dev/neom
+                    find $WORKSPACE -name "_*" | xargs rm -rf
+                    mkdir -p $WORKSPACE/_results
+                    git config --global --add safe.directory "*"
+                    '''
+            }
+        }
+
+        stage('build image once.sh-builder') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    set -e
+                    source ~/config/user.env
+                    cd Units/docker-images/once.sh.ubuntu.22.04-builder
+                    ./devTool docker.build
+                    '''
+            }
+        }
+
+        stage('build image once.sh-server') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    set -e
+                    source ~/config/user.env
+                    cd Units/docker-images/once.sh.ubuntu.22.04-server
+                    ./devTool docker.build
+                    '''
+            }
+        }
+
+        stage('build & deploy image once.sh-server multi-branch') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        source ~/config/user.env
+                        cd Units/docker-images/once.sh.ubuntu.22.04-server
+                        ./devTool docker.buildx.use
+                        docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
+                        ./devTool docker.buildx.push
+                        '''
+                }
+            }
+        }
+
+        stage('Deploy dev/neom with latest structr server') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        ./scenario.deploy com/sfsre/backup/dev-neom deinit
+                        ./scenario.deploy com/sfsre/backup/dev-neom init,up,test
+                        ./scenario.deploy com/sfsre/backup/dev-neom test -v > $WORKSPACE/_results/com.sfsre.backup.dev-neom.log
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                updateGitHubCommitStatus('success', 'Build succeeded')
+            }
+        }
+        failure {
+            script {
+                updateGitHubCommitStatus('failure', 'Build failed')
+            }
+        }
+        unstable {
+            script {
+                updateGitHubCommitStatus('failure', 'Build unstable')
+            }
+        }
+        always {
+            archiveArtifacts artifacts: '_results/*', onlyIfSuccessful: true
+        }
+    }
+}
+
+def updateGitHubCommitStatus(String state, String description) {
+    def context = 'continuous-integration/jenkins'
+    def gitCommit = env.GIT_COMMIT
+    def repoUrl = 'https://api.github.com/repos/Cerulean-Circle-GmbH/Once.2023/statuses/' + gitCommit
+    def payload = [
+        state       : state,
+        target_url  : env.BUILD_URL,
+        description : description,
+        context     : context
+    ]
+    def payloadJson = groovy.json.JsonOutput.toJson(payload)
+
+    withCredentials([string(credentialsId: 'GithubPersonalAccessToken', variable: 'GITHUB_TOKEN')]) {
+        sh """curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '${payloadJson}' \
+              ${repoUrl}"""
+    }
+}
