@@ -152,6 +152,7 @@ devTool.docker.build() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfi
         echo "export OOSH_BRANCH=${OOSH_BRANCH}" > ${OOSH_TAR_ENVFILE}
     fi
 
+    docker pull ubuntu:latest
     docker build ${PROGRESS_PLAIN_ARGUMENT} -t ${DOCKER_IMAGE_NAME} .
     RETURN_VALUE=$?
     if [ $RETURN_VALUE -gt 0 ]; then
