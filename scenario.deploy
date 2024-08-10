@@ -319,6 +319,7 @@ function config() {
 
       # Preset some variables
       if [[ "$variable" == "SCENARIO_SERVER_NAME" && "$value" == "localhost" ]]; then
+        SCENARIO_SERVER_NAME="localhost"
         SCENARIO_SERVER_SSHCONFIG="none"
         SCENARIO_SERVER_CONFIGSDIR="none"
         logVerbose "Preset SCENARIO_SERVER_SSHCONFIG=$SCENARIO_SERVER_SSHCONFIG"
