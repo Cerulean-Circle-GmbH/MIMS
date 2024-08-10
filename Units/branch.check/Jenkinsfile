@@ -82,9 +82,10 @@ pipeline {
                     npm install
                     ./generatePUML.js /var/dev/EAMD.ucp/Components/com/neom
                     export PLANTUML_LIMIT_SIZE=18192
-                    plantuml _test.puml -tsvg
+                    # TODO: plantuml is not working
+                    #plantuml _test.puml -tsvg
                     #plantuml _test.puml -tpng
-                    mv _test.svg $WORKSPACE/_results/$NAME.puml.svg
+                    #mv _test.svg $WORKSPACE/_results/$NAME.puml.svg
                     #mv _test.png $WORKSPACE/_results/$NAME.puml.png
                     '''
             }
