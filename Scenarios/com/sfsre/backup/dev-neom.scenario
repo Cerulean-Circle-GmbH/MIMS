@@ -4,7 +4,7 @@ SCENARIO_SRC_COMPONENT="com/ceruleanCircle/EAM/2_systems/WODA-with-Structr"
 # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
 SCENARIO_SRC_CACHEDIR="~/.cache/ONCE.2023-Scenarios"
 # Which ONCE docker image should be used?
-SCENARIO_SRC_ONCE_IMAGE="once.sh-server:latest"
+SCENARIO_SRC_ONCE_IMAGE="donges/once:latest"
 # Which ONCE branch should be restored (maybe tag dependent)?
 SCENARIO_SRC_ONCE_BRANCH="dev/neom"
 # Which path should be used as outer config?

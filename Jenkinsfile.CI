@@ -78,9 +78,9 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
                         set -e
-                        ./scenario.deploy com/sfsre/backup/dev-ci deinit
-                        ./scenario.deploy com/sfsre/backup/dev-ci init,up,test
-                        ./scenario.deploy com/sfsre/backup/dev-ci test -v > $WORKSPACE/_results/com.sfsre.backup.dev-neom.log
+                        ./scenario.deploy com/sfsre/backup/dev-neom deinit
+                        ./scenario.deploy com/sfsre/backup/dev-neom init,up,test
+                        ./scenario.deploy com/sfsre/backup/dev-neom test -v > $WORKSPACE/_results/com.sfsre.backup.dev-neom.log
                     '''
                 }
             }
