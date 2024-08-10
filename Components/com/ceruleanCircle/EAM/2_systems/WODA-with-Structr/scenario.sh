@@ -194,7 +194,10 @@ function up() {
   # Create structr image
   banner "Create structr image"
   log "Building image..."
-  docker pull ${SCENARIO_SRC_ONCE_IMAGE}
+  # Only pull if image contains a "/" (means it's a repository)
+  if [[ $SCENARIO_STRUCTR_IMAGE == *"/"* ]]; then
+    docker pull ${SCENARIO_STRUCTR_IMAGE}
+  fi
   docker-compose build > $VERBOSEPIPE
   docker image ls > $VERBOSEPIPE
 
