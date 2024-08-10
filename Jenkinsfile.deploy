@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'once.sh-builder'
-            args '-v once_jenkins:/var/dev -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            args '-v once_jenkins:/var/dev -v jenkins_jenkins_home:/var/jenkins_home -v /root/.ssh:/root/.ssh -w /var/dev --entrypoint "" --user root'
             reuseNode true
         }
     }

@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'once.sh-builder'
-            args '-v once_jenkins:/var/dev  -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --entrypoint "" --user root'
+            args '-v once_jenkins:/var/dev  -v jenkins_jenkins_home:/var/jenkins_home -v /root/.ssh:/root/.ssh -w /var/dev --entrypoint "" --user root'
             // docker run --rm -v .:/root/src -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash -c "source ~/config/user.env && cd src/Units/docker-images/once.sh.ubuntu.22.04-server && ./devTool docker.build"
             // docker run --rm -v .:/root/src -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash -c "source ~/config/user.env && cd src/Units/docker-images/once.sh.ubuntu.22.04-builder && docker build -t once.sh-builder.inner ."
             reuseNode true
