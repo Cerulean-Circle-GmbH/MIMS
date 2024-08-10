@@ -164,8 +164,16 @@ function getVarFromOldVar() {
 # Unset variables by filter
 unsetVariablesByFilter() {
   local filter=$1
+  local -n excludes=$2 # -n is needed for nameref a declared array
   for var in $(compgen -v | grep $filter); do
-    unset $var
+    if [ -z $excludes ]; then
+      unset $var
+    else
+      if [[ ! " ${excludes[@]} " =~ " ${var} " ]]; then
+        # array contains not $var, so unset
+        unset $var
+      fi
+    fi
   done
 }
 
@@ -188,7 +196,7 @@ function sourceEnv() {
     exit 1
   fi
 
-  SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario
+  SCENARIO_FILE_NAME=$cwd/Scenarios/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario.$SCENARIO_FILE_TYPE
   SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
   SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 
@@ -311,6 +319,7 @@ function config() {
 
       # Preset some variables
       if [[ "$variable" == "SCENARIO_SERVER_NAME" && "$value" == "localhost" ]]; then
+        SCENARIO_SERVER_NAME="localhost"
         SCENARIO_SERVER_SSHCONFIG="none"
         SCENARIO_SERVER_CONFIGSDIR="none"
         logVerbose "Preset SCENARIO_SERVER_SSHCONFIG=$SCENARIO_SERVER_SSHCONFIG"
@@ -544,7 +553,8 @@ if [[ -n "${keyfile}" ]]; then
 fi
 
 # Check for available scenarios
-AVAILABLE_SCENARIOS=$(find $cwd/Scenarios -name "*.scenario" | sed "s;$cwd/Scenarios/;;" | sed "s/.scenario//" | sed "s/ /\\ /g")
+SCENARIO_FILE_TYPE=env
+AVAILABLE_SCENARIOS=$(find $cwd/Scenarios -name "*.scenario.$SCENARIO_FILE_TYPE" | sed "s;$cwd/Scenarios/;;" | sed "s/.scenario.${SCENARIO_FILE_TYPE}//" | sed "s/ /\\ /g")
 
 # Scan for scenario
 if [ -z "$1" ]; then
@@ -614,7 +624,8 @@ log "Run scenarios: $SCENARIOS_LIST"
 ALLRETVAL=0
 for s in $SCENARIOS_LIST; do
   # Reset SCENARIO_* variables (MUST NOT unset SCENARIOS_LIST nor SCENARIOS_STRING)
-  unsetVariablesByFilter SCENARIO_
+  EXCLUDES=(SCENARIOS_LIST SCENARIOS_STRING SCENARIO_FILE_TYPE)
+  unsetVariablesByFilter SCENARIO_ EXCLUDES
 
   SCENARIO_NAME=$(basename $s)
   SCENARIO_NAME_SPACE=$(dirname $s)
