@@ -1,7 +1,5 @@
 # Use an official Python runtime as a parent image
-# TODO: ubuntu:latest doesn't work on arm64 platform with DOCKER_BUILDKIT. Why?
-#FROM ubuntu:latest
-FROM ubuntu:22.04
+FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV WORKDIR /root/
