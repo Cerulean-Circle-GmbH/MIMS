@@ -950,3 +950,5 @@ $env.config = {
 
 # I added this at the end of the file, can be done wherever as long as its after function definition (ofc)
 show_banner
+
+alias ll = ls -l
