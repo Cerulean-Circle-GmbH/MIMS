@@ -57,28 +57,36 @@ def get_scenarios [] {
 }
 
 def parse_yaml [file: string] {
-  let yaml_content = (open $file)
+  let yaml_content = (open $file --raw)
+  let separator = "_"
+  mut root = ""
+  mut parent = ""
 
-  # run with --env to keep the env variables defined inside the script's global scope
-  def --env recursive_parse [data, parent = ""] {
-    # set separator character
-    mut separator = ""
-    if ($parent | is-not-empty) {
-      $separator = "_"
-    }
-
-    # TODO: YAML comments are ignored
-    for node in ($data | transpose key value) {
-      if ($node.value | describe | str starts-with "record") {
-        recursive_parse $node.value $"($parent)($separator)($node.key)"
+  for node in ($yaml_content | lines | split column ": " key value) {
+    # parse comments
+    if ($node.key | str contains "#") {
+      # exclude comments with ##
+      if not ($node.key | str contains "##") {
+        $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV | append $"($node.key | str trim)"
+      }
+    } else {
+      if ('value' in $node)  {
+        $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV
+        | append $"($parent | str upcase)($separator)($node.key | str trim | str upcase) = ($node.value | str trim)"
       } else {
-        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV
-          | append $"($parent | str upcase)($separator)($node.key | str upcase) = ($node.value)")
+        if ($root | is-empty) and ($node.key !~ "\\s") {
+          # set namespace root
+          $root = ($node.key | str trim | str replace ":" "")
+        }
+
+        if $node.key =~ "\\s" {
+          # extend namespace by parent key
+          $parent = $'($root)($separator)($node.key | str trim | str replace ":" "")'
+        }
       }
     }
   }
 
-  recursive_parse $yaml_content
   $env.SCENARIO_DEFAULTS_ENV
 }
 
