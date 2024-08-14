@@ -65,15 +65,13 @@ def parse_yaml [file: string] {
   for node in ($yaml_content | lines | split column ": " key value) {
     # parse comments
     if ($node.key | str contains "#") {
-      # exclude comments with ##
-      if not ($node.key | str contains "##") {
-        $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV | append $"($node.key | str trim)"
-      }
+      $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV | append $"($node.key | str trim)"
     } else {
       if ('value' in $node)  {
         $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV
-        | append $"($parent | str upcase)($separator)($node.key | str trim | str upcase) = ($node.value | str trim)"
+        | append $'($parent | str upcase)($separator)($node.key | str trim | str upcase)="($node.value | str trim)"'
       } else {
+        # TODO: Not working properly if there are more than 3 levels
         if ($root | is-empty) and ($node.key !~ "\\s") {
           # set namespace root
           $root = ($node.key | str trim | str replace ":" "")
