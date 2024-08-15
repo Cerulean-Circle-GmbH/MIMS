@@ -58,32 +58,68 @@ def get_scenarios [] {
 
 def parse_yaml [file: string] {
   let yaml_content = (open $file --raw)
-  let separator = "_"
-  mut root = ""
-  mut parent = ""
 
-  for node in ($yaml_content | lines | split column ": " key value) {
-    # parse comments
-    if ($node.key | str contains "#") {
-      $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV | append $"($node.key | str trim)"
-    } else {
-      if ('value' in $node)  {
-        $env.SCENARIO_DEFAULTS_ENV = $env.SCENARIO_DEFAULTS_ENV
-        | append $'($parent | str upcase)($separator)($node.key | str trim | str upcase)="($node.value | str trim)"'
+  def get_comments_for [search] {
+    # get index of search string
+    let comment_idx = ($yaml_content
+      | lines
+      | enumerate
+      | each { |e| if ($e.item =~ $search) { if ($e.index > 0) { $e.index - 1 } else { 0 } } }
+      | get 0 # destruct list by returning first element
+    )
+
+    # get all $max_comment_count lines before search string
+    mut result = []
+    let max_comment_count = 5;
+    let start_idx = if ($comment_idx - $max_comment_count) < 0 { 0 } else { $comment_idx - $max_comment_count }
+
+    for idx in $start_idx..$comment_idx {
+      let line = $yaml_content | lines | get $idx
+
+      # comments start with #
+      if ($line =~ '^\s*##?\s?.*') {
+        # add extra newline for comments with ##
+        if ($start_idx > 0) and ($line =~ '^\s*##\s?.*') {
+          $result = ($result | append $"")
+        }
+
+        # add all other comments
+        $result = ($result | append $"($line | str trim)")
       } else {
-        # TODO: Not working properly if there are more than 3 levels
-        if ($root | is-empty) and ($node.key !~ "\\s") {
-          # set namespace root
-          $root = ($node.key | str trim | str replace ":" "")
-        }
+        $result = []
+      }
+    }
 
-        if $node.key =~ "\\s" {
-          # extend namespace by parent key
-          $parent = $'($root)($separator)($node.key | str trim | str replace ":" "")'
-        }
+    $result
+  }
+
+  # run with --env to keep the env variables defined inside the script's global scope
+  def --env recursive_parse [data, parent = ""] {
+    # set separator character
+    mut separator = ""
+    if ($parent | is-not-empty) {
+      $separator = "_"
+    }
+
+    for node in ($data | transpose key value) {
+      # add YAML comments
+      for comment in (get_comments_for $"($node.key):") {
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV | append $comment)
+      }
+
+      if ($node.value | describe | str starts-with "record") {
+        recursive_parse $node.value $"($parent)($separator)($node.key)"
+      } else {
+        # add YAML values
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV
+          | append $'($parent | str upcase)($separator)($node.key | str upcase)="($node.value)"')
       }
     }
   }
+
+  # start recursion
+  let yaml_structured = ($yaml_content | from yaml)
+  recursive_parse $yaml_structured ""
 
   $env.SCENARIO_DEFAULTS_ENV
 }
