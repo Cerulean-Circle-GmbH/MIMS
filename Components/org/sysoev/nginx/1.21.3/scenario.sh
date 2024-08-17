@@ -34,14 +34,13 @@ function banner() {
   logVerbose
 }
 
-function checkURL() {
+function checkContainer() {
   comment=$1
   shift
   logVerbose
-  logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
-  up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
-  if [[ "$up" != "200" && "$up" != "302" ]]; then
-    log "$1 is not running (returned $up) - $comment"
+  logVerbose call: docker ps \| grep "$@"
+  if [[ -z $(docker ps | grep "$@") ]]; then
+    log "$1 is not running - $comment"
     return 1
   else
     log "OK: running: $1 - $comment"
@@ -50,34 +49,13 @@ function checkURL() {
 }
 
 function up() {
-  # Create jenkins image
-  banner "Create jenkins image"
-  log "Building image..."
-  docker pull jenkins/jenkins
-  docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
-
   # Create and run container
   banner "Create and run container"
+  docker-compose pull
   docker-compose -p $SCENARIO_NAME up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi
-
-  # Add user jenkins to group docker inside container
-  GROUP_ID=$(getent group docker | cut -d: -f3)
-  echo "Group ID: $GROUP_ID"
-  docker exec -i -u root ${SCENARIO_NAME}_jenkins_container bash -s << EOF
-    if [ -z "$(getent group dockerofhost)" ]; then
-      echo "Create group dockerofhost"
-      groupadd -g $GROUP_ID dockerofhost
-      usermod -aG dockerofhost jenkins
-      usermod -aG docker jenkins
-    else
-      echo "Group dockerofhost already exists"
-    fi
-EOF
-  echo "User jenkins groups:"
-  docker exec -i ${SCENARIO_NAME}_jenkins_container groups jenkins
 }
 
 function start() {
@@ -116,17 +94,15 @@ function test() {
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
-    log "Volumes:"
-    docker volume ls | grep ${SCENARIO_NAME}_jenkins_home
     log "Images:"
-    docker image ls | grep ${SCENARIO_NAME}_jenkins_image
+    docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_jenkins_container
+    docker ps -all | grep ${SCENARIO_NAME}_container
   fi
 
   # Check EAMD.ucp git status
-  banner "Check Jenkins $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  checkURL "Jenkins (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/jenkins
+  banner "Check nginx $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  checkContainer "NGINX (docker)" nginx_proxy_container
   return $? # Return the result of the last command
 }
 
