@@ -1,6 +1,9 @@
 {
   "name": "Bash (Community)",
-  "dockerFile": "Dockerfile",
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile"
+  },
   "runArgs": [
     "--name=ONCE.2023_devcontainer",
     "--init",

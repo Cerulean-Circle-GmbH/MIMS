@@ -25,7 +25,7 @@ RUN cargo build --release
 ################
 ##### Runtime
 # Note: You can use any Debian/Ubuntu based image you want.
-FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04 AS runtime
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 
 # [Option] Install zsh
 ARG INSTALL_ZSH="true"

@@ -57,7 +57,41 @@ def get_scenarios [] {
 }
 
 def parse_yaml [file: string] {
-  let yaml_content = (open $file)
+  let yaml_content = (open $file --raw)
+
+  def get_comments_for [search] {
+    # get index of search string
+    let comment_idx = ($yaml_content
+      | lines
+      | enumerate
+      | each { |e| if ($e.item =~ $search) { if ($e.index > 0) { $e.index - 1 } else { 0 } } }
+      | get 0 # destruct list by returning first element
+    )
+
+    # get all $max_comment_count lines before search string
+    mut result = []
+    let max_comment_count = 5;
+    let start_idx = if ($comment_idx - $max_comment_count) < 0 { 0 } else { $comment_idx - $max_comment_count }
+
+    for idx in $start_idx..$comment_idx {
+      let line = $yaml_content | lines | get $idx
+
+      # comments start with #
+      if ($line =~ '^\s*##?\s?.*') {
+        # add extra newline for comments with ##
+        if ($start_idx > 0) and ($line =~ '^\s*##\s?.*') {
+          $result = ($result | append $"")
+        }
+
+        # add all other comments
+        $result = ($result | append $"($line | str trim)")
+      } else {
+        $result = []
+      }
+    }
+
+    $result
+  }
 
   # run with --env to keep the env variables defined inside the script's global scope
   def --env recursive_parse [data, parent = ""] {
@@ -67,18 +101,26 @@ def parse_yaml [file: string] {
       $separator = "_"
     }
 
-    # TODO: YAML comments are ignored
     for node in ($data | transpose key value) {
+      # add YAML comments
+      for comment in (get_comments_for $"($node.key):") {
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV | append $comment)
+      }
+
       if ($node.value | describe | str starts-with "record") {
         recursive_parse $node.value $"($parent)($separator)($node.key)"
       } else {
+        # add YAML values
         $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV
-          | append $"($parent | str upcase)($separator)($node.key | str upcase) = ($node.value)")
+          | append $'($parent | str upcase)($separator)($node.key | str upcase)="($node.value)"')
       }
     }
   }
 
-  recursive_parse $yaml_content
+  # start recursion
+  let yaml_structured = ($yaml_content | from yaml)
+  recursive_parse $yaml_structured ""
+
   $env.SCENARIO_DEFAULTS_ENV
 }
 
