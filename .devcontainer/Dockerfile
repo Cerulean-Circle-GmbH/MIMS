@@ -126,3 +126,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   zoxide \
   # Clean up
   && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
+
+# TODO: Needs to be fixed in a better way (Understanding the real problem)
+# Unset DISPLAY in vscodes .bashrc as user vscode
+USER vscode
+RUN echo "unset DISPLAY" >> /home/vscode/.bashrc
