@@ -62,6 +62,22 @@ function up() {
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi
+
+  # Add user jenkins to group docker inside container
+  GROUP_ID=$(getent group docker | cut -d: -f3)
+  echo "Group ID: $GROUP_ID"
+  docker exec -i -u root ${SCENARIO_NAME}_jenkins_container bash -s << EOF
+    if [ -z "$(getent group dockerofhost)" ]; then
+      echo "Create group dockerofhost"
+      groupadd -g $GROUP_ID dockerofhost
+      usermod -aG dockerofhost jenkins
+      usermod -aG docker jenkins
+    else
+      echo "Group dockerofhost already exists"
+    fi
+EOF
+  echo "User jenkins groups:"
+  docker exec -i ${SCENARIO_NAME}_jenkins_container groups jenkins
 }
 
 function start() {
