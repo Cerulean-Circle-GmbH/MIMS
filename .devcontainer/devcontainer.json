@@ -2,10 +2,7 @@
   "name": "Bash (Community)",
   "build": {
     "context": ".",
-    "dockerfile": "Dockerfile",
-    "args": {
-      "TARGETARCH": "linux/amd64"
-    }
+    "dockerfile": "Dockerfile"
   },
   "runArgs": [
     "--name=ONCE.2023_devcontainer",

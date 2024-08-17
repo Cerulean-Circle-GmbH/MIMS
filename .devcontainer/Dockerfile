@@ -1,6 +1,6 @@
 ################
 ##### Builder
-FROM --platform=${TARGETARCH} rust:1.80.0-slim AS builder
+FROM rust:1.80.0-slim AS builder
 
 # Install additional OS packages
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -25,7 +25,7 @@ RUN cargo build --release
 ################
 ##### Runtime
 # Note: You can use any Debian/Ubuntu based image you want.
-FROM --platform=${TARGETARCH} mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 
 # [Option] Install zsh
 ARG INSTALL_ZSH="true"
