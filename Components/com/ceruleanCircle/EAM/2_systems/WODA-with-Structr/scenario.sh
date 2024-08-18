@@ -134,7 +134,6 @@ function calculateVolumeName() {
 }
 
 function recreateCerts() {
-  # TODO: Remove certbot files from repository and create them or something
   local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
   local keystoredir="$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   mkdir -p $keystoredir
