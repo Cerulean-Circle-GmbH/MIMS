@@ -14,13 +14,3 @@ scenario:
     configsdir: /var/dev/ONCE.2023-Scenarios
     # Where to find the servers certificate?
     certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/
-
-  ## Docker setup
-  docker:
-    # What is the name of the docker image?
-    imagename: certbot/certbot
-    # TODO: This here is only the default value. In the scenario might be "latest". Maybe both should not be configurable?
-    # What is the version of the docker image?
-    imageversion: v2.11.0
-    ## What is the network name of the docker container?
-    #networkname: once-woda-network
