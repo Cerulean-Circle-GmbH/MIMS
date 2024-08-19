@@ -376,7 +376,7 @@ function init() {
   banner "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
-  cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $LOCAL_CONFIG_DIR/
+  cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     echo "$ENV_VAR=${!ENV_VAR}"

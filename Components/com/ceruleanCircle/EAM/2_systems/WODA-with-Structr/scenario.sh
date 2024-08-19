@@ -3,39 +3,7 @@
 # 'source' isn't available on all systems, so use . instead
 . .env
 CONFIG_DIR=$(pwd)
-
-# Check docker-compose command
-if [ ! -x "$(command -v docker-compose)" ]; then
-  # Switch from "docker-compose" to "docker compose"
-  shopt -s expand_aliases # enables expanding aliases for current script
-  alias docker-compose='docker compose'
-fi
-
-# Log verbose
-function logVerbose() {
-  # Check for verbosity not equal to -v
-  if [ "$VERBOSITY" != "-v" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# TODO: error() mit stderr
-
-# Log
-function log() {
-  if [ "$VERBOSITY" == "-s" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# Banner
-function banner() {
-  logVerbose
-  logVerbose "--- $1"
-  logVerbose
-}
+. deploy-tools.sh
 
 function checkURL() {
   comment=$1
@@ -173,9 +141,7 @@ function up() {
     logVerbose "Already existing workspace..."
   else
     logVerbose "Fetching workspace..."
-    if [ ! -f "${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz" ]; then
-      rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
-    fi
+    rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
     tar xzf ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz -C ./ > $VERBOSEPIPE
   fi
 
@@ -185,9 +151,12 @@ function up() {
     logVerbose "Already existing structr.zip..."
   else
     logVerbose "Fetching structr.zip..."
-    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip > $VERBOSEPIPE
+    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP > $VERBOSEPIPE
+    # if no error, rename file
+    if [ $? -eq 0 ]; then
+      mv ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP ${SCENARIO_SRC_CACHEDIR}/structr.zip
+    fi
   fi
-
   if [ ! -f "./structr.zip" ]; then
     cp "${SCENARIO_SRC_CACHEDIR}/structr.zip" .
   fi
