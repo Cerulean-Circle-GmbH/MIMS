@@ -3,7 +3,7 @@ version: "3"
 services:
   nginx-service:
     container_name: nginx_proxy_container
-    image: ${SCENARIO_DOCKER_IMAGENAME}:${SCENARIO_DOCKER_IMAGEVERSION}
+    image: nginx:1-alpine3.18
     restart: unless-stopped
     volumes:
       - ${SCENARIO_SERVER_CONFIGDIR}:/etc/nginx/conf.d/
