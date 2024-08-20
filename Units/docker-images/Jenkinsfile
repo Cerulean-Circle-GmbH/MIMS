@@ -50,7 +50,7 @@ pipeline {
                         ./devTool docker.buildx.use
                         docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
                         ./devTool docker.buildx.push
-                        ./devTool docker.buildx.rm
+                        ./devTool docker.buildx.unuse
                         '''
                 }
             }
@@ -73,7 +73,7 @@ pipeline {
                                 ./devTool docker.buildx.use
                                 docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
                                 ./devTool docker.buildx.push.latest
-                                ./devTool docker.buildx.rm
+                                ./devTool docker.buildx.unuse
                             fi
                         elif [ ! -z "$RELEASE_CMD" ]; then
                             echo "RELEASE_CMD has the wrong value: $RELEASE_CMD"
