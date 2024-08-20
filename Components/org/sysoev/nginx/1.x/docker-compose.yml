@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  nginx-service:
+    container_name: nginx_proxy_container
+    image: nginx:1-alpine3.18
+    restart: unless-stopped
+    volumes:
+      - ${SCENARIO_SERVER_CONFIGDIR}:/etc/nginx/conf.d/
+      - ${SCENARIO_SERVER_CERTIFICATEDIR}/conf:/etc/letsencrypt
+      - ${SCENARIO_SERVER_CERTIFICATEDIR}/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORKNAME}

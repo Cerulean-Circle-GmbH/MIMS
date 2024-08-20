@@ -1,6 +1,9 @@
 {
   "name": "Bash (Community)",
-  "dockerFile": "Dockerfile",
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile"
+  },
   "runArgs": [
     "--name=ONCE.2023_devcontainer",
     "--init",
@@ -11,7 +14,8 @@
   ],
   "mounts": [
     "source=dind-var-lib-docker,target=/var/lib/docker,type=volume",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/..,target=/home/vscode/_var_dev,type=bind,consistency=cached"
   ],
   "overrideCommand": false,
 

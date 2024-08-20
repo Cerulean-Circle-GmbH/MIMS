@@ -9,6 +9,8 @@ services:
       - /run/snapd.socket:/run/snapd.socket
       - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
+      - ${SCENARIO_SERVER_CERTIFICATEDIR}/fullchain.pem:/${ONCE_DEFAULT_SCENARIO}/once.cert.pem:ro
+      - ${SCENARIO_SERVER_CERTIFICATEDIR}/privkey.pem:/${ONCE_DEFAULT_SCENARIO}/once.key.pem:ro
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
       - ${SCENARIO_RESOURCE_ONCE_HTTPS}:8443
@@ -37,6 +39,7 @@ services:
       - ${SCENARIO_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
       - ${SCENARIO_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/
       - ${SCENARIO_STRUCTR_DIR}/snapshots/:/var/lib/structr/snapshots/
+      - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.p12:ro
       - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     environment:

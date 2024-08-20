@@ -68,6 +68,7 @@ pipeline {
                         ./devTool docker.buildx.use
                         docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
                         ./devTool docker.buildx.push
+                        ./devTool docker.buildx.rm
                         '''
                 }
             }

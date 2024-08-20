@@ -25,5 +25,6 @@ ssh $use_key -o 'StrictHostKeyChecking no' WODA.test "pg_dump keycloak -h localh
 
 # Copy to backup server
 banner "Copy to backup server"
-rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" oncestore-db-${date}.sql.gz backup.sfsre.com:/var/backups/test.wo-da.de_once/
+# Postgres is now down
+#rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" oncestore-db-${date}.sql.gz backup.sfsre.com:/var/backups/test.wo-da.de_once/
 rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" keycloak-db-${date}.sql.gz backup.sfsre.com:/var/backups/test.wo-da.de_once/
