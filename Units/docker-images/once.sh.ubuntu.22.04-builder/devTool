@@ -105,13 +105,13 @@ devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture
     return $?
 }
 
-devTool.docker.buildx.rm() # # removes the "myoncebuilder" buildx environment
+devTool.docker.buildx.unuse() # # unuse the "myoncebuilder" buildx environment
 {
   echo "function "${FUNCNAME[0]} "$@"
 
   # Remove myoncebuilder
   MYBUILDER=myoncebuilder
-  docker buildx rm ${MYBUILDER}
+  docker buildx stop ${MYBUILDER}
   docker buildx ls
   return $?
 }

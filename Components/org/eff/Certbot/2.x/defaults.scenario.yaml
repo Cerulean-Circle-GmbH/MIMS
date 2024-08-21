@@ -14,3 +14,8 @@ scenario:
     configsdir: /var/dev/ONCE.2023-Scenarios
     # Where to find the servers certificate?
     certificatedir: /var/dev/ssl/data/certbot/
+# TODO: Wie kann ich deploy-tools und diese vars und einige oben in ein DefaultComponent machen und dann die componente ableiten?
+#data_directory_type (local_directory | docker_volume))
+#data_directory_path
+#data_directory_backup_source # put into path if path is empty
+#delete_data_directory_on_stop (tru | false)
