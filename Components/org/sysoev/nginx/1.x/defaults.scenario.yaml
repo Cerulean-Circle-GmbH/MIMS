@@ -14,7 +14,9 @@ scenario:
     configsdir: /var/dev/ONCE.2023-Scenarios
     # Where to find the servers config?
     configdir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/Nginx.v1.21.3/config/
+    # Where to find the servers letsencrypt base dir?
+    letsencryptdir: "/var/dev/ssl/data/certbot"
     # Where to find the servers certificate?
-    certificatedir: /var/dev/ssl/data/certbot/
+    #certificatedir: none
     # What is the servers network name?
     networkname: once-woda-network

@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     volumes:
       - ${SCENARIO_SERVER_CONFIGDIR}:/etc/nginx/conf.d/
-      - ${SCENARIO_SERVER_CERTIFICATEDIR}/conf:/etc/letsencrypt
-      - ${SCENARIO_SERVER_CERTIFICATEDIR}/www:/var/www/certbot
+      - ${SCENARIO_SERVER_LETSENCRYPTDIR}/conf:/etc/letsencrypt
+      - ${SCENARIO_SERVER_LETSENCRYPTDIR}/www:/var/www/certbot
     ports:
       - "80:80"
       - "443:443"
