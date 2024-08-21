@@ -25,9 +25,9 @@ scenario:
     # What is the scenarios root directory on the server?
     configsdir: /var/dev/ONCE.2023-Scenarios
     # Where to find the servers letsencrypt base dir?
-    letsencryptdir: "/var/dev/ssl/data/certbot"
+    letsencryptdir: /var/dev/ssl/data/certbot
     # Where to find the servers certificate?
-    certificatedir: "/var/dev/ssl/data/certbot/conf/live/test.wo-da.de"
+    certificatedir: /var/dev/ssl/data/certbot/conf/live/test.wo-da.de
 
   ## Unique resources
   resource:
