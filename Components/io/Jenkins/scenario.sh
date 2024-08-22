@@ -104,7 +104,11 @@ function stop() {
 function down() {
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down -v
+  CLEANUP=""
+  if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
+    CLEANUP="--volumes"
+  fi
+  docker-compose -p $SCENARIO_NAME down $CLEANUP
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi

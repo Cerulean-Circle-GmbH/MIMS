@@ -21,6 +21,7 @@ scenario:
   data:
     # What is the path of the data volume (e.g. './data' or 'jenkins_home'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
     volume: ./data
+    # TODO: muss noch ;-)
     # Where to find the restore data (none - if not applicable)?
     restoresource: none
     # Is the data volume external (true|false; if not external, it will be deleted on down)?
