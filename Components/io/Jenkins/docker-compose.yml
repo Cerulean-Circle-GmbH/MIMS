@@ -4,7 +4,7 @@ services:
     image: ${SCENARIO_NAME}_jenkins_image
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - jenkins-volume:/var/jenkins_home
+      - ${SCENARIO_DATA_DIR:-jenkins-volume}:/var/jenkins_home
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
       - "${SCENARIO_RESOURCE_AGENTPORT}:50000"
@@ -13,4 +13,4 @@ services:
 volumes:
   jenkins-volume:
     external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME}
+    name: ${SCENARIO_DATA_VOLUME_NAME:-/notapplicable/}

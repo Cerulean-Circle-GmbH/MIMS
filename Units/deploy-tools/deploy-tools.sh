@@ -2,6 +2,11 @@
 
 # TODO: Define which variables are expected of give then as arguments
 
+# Get config dir
+pushd $(dirname $0) > /dev/null
+CONFIG_DIR=$(pwd)
+popd > /dev/null
+
 # Check docker-compose command
 if docker compose version > /dev/null 2>&1; then
   # Switch from "docker-compose" to "docker compose"
@@ -58,5 +63,19 @@ function checkContainer() {
   else
     log "OK: running: $1 - $comment"
     return 0
+  fi
+}
+
+# TODO: Is this good practice?
+function addToFile() {
+  local file=$1
+  local envvar=$2
+  if [ -f "$file" ]; then
+    cat $file | grep -v "$envvar" > $file.tmp
+    cat $file.tmp > $file
+    rm $file.tmp
+    # Add envvar to file with using $envvar as variable
+    echo "${envvar}=${!envvar}" >> $file
+    logVerbose "Added $envvar to $file"
   fi
 }

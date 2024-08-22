@@ -28,6 +28,8 @@ function checkDataVolume() {
     pushd $datavolume
     ls
     popd
+    SCENARIO_DATA_DIR=$datavolume
+    addToFile $CONFIG_DIR/.env SCENARIO_DATA_DIR
   else
     log "Volume name does not contain a slash, so it is a volume: $datavolume"
     if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
@@ -40,6 +42,8 @@ function checkDataVolume() {
     else
       log "Volume already exists: $datavolume"
     fi
+    SCENARIO_DATA_VOLUME_NAME=$datavolume
+    addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
   fi
 
   # Check SCENARIO_DATA_EXTERNAL
@@ -82,10 +86,6 @@ function up() {
 EOF
   log "User jenkins groups:"
   docker exec -i ${SCENARIO_NAME}_jenkins_container groups jenkins
-
-  # Check data volume
-  banner "Check data volume (again)"
-  checkDataVolume $SCENARIO_DATA_VOLUME
 }
 
 function start() {
