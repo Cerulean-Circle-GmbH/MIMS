@@ -109,6 +109,12 @@ function down() {
     docker ps
   fi
 
+  # Remove data directory if it is a path and SCENARIO_DATA_EXTERNAL is false
+  if [[ $SCENARIO_DATA_VOLUME == *"/"* && "$SCENARIO_DATA_EXTERNAL" == "false" ]]; then
+    log "Removing data directory: $SCENARIO_DATA_VOLUME"
+    rm -rf $SCENARIO_DATA_VOLUME
+  fi
+
   # Cleanup docker
   banner "Cleanup docker"
   docker image prune -f
