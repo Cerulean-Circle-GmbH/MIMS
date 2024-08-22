@@ -10,9 +10,6 @@ services:
       # TDOD: Das geht nicht, wenn das volume unten nicht existiert (none wird behandelt)
       - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
-      # TDOD: Das geht nicht, wenn das certificatedir nicht existiert (oder = none ist)
-      - ${SCENARIO_SERVER_CERTIFICATEDIR}/fullchain.pem:/${ONCE_DEFAULT_SCENARIO}/once.cert.pem:ro
-      - ${SCENARIO_SERVER_CERTIFICATEDIR}/privkey.pem:/${ONCE_DEFAULT_SCENARIO}/once.key.pem:ro
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
       - ${SCENARIO_RESOURCE_ONCE_HTTPS}:8443

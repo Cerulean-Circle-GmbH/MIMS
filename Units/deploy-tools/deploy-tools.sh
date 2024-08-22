@@ -3,7 +3,7 @@
 # TODO: Define which variables are expected of give then as arguments
 
 # Check docker-compose command
-if docker compose version; then
+if docker compose version > /dev/null 2>&1; then
   # Switch from "docker-compose" to "docker compose"
   shopt -s expand_aliases # enables expanding aliases for current script
   alias docker-compose='docker compose'

@@ -101,7 +101,7 @@ function calculateVolumeName() {
   logVerbose "SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_ONCE_VOLUME_NAME"
 }
 
-function recreateCerts() {
+function recreateKeystore() {
   local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
   local keystoredir="$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   mkdir -p $keystoredir
@@ -125,6 +125,32 @@ function recreateCerts() {
   fi
 }
 
+function recreateOnceCerts() {
+  local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
+
+  # Copy certificates to container
+  if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+    banner "Copy certificates to container"
+    local CERT=$(cat $certdir/fullchain.pem)
+    local KEY=$(cat $certdir/privkey.pem)
+    DOCKEROUTPUT=$(
+      docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+            source /root/.once
+            cd \$ONCE_DEFAULT_SCENARIO
+            mv once.cert.pem once.cert.pem.bak
+            mv once.key.pem once.key.pem.bak
+            echo "$CERT" > once.cert.pem
+            echo "$KEY" > once.key.pem
+            ls once.*.pem
+            openssl x509 -noout -fingerprint -sha256 -inform pem -in once.cert.pem
+            openssl x509 -noout -fingerprint -sha1 -inform pem -in once.cert.pem
+            openssl x509 -noout -text -inform pem -in once.cert.pem
+EOF
+    )
+    logVerbose "$DOCKEROUTPUT"
+  fi
+}
+
 function up() {
   setEnvironment
 
@@ -132,7 +158,7 @@ function up() {
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  recreateCerts
+  recreateKeystore
 
   # TODO: Use default structr server if file is a server or none
   # Workspace
@@ -223,6 +249,8 @@ function up() {
   logVerbose "===================="
   log "Startup done ($found)"
 
+  recreateOnceCerts
+
   # Reconfigure ONCE server and connect structr
   banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_ONCE_CONTAINER)"
   DOCKEROUTPUT=$(
@@ -280,7 +308,7 @@ EOF
 }
 
 function start() {
-  recreateCerts
+  recreateKeystore
 
   # Start container
   banner "Start container"
@@ -289,6 +317,7 @@ function start() {
     docker ps | grep $SCENARIO_NAME
   fi
 
+  recreateOnceCerts
   private.restart.once
 }
 

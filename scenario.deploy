@@ -404,6 +404,24 @@ EOF
       RSYNC_VERBOSE="-v"
     fi
     rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $LOCAL_CONFIG_DIR/ $SCENARIO_SERVER_SSHCONFIG:$REMOTE_CONFIG_DIR/
+
+    # Create certbot renewal-hook deploy script
+    if [ -n "$SCENARIO_SERVER_LETSENCRYPTDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+      local deploy_hook="$SCENARIO_SERVER_LETSENCRYPTDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+
+      # declare script content for remote file
+      cat << EOF | ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "cat > $deploy_hook"
+#!/usr/bin/env bash
+
+pushd $SCENARIO_SERVER_CONFIGSDIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+./scenario.sh stop,start -s
+popd
+EOF
+
+      # mark script executable of remote file
+      ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "chmod +x $deploy_hook"
+    fi
+
     log "Scenario '$SCENARIO_NAME' is now inited (available on remote server)."
   else
     log "Scenario '$SCENARIO_NAME' is now inited (local only)."
@@ -502,6 +520,12 @@ function deinit() {
   rm -rf $LOCAL_CONFIG_DIR
   rmdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE 2> /dev/null || true
   if ! isLocal; then
+    # remove remote renewal-hook deploy script
+    if [ -n "$SCENARIO_SERVER_LETSENCRYPTDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+      local deploy_hook="$SCENARIO_SERVER_LETSENCRYPTDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+      ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "rm -f $deploy_hook"
+    fi
+
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
             cd $SCENARIO_SERVER_CONFIGSDIR
             rm -rf $SCENARIO_NAME_SPACE/$SCENARIO_NAME
