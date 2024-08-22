@@ -48,7 +48,7 @@ function checkDataVolume() {
 
   # Check SCENARIO_DATA_EXTERNAL
   if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
-    logError "SCENARIO_DATA_EXTERNAL must be true or false"
+    logError "SCENARIO_DATA_EXTERNAL must be true or false (but is $SCENARIO_DATA_EXTERNAL)"
     exit 1
   fi
 }
