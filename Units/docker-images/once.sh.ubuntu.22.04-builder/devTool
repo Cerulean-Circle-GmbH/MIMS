@@ -105,6 +105,17 @@ devTool.docker.buildx.push.latest() # # builds and pushes the multi architecture
     return $?
 }
 
+devTool.docker.buildx.unuse() # # unuse the "myoncebuilder" buildx environment
+{
+  echo "function "${FUNCNAME[0]} "$@"
+
+  # Remove myoncebuilder
+  MYBUILDER=myoncebuilder
+  docker buildx stop ${MYBUILDER}
+  docker buildx ls
+  return $?
+}
+
 devTool.docker.build.progressplain() # <?imageName:${DOCKER_IMAGE_NAME}> # builds the dockerfile with --progress=plain to give the full build output
 {
     echo "function "${FUNCNAME[0]} "$@"

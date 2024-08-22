@@ -3,39 +3,7 @@
 # 'source' isn't available on all systems, so use . instead
 . .env
 CONFIG_DIR=$(pwd)
-
-# Check docker-compose command
-if [ ! -x "$(command -v docker-compose)" ]; then
-  # Switch from "docker-compose" to "docker compose"
-  shopt -s expand_aliases # enables expanding aliases for current script
-  alias docker-compose='docker compose'
-fi
-
-# Log verbose
-function logVerbose() {
-  # Check for verbosity not equal to -v
-  if [ "$VERBOSITY" != "-v" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# TODO: error() mit stderr
-
-# Log
-function log() {
-  if [ "$VERBOSITY" == "-s" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# Banner
-function banner() {
-  logVerbose
-  logVerbose "--- $1"
-  logVerbose
-}
+. deploy-tools.sh
 
 function checkURL() {
   comment=$1
@@ -133,7 +101,7 @@ function calculateVolumeName() {
   logVerbose "SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_ONCE_VOLUME_NAME"
 }
 
-function recreateCerts() {
+function recreateKeystore() {
   local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
   local keystoredir="$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   mkdir -p $keystoredir
@@ -157,6 +125,32 @@ function recreateCerts() {
   fi
 }
 
+function recreateOnceCerts() {
+  local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
+
+  # Copy certificates to container
+  if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+    banner "Copy certificates to container"
+    local CERT=$(cat $certdir/fullchain.pem)
+    local KEY=$(cat $certdir/privkey.pem)
+    DOCKEROUTPUT=$(
+      docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+            source /root/.once
+            cd \$ONCE_DEFAULT_SCENARIO
+            mv once.cert.pem once.cert.pem.bak
+            mv once.key.pem once.key.pem.bak
+            echo "$CERT" > once.cert.pem
+            echo "$KEY" > once.key.pem
+            ls once.*.pem
+            openssl x509 -noout -fingerprint -sha256 -inform pem -in once.cert.pem
+            openssl x509 -noout -fingerprint -sha1 -inform pem -in once.cert.pem
+            openssl x509 -noout -text -inform pem -in once.cert.pem
+EOF
+    )
+    logVerbose "$DOCKEROUTPUT"
+  fi
+}
+
 function up() {
   setEnvironment
 
@@ -164,7 +158,7 @@ function up() {
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  recreateCerts
+  recreateKeystore
 
   # TODO: Use default structr server if file is a server or none
   # Workspace
@@ -173,9 +167,7 @@ function up() {
     logVerbose "Already existing workspace..."
   else
     logVerbose "Fetching workspace..."
-    if [ ! -f "${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz" ]; then
-      rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
-    fi
+    rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
     tar xzf ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz -C ./ > $VERBOSEPIPE
   fi
 
@@ -185,9 +177,12 @@ function up() {
     logVerbose "Already existing structr.zip..."
   else
     logVerbose "Fetching structr.zip..."
-    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip > $VERBOSEPIPE
+    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP > $VERBOSEPIPE
+    # if no error, rename file
+    if [ $? -eq 0 ]; then
+      mv ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP ${SCENARIO_SRC_CACHEDIR}/structr.zip
+    fi
   fi
-
   if [ ! -f "./structr.zip" ]; then
     cp "${SCENARIO_SRC_CACHEDIR}/structr.zip" .
   fi
@@ -254,6 +249,8 @@ function up() {
   logVerbose "===================="
   log "Startup done ($found)"
 
+  recreateOnceCerts
+
   # Reconfigure ONCE server and connect structr
   banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_ONCE_CONTAINER)"
   DOCKEROUTPUT=$(
@@ -311,7 +308,7 @@ EOF
 }
 
 function start() {
-  recreateCerts
+  recreateKeystore
 
   # Start container
   banner "Start container"
@@ -320,6 +317,7 @@ function start() {
     docker ps | grep $SCENARIO_NAME
   fi
 
+  recreateOnceCerts
   private.restart.once
 }
 
