@@ -18,14 +18,26 @@ function logVerbose() {
   echo "$@"
 }
 
-# TODO: error() mit stderr
-
 # Log
 function log() {
   if [ "$VERBOSITY" == "-s" ]; then
     return
   fi
   echo "$@"
+}
+
+# Log error
+function logError() {
+  echo "ERROR: $@" > /dev/stderr
+}
+
+# Banner
+function bannerBig() {
+  logVerbose
+  logVerbose "####################################################################################################"
+  logVerbose "## $@"
+  logVerbose "####################################################################################################"
+  logVerbose
 }
 
 # Banner

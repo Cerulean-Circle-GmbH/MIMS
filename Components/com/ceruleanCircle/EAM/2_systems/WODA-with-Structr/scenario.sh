@@ -120,7 +120,7 @@ function recreateKeystore() {
 
       openssl pkcs12 -export -out "$keystoredir/keystore.p12" -in "$certdir/fullchain.pem" -inkey "$certdir/privkey.pem" -password pass:qazwsx#123 > $VERBOSEPIPE
     else
-      log "ERROR: No certificates found!"
+      logError "No certificates found!"
     fi
   fi
 }
@@ -451,7 +451,7 @@ for i in "$@"; do
       ;;
     *)
       # unknown option
-      log "Unknown option: $i"
+      logError "Unknown option: $i"
       printUsage
       ;;
   esac
