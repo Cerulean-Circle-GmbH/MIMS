@@ -622,6 +622,8 @@ log "Run scenarios: $SCENARIOS_LIST"
 
 ALLRETVAL=0
 for s in $SCENARIOS_LIST; do
+  echo "Run scenario: $s"
+
   # Reset SCENARIO_* variables (MUST NOT unset SCENARIOS_LIST nor SCENARIOS_STRING)
   EXCLUDES=(SCENARIOS_LIST SCENARIOS_STRING SCENARIO_FILE_TYPE)
   unsetVariablesByFilter SCENARIO_ EXCLUDES

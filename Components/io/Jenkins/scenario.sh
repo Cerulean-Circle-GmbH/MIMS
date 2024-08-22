@@ -19,12 +19,46 @@ function checkURL() {
   fi
 }
 
+# Check if data volume is a path or a volume
+function checkDataVolume() {
+  datavolume=$1
+  if [[ $datavolume == *"/"* ]]; then
+    log "Volume name contains a slash, so it is a path: $datavolume"
+    mkdir -p $datavolume
+    pushd $datavolume
+    ls
+    popd
+  else
+    log "Volume name does not contain a slash, so it is a volume: $datavolume"
+    if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
+      log "Volume does not exist yet: $datavolume"
+      # Create volume if ${SCENARIO_DATA_EXTERNAL} is true
+      if [[ "$SCENARIO_DATA_EXTERNAL" == "true" ]]; then
+        log "Creating external volume: $datavolume"
+        docker volume create $datavolume
+      fi
+    else
+      log "Volume already exists: $datavolume"
+    fi
+  fi
+
+  # Check SCENARIO_DATA_EXTERNAL
+  if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
+    logError "SCENARIO_DATA_EXTERNAL must be true or false"
+    exit 1
+  fi
+}
+
 function up() {
   # Create jenkins image
   banner "Create jenkins image"
   log "Building image..."
   docker pull jenkins/jenkins
   docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
+
+  # Check data volume
+  banner "Check data volume"
+  checkDataVolume $SCENARIO_DATA_VOLUME
 
   # Create and run container
   banner "Create and run container"
@@ -35,7 +69,7 @@ function up() {
 
   # Add user jenkins to group docker inside container
   GROUP_ID=$(getent group docker | cut -d: -f3)
-  echo "Group ID: $GROUP_ID"
+  log "Group ID: $GROUP_ID"
   docker exec -i -u root ${SCENARIO_NAME}_jenkins_container bash -s << EOF
     if [ -z "$(getent group dockerofhost)" ]; then
       echo "Create group dockerofhost"
@@ -46,8 +80,12 @@ function up() {
       echo "Group dockerofhost already exists"
     fi
 EOF
-  echo "User jenkins groups:"
+  log "User jenkins groups:"
   docker exec -i ${SCENARIO_NAME}_jenkins_container groups jenkins
+
+  # Check data volume
+  banner "Check data volume (again)"
+  checkDataVolume $SCENARIO_DATA_VOLUME
 }
 
 function start() {
@@ -66,7 +104,7 @@ function stop() {
 function down() {
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down
+  docker-compose -p $SCENARIO_NAME down -v
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi

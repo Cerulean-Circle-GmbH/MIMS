@@ -17,6 +17,15 @@ scenario:
     # Where to find the servers certificate?
     #certificatedir: none
 
+  ## Config data setup
+  data:
+    # What is the path of the data volume (e.g. './data' or 'jenkins_home'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+    volume: ./data
+    # Where to find the restore data (none - if not applicable)?
+    restoresource: none
+    # Is the data volume external (true|false; if not external, it will be deleted on down)?
+    external: true
+
   ## Unique resources
   resource:
     # What is the http port of the docker container?
