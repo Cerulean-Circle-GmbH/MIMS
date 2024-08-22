@@ -20,11 +20,12 @@ fi
 
 # Create sql.gz
 banner "Get sql dumps"
-ssh $use_key -o 'StrictHostKeyChecking no' WODA.test "pg_dump oncestore -h localhost -p 5433 -U once" | gzip > oncestore-db-${date}.sql.gz
-ssh $use_key -o 'StrictHostKeyChecking no' WODA.test "pg_dump keycloak -h localhost -p 5439 -U keycloak" | gzip > keycloak-db-${date}.sql.gz
+#ssh $use_key -o 'StrictHostKeyChecking no' WODA.test "pg_dump oncestore -h localhost -p 5433 -U once" | gzip > oncestore-db-${date}.sql.gz
+#ssh $use_key -o 'StrictHostKeyChecking no' WODA.test "pg_dump keycloak -h localhost -p 5439 -U keycloak" | gzip > keycloak-db-${date}.sql.gz
+# TODO: certbot backup + WODA.test fixen
 
 # Copy to backup server
 banner "Copy to backup server"
 # Postgres is now down
 #rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" oncestore-db-${date}.sql.gz backup.sfsre.com:/var/backups/test.wo-da.de_once/
-rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" keycloak-db-${date}.sql.gz backup.sfsre.com:/var/backups/test.wo-da.de_once/
+#rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" keycloak-db-${date}.sql.gz backup.sfsre.com:/var/backups/test.wo-da.de_once/
