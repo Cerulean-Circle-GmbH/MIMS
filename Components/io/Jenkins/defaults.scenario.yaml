@@ -24,7 +24,7 @@ scenario:
     # TODO: muss noch ;-)
     # Where to find the restore data (none - if not applicable)?
     restoresource: none
-    # Is the data volume external (true|false; if not external, it will be deleted on down)?
+    # Is the data volume external (true or false; if not external, it will be deleted on down)?
     external: true
 
   ## Unique resources
