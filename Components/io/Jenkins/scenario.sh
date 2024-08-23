@@ -29,6 +29,12 @@ function setEnvironment() {
     # SCENARIO_DATA_VOLUME is a volume
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
   fi
+
+  # Rsync verbosity
+  RSYNC_VERBOSE="-q"
+  if [ "$VERBOSITY" != "-s" ]; then
+    RSYNC_VERBOSE="-v"
+  fi
 }
 
 # Check if data volume is a path or a volume
@@ -78,6 +84,35 @@ function up() {
   # Check data volume
   banner "Check data volume"
   checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+
+  # If the is a restore source (!=none), download the file
+  if [ "$SCENARIO_DATA_RESTORESOURCE" != "none" ]; then
+    banner "Restore data backup"
+    mkdir -p _data_restore
+    downloadFile $SCENARIO_DATA_RESTORESOURCE _data_restore/data.tar.gz
+
+    # Move data to volume if empty
+    if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
+      # Move data to data dir if empty
+      if [ "$(ls -A $SCENARIO_DATA_VOLUME)" ]; then
+        logError "Data dir is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
+      else
+        # Extract data and strip /var/jenkins_home from the tar
+        log "Extracting data into directory: $SCENARIO_DATA_VOLUME"
+        tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=2
+      fi
+    else
+      FILES=$(docker run --rm -v $SCENARIO_DATA_VOLUME:/data alpine sh -c "ls -A /data")
+      if [ -n "$FILES" ]; then
+        logError "Data volume is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
+      else
+        # Extract data and strip /var/jenkins_home from the tar
+        log "Extracting data into volume: $SCENARIO_DATA_VOLUME"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=2 > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
+      fi
+    fi
+  fi
 
   # Create and run container
   banner "Create and run container"

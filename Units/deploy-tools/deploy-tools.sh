@@ -79,3 +79,41 @@ function addToFile() {
     logVerbose "Added $envvar to $file"
   fi
 }
+
+# Download file
+function downloadFile() {
+  url=$1
+  file=$2
+
+  # Create leading directories
+  mkdir -p ${SCENARIO_SRC_CACHEDIR}
+
+  # Download into cache dir
+  pushd ${SCENARIO_SRC_CACHEDIR} > /dev/null
+  if [[ $file == *"/"* ]]; then
+    mkdir -p $(dirname $file)
+  fi
+
+  # If it is a URL use curl
+  if [[ $url == "http"* ]]; then
+    if [ ! -f "${file}" ]; then
+      logVerbose "Downloading $url to $file..."
+      curl -s -o "${file}.TEMP" "$url"
+      # if no error, rename file
+      if [ $? -eq 0 ]; then
+        mv "${file}.TEMP" "${file}"
+      fi
+    else
+      logVerbose "File $file already cached"
+    fi
+  else
+    logVerbose "Downloading $url to $file..."
+    echo rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" "$url" "${file}"
+    rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" "$url" "${file}"
+  fi
+  popd > /dev/null
+
+  echo rsync -aP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" "${SCENARIO_SRC_CACHEDIR}/${file}" "${file}" > /dev/null
+  rsync -aP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" "${SCENARIO_SRC_CACHEDIR}/${file}" "${file}" > /dev/null
+  logVerbose "Downloaded $url to $file"
+}
