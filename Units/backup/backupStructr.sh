@@ -50,7 +50,7 @@ banner "Copy to backup server"
 rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile $BACKUP_DESTINATION/
 latest_tarfile=backup-structr-latest_${dirname}.tar.gz
 ssh $use_key -o 'StrictHostKeyChecking no' backup.sfsre.com bash -s << EOF
-cd $BACKUP_DESTINATION
+cd $BACKUP_DIR
 rm -rf $latest_tarfile
 ln -s $tarfile $latest_tarfile
 EOF

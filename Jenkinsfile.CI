@@ -24,37 +24,6 @@ pipeline {
             }
         }
 
-        stage('Backup structr') {
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile'),
-                                 string(credentialsId: 'jenkins4bitbucket', variable: 'BBTOKEN')]) {
-                    sh '''#!/usr/bin/bash
-                        set -e
-                        ./Units/backup/backupStructr.sh
-                    '''
-                }
-            }
-        }
-        stage('Backup jenkins') {
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
-                    sh '''#!/usr/bin/bash
-                        set -e
-                        ./Units/backup/backupJenkins.sh
-                    '''
-                }
-            }
-        }
-        stage('Backup certbot') {
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
-                    sh '''#!/usr/bin/bash
-                        set -e
-                        ./Units/backup/backupCertbot.sh
-                    '''
-                }
-            }
-        }
         stage('Cleanup & update (dev/neom)') {
             steps {
                 sh '''#!/usr/bin/bash
