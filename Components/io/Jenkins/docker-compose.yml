@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:
   jenkins-service:
@@ -12,7 +12,3 @@ services:
       - "${SCENARIO_RESOURCE_AGENTPORT}:50000"
     environment:
       - JENKINS_OPTS="--prefix=/jenkins"
-volumes:
-  jenkins-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME}

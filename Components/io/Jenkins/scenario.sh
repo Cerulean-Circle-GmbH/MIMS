@@ -19,15 +19,25 @@ function checkURL() {
   fi
 }
 
+# Set some variables
+function setEnvironment() {
+  # This separation is necessary because of the old version of docker on WODA.test
+  if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
+    # SCENARIO_DATA_VOLUME is a path
+    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml"
+  else
+    # SCENARIO_DATA_VOLUME is a volume
+    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
+  fi
+}
+
 # Check if data volume is a path or a volume
-function checkDataVolume() {
+function checkAndCreateDataVolume() {
   datavolume=$1
   if [[ $datavolume == *"/"* ]]; then
     log "Volume name contains a slash, so it is a path: $datavolume"
     mkdir -p $datavolume
-    pushd $datavolume
-    ls
-    popd
+    chmod 777 $datavolume
     SCENARIO_DATA_MOUNTPOINT=$datavolume
     SCENARIO_DATA_VOLUME_NAME="/notapplicable/"
   else
@@ -56,6 +66,9 @@ function checkDataVolume() {
 }
 
 function up() {
+  # Set environment
+  setEnvironment
+
   # Create jenkins image
   banner "Create jenkins image"
   log "Building image..."
@@ -64,13 +77,13 @@ function up() {
 
   # Check data volume
   banner "Check data volume"
-  checkDataVolume $SCENARIO_DATA_VOLUME
+  checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
 
   # Create and run container
   banner "Create and run container"
-  docker-compose -p $SCENARIO_NAME up -d
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
+    docker ps | grep $SCENARIO_NAME
   fi
 
   # Add user jenkins to group docker inside container
@@ -91,26 +104,35 @@ EOF
 }
 
 function start() {
+  # Set environment
+  setEnvironment
+
   # Start container
   banner "Start container"
-  docker-compose -p $SCENARIO_NAME start
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS start
 }
 
 function stop() {
+  # Set environment
+  setEnvironment
+
   # Stop container
   banner "Stop container"
-  docker-compose -p $SCENARIO_NAME stop
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
   docker ps | grep $SCENARIO_NAME
 }
 
 function down() {
+  # Set environment
+  setEnvironment
+
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
   CLEANUP=""
   if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
     CLEANUP="--volumes"
   fi
-  docker-compose -p $SCENARIO_NAME down $CLEANUP
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi
@@ -133,6 +155,9 @@ function down() {
 }
 
 function test() {
+  # Set environment
+  setEnvironment
+
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
