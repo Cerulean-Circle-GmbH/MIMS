@@ -85,7 +85,7 @@ function up() {
   banner "Check data volume"
   checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
 
-  # If the is a restore source (!=none), download the file
+  # If there is a restore source (!=none), download the file
   if [ "$SCENARIO_DATA_RESTORESOURCE" != "none" ]; then
     banner "Restore data backup"
     mkdir -p _data_restore
