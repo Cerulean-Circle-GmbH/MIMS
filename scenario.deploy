@@ -4,32 +4,7 @@
 pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
 popd > /dev/null
-
-# Log verbose
-function logVerbose() {
-  # Check for verbosity not equal to -v
-  if [ "$VERBOSITY" != "-v" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# Log
-function log() {
-  if [ "$VERBOSITY" == "-s" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# Banner
-function banner() {
-  logVerbose
-  logVerbose "####################################################################################################"
-  logVerbose "## $@"
-  logVerbose "####################################################################################################"
-  logVerbose
-}
+. $cwd/Units/deploy-tools/deploy-tools.sh
 
 # Check namespace (server vs. scenario name space)
 function checkNamespace() {
@@ -71,7 +46,7 @@ EOF
 function isInited() {
   # Check if scenario file exists
   if [ ! -f $SCENARIO_FILE_NAME ]; then
-    echo "ERROR: Scenario $SCENARIO_FILE_NAME not found"
+    logError "Scenario $SCENARIO_FILE_NAME not found"
     return 1
   fi
 
@@ -181,18 +156,18 @@ unsetVariablesByFilter() {
 function sourceEnv() {
   # Check that scenario name is set
   if [ -z $SCENARIO_NAME ]; then
-    echo "ERROR: Scenario name must be set"
+    logError "Scenario name must be set"
     exit 1
   fi
   # SCEANRIO_NAME must not conatin an asterisk
   if [[ $SCENARIO_NAME == *"*"* ]]; then
-    echo "ERROR: Scenario name must not contain an asterisk"
+    logError "Scenario name must not contain an asterisk"
     exit 1
   fi
   # Check that scenario name space exists (means: is not ".")
   if [ $SCENARIO_NAME_SPACE == "." ]; then
-    echo "ERROR: Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
-    echo "Namespace is currently: $SCENARIO_NAME_SPACE"
+    logError "Scenario name must contain a namespace reflecting the server (e.g. 'de/wo-da/test/dev', 'localhost/dev)"
+    logError "Namespace is currently: $SCENARIO_NAME_SPACE"
     exit 1
   fi
 
@@ -282,7 +257,7 @@ function config() {
   sourceEnv
 
   # Configure scenario
-  banner "Configure scenario"
+  bannerBig "Configure scenario"
 
   mkdir -p $cwd/Scenarios/$SCENARIO_NAME_SPACE
 
@@ -373,7 +348,7 @@ function init() {
   config
 
   # Setup scenario dir locally
-  banner "Setup scenario dir locally and sync to remote"
+  bannerBig "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
   cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $LOCAL_CONFIG_DIR/
@@ -406,8 +381,8 @@ EOF
     rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $LOCAL_CONFIG_DIR/ $SCENARIO_SERVER_SSHCONFIG:$REMOTE_CONFIG_DIR/
 
     # Create certbot renewal-hook deploy script
-    if [ -n "$SCENARIO_SERVER_LETSENCRYPTDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
-      local deploy_hook="$SCENARIO_SERVER_LETSENCRYPTDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
 
       # declare script content for remote file
       cat << EOF | ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "cat > $deploy_hook"
@@ -449,11 +424,11 @@ function up() {
   checkNamespace
 
   # Startup scenario
-  banner "Startup scenario '$SCENARIO_NAME'"
+  bannerBig "Startup scenario '$SCENARIO_NAME'"
   callScript ./scenario.sh up $VERBOSITY
   RETVAL=$?
   if [ $RETVAL -ne 0 ]; then
-    echo "ERROR: Scenario '$SCENARIO_NAME' failed to start."
+    logError "Scenario '$SCENARIO_NAME' failed to start."
     return $RETVAL
   fi
 
@@ -473,7 +448,7 @@ function start() {
   fi
 
   # Restart once server
-  banner "Restart once server"
+  bannerBig "Restart once server"
   callScript ./scenario.sh start $VERBOSITY
 
   log "Scenario '$SCENARIO_NAME' is now started (running on remote server)."
@@ -487,7 +462,7 @@ function stop() {
   fi
 
   # Stop remotely
-  banner "Stop remotely"
+  bannerBig "Stop remotely"
   callScript ./scenario.sh stop $VERBOSITY || true
 
   log "Scenario '$SCENARIO_NAME' is now stopped (on remote server)."
@@ -501,7 +476,7 @@ function down() {
   fi
 
   # Shutdown remotely
-  banner "Shutdown remotely"
+  bannerBig "Shutdown remotely"
   callScript ./scenario.sh down $VERBOSITY || true
 
   log "Scenario '$SCENARIO_NAME' is now down (server removed on remote server)."
@@ -516,13 +491,13 @@ function deinit() {
   fi
 
   # Remove locally and remotely
-  banner "Remove locally and remotely"
+  bannerBig "Remove locally and remotely"
   rm -rf $LOCAL_CONFIG_DIR
   rmdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE 2> /dev/null || true
   if ! isLocal; then
     # remove remote renewal-hook deploy script
-    if [ -n "$SCENARIO_SERVER_LETSENCRYPTDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
-      local deploy_hook="$SCENARIO_SERVER_LETSENCRYPTDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
       ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "rm -f $deploy_hook"
     fi
 
@@ -545,7 +520,7 @@ function test() {
   fi
 
   # Test remote
-  banner "Test remote"
+  bannerBig "Test remote"
   if isInited; then
     log "Scenario '$SCENARIO_NAME' is available on remote server."
     callScript ./scenario.sh test $VERBOSITY
@@ -647,6 +622,8 @@ log "Run scenarios: $SCENARIOS_LIST"
 
 ALLRETVAL=0
 for s in $SCENARIOS_LIST; do
+  echo "Run scenario: $s"
+
   # Reset SCENARIO_* variables (MUST NOT unset SCENARIOS_LIST nor SCENARIOS_STRING)
   EXCLUDES=(SCENARIOS_LIST SCENARIOS_STRING SCENARIO_FILE_TYPE)
   unsetVariablesByFilter SCENARIO_ EXCLUDES
@@ -682,7 +659,7 @@ for s in $SCENARIOS_LIST; do
       updateconfig
       RETVAL=$? # return value
     else
-      echo "ERROR: Unknown step: $STEP"
+      logError "Unknown step: $STEP"
       exit 1
     fi
     if [ $RETVAL -ne 0 ]; then
@@ -691,6 +668,6 @@ for s in $SCENARIOS_LIST; do
   done
 done
 if [ $ALLRETVAL -ne 0 ]; then
-  echo "ERROR: '$STEPS' failed with return value: $ALLRETVAL"
+  logError "'$STEPS' failed with return value: $ALLRETVAL"
   exit $ALLRETVAL
 fi

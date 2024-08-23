@@ -2,7 +2,6 @@
 
 # 'source' isn't available on all systems, so use . instead
 . .env
-CONFIG_DIR=$(pwd)
 . deploy-tools.sh
 
 function checkURL() {
@@ -17,20 +16,6 @@ function checkURL() {
   else
     log "OK: running: $1 - $comment"
     return 0
-  fi
-}
-
-# TODO: Is this good practice?
-function addToFile() {
-  local file=$1
-  local envvar=$2
-  if [ -f "$file" ]; then
-    cat $file | grep -v "$envvar" > $file.tmp
-    cat $file.tmp > $file
-    rm $file.tmp
-    # Add envvar to file with using $envvar as variable
-    echo "${envvar}=${!envvar}" >> $file
-    logVerbose "Added $envvar to $file"
   fi
 }
 
@@ -120,7 +105,7 @@ function recreateKeystore() {
 
       openssl pkcs12 -export -out "$keystoredir/keystore.p12" -in "$certdir/fullchain.pem" -inkey "$certdir/privkey.pem" -password pass:qazwsx#123 > $VERBOSEPIPE
     else
-      log "ERROR: No certificates found!"
+      logError "No certificates found!"
     fi
   fi
 }
@@ -161,31 +146,20 @@ function up() {
   recreateKeystore
 
   # TODO: Use default structr server if file is a server or none
-  # Workspace
-  banner "Workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
+
+  # Download structr workspace
+  banner "Download structr workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
   if [ -d "WODA-current" ]; then
     logVerbose "Already existing workspace..."
   else
     logVerbose "Fetching workspace..."
-    rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
-    tar xzf ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz -C ./ > $VERBOSEPIPE
+    downloadFile $SCENARIO_SRC_STRUCTR_DATAFILE WODA-current.tar.gz
+    tar xzf WODA-current.tar.gz -C ./ > $VERBOSEPIPE
   fi
 
-  # structr.zip
-  banner "structr.zip"
-  if [ -f "${SCENARIO_SRC_CACHEDIR}/structr.zip" ]; then
-    logVerbose "Already existing structr.zip..."
-  else
-    logVerbose "Fetching structr.zip..."
-    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP > $VERBOSEPIPE
-    # if no error, rename file
-    if [ $? -eq 0 ]; then
-      mv ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP ${SCENARIO_SRC_CACHEDIR}/structr.zip
-    fi
-  fi
-  if [ ! -f "./structr.zip" ]; then
-    cp "${SCENARIO_SRC_CACHEDIR}/structr.zip" .
-  fi
+  # Download structr.zip
+  banner "Download structr.zip"
+  downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
   popd > /dev/null
 
   # Create structr image
@@ -451,7 +425,7 @@ for i in "$@"; do
       ;;
     *)
       # unknown option
-      log "Unknown option: $i"
+      logError "Unknown option: $i"
       printUsage
       ;;
   esac

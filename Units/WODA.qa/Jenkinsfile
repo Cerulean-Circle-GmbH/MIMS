@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'once.sh-server'
-            args '-v once_woda_qa:/var/dev  -v jenkins_jenkins_home:/var/jenkins_home -w /var/dev --network once-woda-network --entrypoint "" --user root'
+            args '-v once_woda_qa:/var/dev -v jenkins_jenkins_home:/var/jenkins_home -v /root/.ssh:/root/.ssh -w /var/dev --network once-woda-network --entrypoint "" --user root'
             reuseNode true
         }
     }

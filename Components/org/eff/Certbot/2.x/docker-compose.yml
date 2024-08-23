@@ -6,6 +6,6 @@ services:
     image: certbot/certbot:v2.11.0
     restart: unless-stopped
     volumes:
-      - ${SCENARIO_SERVER_LETSENCRYPTDIR}/conf:/etc/letsencrypt
-      - ${SCENARIO_SERVER_LETSENCRYPTDIR}/www:/var/www/certbot
+      - ${SCENARIO_SERVER_CERTCONFIGDIR}/conf:/etc/letsencrypt
+      - ${SCENARIO_SERVER_CERTCONFIGDIR}/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
