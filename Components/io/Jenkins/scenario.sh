@@ -19,23 +19,111 @@ function checkURL() {
   fi
 }
 
+# Set some variables
+function setEnvironment() {
+  # This separation is necessary because of the old version of docker on WODA.test
+  if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
+    # SCENARIO_DATA_VOLUME is a path
+    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml"
+  else
+    # SCENARIO_DATA_VOLUME is a volume
+    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
+  fi
+
+  # Rsync verbosity
+  RSYNC_VERBOSE="-q"
+  if [ "$VERBOSITY" != "-s" ]; then
+    RSYNC_VERBOSE="-v"
+  fi
+}
+
+# Check if data volume is a path or a volume
+function checkAndCreateDataVolume() {
+  datavolume=$1
+  if [[ $datavolume == *"/"* ]]; then
+    log "Volume name contains a slash, so it is a path: $datavolume"
+    mkdir -p $datavolume
+    chmod 777 $datavolume
+    SCENARIO_DATA_MOUNTPOINT=$datavolume
+    SCENARIO_DATA_VOLUME_NAME="/notapplicable/"
+  else
+    log "Volume name does not contain a slash, so it is a volume: $datavolume"
+    if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
+      log "Volume does not exist yet: $datavolume"
+      # Create volume if ${SCENARIO_DATA_EXTERNAL} is true
+      if [[ "$SCENARIO_DATA_EXTERNAL" == "true" ]]; then
+        log "Creating external volume: $datavolume"
+        docker volume create $datavolume
+      fi
+    else
+      log "Volume already exists: $datavolume"
+    fi
+    SCENARIO_DATA_MOUNTPOINT="jenkins-volume"
+    SCENARIO_DATA_VOLUME_NAME=$datavolume
+  fi
+  addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT
+  addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
+
+  # Check SCENARIO_DATA_EXTERNAL
+  if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
+    logError "SCENARIO_DATA_EXTERNAL must be true or false (but is $SCENARIO_DATA_EXTERNAL)"
+    exit 1
+  fi
+}
+
 function up() {
+  # Set environment
+  setEnvironment
+
   # Create jenkins image
   banner "Create jenkins image"
   log "Building image..."
   docker pull jenkins/jenkins
   docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
 
+  # Check data volume
+  banner "Check data volume"
+  checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+
+  # If the is a restore source (!=none), download the file
+  if [ "$SCENARIO_DATA_RESTORESOURCE" != "none" ]; then
+    banner "Restore data backup"
+    mkdir -p _data_restore
+    downloadFile $SCENARIO_DATA_RESTORESOURCE _data_restore/data.tar.gz
+
+    # Move data to volume if empty
+    if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
+      # Move data to data dir if empty
+      if [ "$(ls -A $SCENARIO_DATA_VOLUME)" ]; then
+        logError "Data dir is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
+      else
+        # Extract data and strip /var/jenkins_home from the tar
+        log "Extracting data into directory: $SCENARIO_DATA_VOLUME"
+        tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=2
+      fi
+    else
+      FILES=$(docker run --rm -v $SCENARIO_DATA_VOLUME:/data alpine sh -c "ls -A /data")
+      if [ -n "$FILES" ]; then
+        logError "Data volume is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
+      else
+        # Extract data and strip /var/jenkins_home from the tar
+        log "Extracting data into volume: $SCENARIO_DATA_VOLUME"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=2 > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
+      fi
+    fi
+  fi
+
   # Create and run container
   banner "Create and run container"
-  docker-compose -p $SCENARIO_NAME up -d
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
+    docker ps | grep $SCENARIO_NAME
   fi
 
   # Add user jenkins to group docker inside container
   GROUP_ID=$(getent group docker | cut -d: -f3)
-  echo "Group ID: $GROUP_ID"
+  log "Group ID: $GROUP_ID"
   docker exec -i -u root ${SCENARIO_NAME}_jenkins_container bash -s << EOF
     if [ -z "$(getent group dockerofhost)" ]; then
       echo "Create group dockerofhost"
@@ -46,29 +134,48 @@ function up() {
       echo "Group dockerofhost already exists"
     fi
 EOF
-  echo "User jenkins groups:"
+  log "User jenkins groups:"
   docker exec -i ${SCENARIO_NAME}_jenkins_container groups jenkins
 }
 
 function start() {
+  # Set environment
+  setEnvironment
+
   # Start container
   banner "Start container"
-  docker-compose -p $SCENARIO_NAME start
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS start
 }
 
 function stop() {
+  # Set environment
+  setEnvironment
+
   # Stop container
   banner "Stop container"
-  docker-compose -p $SCENARIO_NAME stop
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
   docker ps | grep $SCENARIO_NAME
 }
 
 function down() {
+  # Set environment
+  setEnvironment
+
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down
+  CLEANUP=""
+  if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
+    CLEANUP="--volumes"
+  fi
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
+  fi
+
+  # Remove data directory if it is a path and SCENARIO_DATA_EXTERNAL is false
+  if [[ $SCENARIO_DATA_VOLUME == *"/"* && "$SCENARIO_DATA_EXTERNAL" == "false" ]]; then
+    log "Removing data directory: $SCENARIO_DATA_VOLUME"
+    rm -rf $SCENARIO_DATA_VOLUME
   fi
 
   # Cleanup docker
@@ -83,6 +190,9 @@ function down() {
 }
 
 function test() {
+  # Set environment
+  setEnvironment
+
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
@@ -130,7 +240,7 @@ for i in "$@"; do
       ;;
     *)
       # unknown option
-      log "Unknown option: $i"
+      logError "Unknown option: $i"
       printUsage
       ;;
   esac

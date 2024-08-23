@@ -2,7 +2,6 @@
 
 # 'source' isn't available on all systems, so use . instead
 . .env
-CONFIG_DIR=$(pwd)
 . deploy-tools.sh
 
 function checkURL() {
@@ -17,20 +16,6 @@ function checkURL() {
   else
     log "OK: running: $1 - $comment"
     return 0
-  fi
-}
-
-# TODO: Is this good practice?
-function addToFile() {
-  local file=$1
-  local envvar=$2
-  if [ -f "$file" ]; then
-    cat $file | grep -v "$envvar" > $file.tmp
-    cat $file.tmp > $file
-    rm $file.tmp
-    # Add envvar to file with using $envvar as variable
-    echo "${envvar}=${!envvar}" >> $file
-    logVerbose "Added $envvar to $file"
   fi
 }
 
@@ -120,7 +105,7 @@ function recreateKeystore() {
 
       openssl pkcs12 -export -out "$keystoredir/keystore.p12" -in "$certdir/fullchain.pem" -inkey "$certdir/privkey.pem" -password pass:qazwsx#123 > $VERBOSEPIPE
     else
-      log "ERROR: No certificates found!"
+      logError "No certificates found!"
     fi
   fi
 }
@@ -451,7 +436,7 @@ for i in "$@"; do
       ;;
     *)
       # unknown option
-      log "Unknown option: $i"
+      logError "Unknown option: $i"
       printUsage
       ;;
   esac

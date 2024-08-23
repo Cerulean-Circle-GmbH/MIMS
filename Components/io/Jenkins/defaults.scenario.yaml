@@ -3,6 +3,8 @@ scenario:
   src:
     # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
     component: .
+    # This is the cache directory for downloaded files for restoresource.
+    cachedir: ~/.cache/ONCE.2023-Scenarios
 
   ## Server setup
   server:
@@ -16,6 +18,15 @@ scenario:
     #letsencryptdir: /var/dev/ssl/data/certbot
     # Where to find the servers certificate?
     #certificatedir: none
+
+  ## Config data setup
+  data:
+    # What is the path of the data volume (e.g. './data' or 'jenkins_home'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+    volume: ./data
+    # Where to find the restore data (none - if not applicable)?
+    restoresource: none
+    # Is the data volume external (true or false; if not external, it will be deleted on down)?
+    external: true
 
   ## Unique resources
   resource:
