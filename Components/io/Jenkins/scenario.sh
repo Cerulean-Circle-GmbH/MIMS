@@ -28,8 +28,8 @@ function checkDataVolume() {
     pushd $datavolume
     ls
     popd
-    SCENARIO_DATA_DIR=$datavolume
-    addToFile $CONFIG_DIR/.env SCENARIO_DATA_DIR
+    SCENARIO_DATA_MOUNTPOINT=$datavolume
+    SCENARIO_DATA_VOLUME_NAME="/notapplicable/"
   else
     log "Volume name does not contain a slash, so it is a volume: $datavolume"
     if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
@@ -42,9 +42,11 @@ function checkDataVolume() {
     else
       log "Volume already exists: $datavolume"
     fi
+    SCENARIO_DATA_MOUNTPOINT="jenkins-volume"
     SCENARIO_DATA_VOLUME_NAME=$datavolume
-    addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
   fi
+  addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT
+  addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
 
   # Check SCENARIO_DATA_EXTERNAL
   if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
