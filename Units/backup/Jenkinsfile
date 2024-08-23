@@ -42,12 +42,12 @@ pipeline {
                 }
             }
         }
-        stage('Backup once(test.wo-da.de)') {
+        stage('Backup certbot') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
                         set -e
-                        ./Units/backup/backupOnce.sh
+                        ./Units/backup/backupCertbot.sh
                     '''
                 }
             }

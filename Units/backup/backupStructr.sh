@@ -24,6 +24,9 @@ if [[ -n "${keyfile}" ]]; then
   use_key="-i ${keyfile}"
 fi
 
+BACKUP_DIR="/var/backups/test.wo-da.de_structr"
+BACKUP_DESTINATION="backup.sfsre.com:$BACKUP_DIR"
+
 # Get data
 banner "Get data from $sourcedir"
 while true; do
@@ -44,10 +47,10 @@ ls -lah
 
 # Copy to backup server
 banner "Copy to backup server"
-rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile backup.sfsre.com:/var/backups/structr/
+rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile $BACKUP_DESTINATION/
 latest_tarfile=backup-structr-latest_${dirname}.tar.gz
 ssh $use_key -o 'StrictHostKeyChecking no' backup.sfsre.com bash -s << EOF
-cd /var/backups/structr/
+cd $BACKUP_DESTINATION
 rm -rf $latest_tarfile
 ln -s $tarfile $latest_tarfile
 EOF
