@@ -146,31 +146,20 @@ function up() {
   recreateKeystore
 
   # TODO: Use default structr server if file is a server or none
-  # Workspace
-  banner "Workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
+
+  # Download structr workspace
+  banner "Download structr workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
   if [ -d "WODA-current" ]; then
     logVerbose "Already existing workspace..."
   else
     logVerbose "Fetching workspace..."
-    rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
-    tar xzf ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz -C ./ > $VERBOSEPIPE
+    downloadFile $SCENARIO_SRC_STRUCTR_DATAFILE WODA-current.tar.gz
+    tar xzf WODA-current.tar.gz -C ./ > $VERBOSEPIPE
   fi
 
-  # structr.zip
-  banner "structr.zip"
-  if [ -f "${SCENARIO_SRC_CACHEDIR}/structr.zip" ]; then
-    logVerbose "Already existing structr.zip..."
-  else
-    logVerbose "Fetching structr.zip..."
-    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP > $VERBOSEPIPE
-    # if no error, rename file
-    if [ $? -eq 0 ]; then
-      mv ${SCENARIO_SRC_CACHEDIR}/structr.zip.TEMP ${SCENARIO_SRC_CACHEDIR}/structr.zip
-    fi
-  fi
-  if [ ! -f "./structr.zip" ]; then
-    cp "${SCENARIO_SRC_CACHEDIR}/structr.zip" .
-  fi
+  # Download structr.zip
+  banner "Download structr.zip"
+  downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
   popd > /dev/null
 
   # Create structr image
