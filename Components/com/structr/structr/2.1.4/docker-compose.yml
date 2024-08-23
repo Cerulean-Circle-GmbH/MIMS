@@ -9,20 +9,16 @@ services:
     restart: unless-stopped
     env_file: ".env"
     ports:
-      - ${SCENARIO_RESOURCE_STRUCTR_HTTP}:8082
-      - ${SCENARIO_RESOURCE_STRUCTR_HTTPS}:8083
+      - ${SCENARIO_RESOURCE_HTTP}:8082
+      - ${SCENARIO_RESOURCE_HTTPS}:8083
     volumes:
-      - ${SCENARIO_SRC_STRUCTR_DIR}/db/:/var/lib/structr/db/
-      - ${SCENARIO_SRC_STRUCTR_DIR}/files/:/var/lib/structr/files/
-      - ${SCENARIO_SRC_STRUCTR_DIR}/layouts/:/var/lib/structr/layouts/
-      - ${SCENARIO_SRC_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
-      - ${SCENARIO_SRC_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/
-      - ${SCENARIO_SRC_STRUCTR_DIR}/snapshots/:/var/lib/structr/snapshots/
+      - ${SCENARIO_DATA_MOUNTPOINT}:/var/lib/structr-volume/
+      - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.p12:ro
       - ${SCENARIO_SERVER_EAMDDIR}:/EAMD.ucp
       - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
     environment:
       - PROXY_ADDRESS_FORWARDING=true
 networks:
   default:
-    external:
-      name: ${SCENARIO_SERVER_NETWORKNAME}
+    external: true
+    name: ${SCENARIO_SERVER_NETWORKNAME}

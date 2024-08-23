@@ -4,71 +4,9 @@
 . .env
 . deploy-tools.sh
 
-function checkURL() {
-  comment=$1
-  shift
-  logVerbose
-  logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
-  up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
-  if [[ "$up" != "200" && "$up" != "302" ]]; then
-    log "$1 is not running (returned $up) - $comment"
-    return 1
-  else
-    log "OK: running: $1 - $comment"
-    return 0
-  fi
-}
-
 # Set some variables
 function setEnvironment() {
-  # This separation is necessary because of the old version of docker on WODA.test
-  if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
-    # SCENARIO_DATA_VOLUME is a path
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml"
-  else
-    # SCENARIO_DATA_VOLUME is a volume
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
-  fi
-
-  # Rsync verbosity
-  RSYNC_VERBOSE="-q"
-  if [ "$VERBOSITY" != "-s" ]; then
-    RSYNC_VERBOSE="-v"
-  fi
-}
-
-# Check if data volume is a path or a volume
-function checkAndCreateDataVolume() {
-  datavolume=$1
-  if [[ $datavolume == *"/"* ]]; then
-    log "Volume name contains a slash, so it is a path: $datavolume"
-    mkdir -p $datavolume
-    chmod 777 $datavolume
-    SCENARIO_DATA_MOUNTPOINT=$datavolume
-    SCENARIO_DATA_VOLUME_NAME="/notapplicable/"
-  else
-    log "Volume name does not contain a slash, so it is a volume: $datavolume"
-    if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
-      log "Volume does not exist yet: $datavolume"
-      # Create volume if ${SCENARIO_DATA_EXTERNAL} is true
-      if [[ "$SCENARIO_DATA_EXTERNAL" == "true" ]]; then
-        log "Creating external volume: $datavolume"
-        docker volume create $datavolume
-      fi
-    else
-      log "Volume already exists: $datavolume"
-    fi
-    SCENARIO_DATA_MOUNTPOINT="jenkins-volume"
-    SCENARIO_DATA_VOLUME_NAME=$datavolume
-  fi
-  addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT
-  addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
-
-  # Check SCENARIO_DATA_EXTERNAL
-  if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
-    logError "SCENARIO_DATA_EXTERNAL must be true or false (but is $SCENARIO_DATA_EXTERNAL)"
-    exit 1
-  fi
+  setBaseEnvironment
 }
 
 function up() {
@@ -99,6 +37,7 @@ function up() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into directory: $SCENARIO_DATA_VOLUME"
+        # TODO: --strip-components=1, fix in backup before
         tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=2
       fi
     else
@@ -145,6 +84,9 @@ function start() {
   # Start container
   banner "Start container"
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS start
+  if [ "$VERBOSITY" == "-v" ]; then
+    docker ps | grep $SCENARIO_NAME
+  fi
 }
 
 function stop() {
@@ -154,7 +96,9 @@ function stop() {
   # Stop container
   banner "Stop container"
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
-  docker ps | grep $SCENARIO_NAME
+  if [ "$VERBOSITY" == "-v" ]; then
+    docker ps | grep $SCENARIO_NAME
+  fi
 }
 
 function down() {
@@ -169,7 +113,7 @@ function down() {
   fi
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
   if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
+    docker ps | grep $SCENARIO_NAME
   fi
 
   # Remove data directory if it is a path and SCENARIO_DATA_EXTERNAL is false
@@ -197,7 +141,7 @@ function test() {
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_NAME}_jenkins_home
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}_jenkins_image
     log "Containers:"
@@ -218,6 +162,7 @@ function printUsage() {
 # Scenario vars
 if [ -z "$1" ]; then
   printUsage
+  exit 1
 fi
 
 STEP=$1

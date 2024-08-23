@@ -25,9 +25,7 @@ RUN unzip -q /structr.zip -d /var/lib && rm /structr.zip
 # Necessary hotfix for schema saving (JavaScript ESX changes)
 RUN sed -i 's;+/,;+/g,;g' /var/lib/structr/structr/js/schema.js
 ADD structr.conf ${WORK_DIR}/
-ADD _data/keystore.pkcs12 ${WORK_DIR}/
 RUN mkdir /usr/lib/structr
-ADD _data/keystore.pkcs12 /usr/lib/structr/
 ADD start-structr.sh ${WORK_DIR}/bin
 
 # Prepare links to the scripts and /EAMD.ucp to link into mounted volume

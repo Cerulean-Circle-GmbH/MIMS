@@ -5,11 +5,6 @@ scenario:
     component: .
     # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
     cachedir: ~/.cache/ONCE.2023-Scenarios
-    structr:
-      # What is the URI of the struct data backup file (maybe tag dependent)?
-      datafile: none
-      # What is the structr directory on the server?
-      dir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/2_systems/Docker/StructrServer.v2.1/Workspaces/structrAppWorkspace/WODA-current
 
   ## Server setup
   server:
@@ -22,16 +17,22 @@ scenario:
     # What is the EAMD root directory on the server?
     eamddir: /var/dev/EAMD.ucp/
     # Where to find the servers certificate?
-    certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/conf/live/test.wo-da.de
+    certificatedir: /var/dev/ssl/data/certbot/conf/live/test.wo-da.de
     # What is the servers network name?
     networkname: once-woda-network
 
+  ## Config data setup
+  data:
+    # What is the path of the data volume (e.g. './data' or 'jenkins_home'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+    volume: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/2_systems/Docker/StructrServer.v2.1/Workspaces/structrAppWorkspace/WODA-current
+    # Where to find the restore data (none - if not applicable)?
+    restoresource: none
+    # Is the data volume external (true or false; if not external, it will be deleted on down)?
+    external: true
+
   ## Unique resources
   resource:
-    structr:
-      # What is the STRUCTR http port?
-      http: 8082
-      # What is the STRUCTR https port?
-      https: 8083
-      - 8021:8021
-      - 7574:7688
+    # What is the STRUCTR http port?
+    http: 8082
+    # What is the STRUCTR https port?
+    https: 8083

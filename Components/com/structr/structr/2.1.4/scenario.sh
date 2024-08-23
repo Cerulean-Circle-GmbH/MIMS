@@ -2,121 +2,61 @@
 
 # 'source' isn't available on all systems, so use . instead
 . .env
-CONFIG_DIR=$(pwd)
-
-# Check docker-compose command
-if docker compose version; then
-  # Switch from "docker-compose" to "docker compose"
-  shopt -s expand_aliases # enables expanding aliases for current script
-  alias docker-compose='docker compose'
-fi
-
-# Log verbose
-function logVerbose() {
-  # Check for verbosity not equal to -v
-  if [ "$VERBOSITY" != "-v" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# TODO: error() mit stderr
-
-# Log
-function log() {
-  if [ "$VERBOSITY" == "-s" ]; then
-    return
-  fi
-  echo "$@"
-}
-
-# Banner
-function banner() {
-  logVerbose
-  logVerbose "--- $1"
-  logVerbose
-}
-
-function checkURL() {
-  comment=$1
-  shift
-  logVerbose
-  logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
-  up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
-  if [ "$up" != "200" ]; then
-    log "NO: $1 is not running (returned $up) - $comment"
-    return 1
-  else
-    log "OK: running: $1 - $comment"
-    return 0
-  fi
-}
+. ./structr/.env
+. deploy-tools.sh
 
 # Set some variables
 function setEnvironment() {
-  # Rsync verbosity
-  RSYNC_VERBOSE="-q"
-  if [ "$VERBOSITY" != "-s" ]; then
-    RSYNC_VERBOSE="-v"
-  fi
+  setBaseEnvironment
 }
 
 function up() {
+  # Set environment
   setEnvironment
 
   mkdir -p structr/_data
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  # TODO: Remove certbot files from repository and create them or something
-  local certdir=$SCENARIO_SERVER_CERTIFICATEDIR
+  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
-  # Keystore
-  banner "Keystore"
-  if [ -f "keystore.pkcs12" ]; then
-    logVerbose "Already existing keystore.pkcs12..."
-  else
-    logVerbose "Creating new keystore.pkcs12..."
-    if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
-      echo "Using certificates from $certdir"
-      ls -l "$certdir" > $VERBOSEPIPE
-      ln -s "$certdir/fullchain.pem" fullchain.pem
-      ln -s "$certdir/privkey.pem" privkey.pem
-      openssl x509 -noout -fingerprint -sha256 -inform pem -in fullchain.pem > $VERBOSEPIPE
-      openssl x509 -noout -fingerprint -sha1 -inform pem -in fullchain.pem > $VERBOSEPIPE
-      openssl x509 -noout -text -inform pem -in fullchain.pem > $VERBOSEPIPE
+  # Check data volume
+  banner "Check data volume"
+  checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
 
-      openssl pkcs12 -export -out keystore.pkcs12 -in fullchain.pem -inkey privkey.pem -password pass:qazwsx#123 > $VERBOSEPIPE
+  # If there is a restore source (!=none), download the file
+  if [ "$SCENARIO_DATA_RESTORESOURCE" != "none" ]; then
+    banner "Restore data backup"
+    mkdir -p _data_restore
+    downloadFile $SCENARIO_DATA_RESTORESOURCE _data_restore/data.tar.gz
+
+    # Move data to volume if empty
+    if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
+      # Move data to data dir if empty
+      if [ "$(ls -A $SCENARIO_DATA_VOLUME)" ]; then
+        logError "Data dir is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
+      else
+        # Extract data and strip /var/jenkins_home from the tar
+        log "Extracting data into directory: $SCENARIO_DATA_VOLUME"
+        tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=1
+      fi
     else
-      echo "ERROR: No certificates found!"
+      FILES=$(docker run --rm -v $SCENARIO_DATA_VOLUME:/data alpine sh -c "ls -A /data")
+      if [ -n "$FILES" ]; then
+        logError "Data volume is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
+      else
+        # Extract data and strip /var/jenkins_home from the tar
+        log "Extracting data into volume: $SCENARIO_DATA_VOLUME"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=1 > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} /data > /dev/null"
+      fi
     fi
   fi
 
-  # TODO: Use default structr server if file is a server or none
-  # Workspace
-  banner "Workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
-  if [ -d "WODA-current" ]; then
-    logVerbose "Already existing workspace..."
-  else
-    logVerbose "Fetching workspace..."
-    if [ ! -f "${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz" ]; then
-      rsync -azP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" $SCENARIO_SRC_STRUCTR_DATAFILE ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz
-    fi
-    tar xzf ${SCENARIO_SRC_CACHEDIR}/WODA-current.tar.gz -C ./ > $VERBOSEPIPE
-  fi
-
-  # structr.zip
-  banner "structr.zip"
-  if [ -f "${SCENARIO_SRC_CACHEDIR}/structr.zip" ]; then
-    logVerbose "Already existing structr.zip..."
-  else
-    logVerbose "Fetching structr.zip..."
-    curl https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip -o ${SCENARIO_SRC_CACHEDIR}/structr.zip > $VERBOSEPIPE
-  fi
-
-  if [ ! -f "./structr.zip" ]; then
-    cp "${SCENARIO_SRC_CACHEDIR}/structr.zip" .
-  fi
+  # Download structr.zip
+  banner "Download structr.zip"
+  downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
   popd > /dev/null
 
   # Create structr image
@@ -126,21 +66,31 @@ function up() {
   if [[ $SCENARIO_STRUCTR_IMAGE == *"/"* ]]; then
     docker pull ${SCENARIO_STRUCTR_IMAGE}
   fi
-  docker-compose build > $VERBOSEPIPE
-  docker image ls > $VERBOSEPIPE
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS build > $VERBOSEPIPE
+  docker image ls | grep $SCENARIO_STRUCTR_IMAGE > $VERBOSEPIPE
+
+  # Check netwrok ${SCENARIO_SERVER_NETWORKNAME}
+  banner "Check network ${SCENARIO_SERVER_NETWORKNAME}"
+  if [[ -z $(docker network ls | grep ${SCENARIO_SERVER_NETWORKNAME}) ]]; then
+    log "Creating network ${SCENARIO_SERVER_NETWORKNAME}"
+    docker network create ${SCENARIO_SERVER_NETWORKNAME}
+  fi
 
   # Create and run container
   banner "Create and run container"
-  docker-compose -p $SCENARIO_NAME up -d
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi
 }
 
 function start() {
+  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+
   # Start container
   banner "Start container"
-  docker-compose -p $SCENARIO_NAME start
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS start
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps | grep $SCENARIO_NAME
   fi
@@ -149,8 +99,10 @@ function start() {
 function stop() {
   # Stop container
   banner "Stop container"
-  docker-compose -p $SCENARIO_NAME stop
-  docker ps | grep $SCENARIO_NAME
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
+  if [ "$VERBOSITY" == "-v" ]; then
+    docker ps | grep $SCENARIO_NAME
+  fi
 }
 
 function down() {
@@ -158,9 +110,19 @@ function down() {
 
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down
+  CLEANUP=""
+  if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
+    CLEANUP="--volumes"
+  fi
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
   if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
+    docker ps | grep $SCENARIO_NAME
+  fi
+
+  # Remove data directory if it is a path and SCENARIO_DATA_EXTERNAL is false
+  if [[ $SCENARIO_DATA_VOLUME == *"/"* && "$SCENARIO_DATA_EXTERNAL" == "false" ]]; then
+    log "Removing data directory: $SCENARIO_DATA_VOLUME"
+    rm -rf $SCENARIO_DATA_VOLUME
   fi
 
   # Cleanup docker
@@ -185,10 +147,10 @@ function test() {
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
-
+    log "Volumes:"
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
     log "Images:"
     docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
-
     log "Containers:"
     docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
   fi
@@ -234,7 +196,7 @@ for i in "$@"; do
       ;;
     *)
       # unknown option
-      log "Unknown option: $i"
+      logError "Unknown option: $i"
       printUsage
       ;;
   esac
