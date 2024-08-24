@@ -4,23 +4,10 @@
 . .env
 . deploy-tools.sh
 
-function checkURL() {
-  comment=$1
-  shift
-  logVerbose
-  logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
-  up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
-  if [ "$up" != "200" ]; then
-    log "NO: $1 is not running (returned $up) - $comment"
-    return 1
-  else
-    log "OK: running: $1 - $comment"
-    return 0
-  fi
-}
-
 # Set some variables
 function setEnvironment() {
+  setBaseEnvironment
+
   # Handle volume
   calculateVolumeName
   addToFile $CONFIG_DIR/.env SCENARIO_ONCE_VOLUME_NAME
@@ -30,12 +17,6 @@ function setEnvironment() {
   fi
 
   logVerbose "REAL_VOLUME_NAME=$REAL_VOLUME_NAME"
-
-  # Rsync verbosity
-  RSYNC_VERBOSE="-q"
-  if [ "$VERBOSITY" != "-s" ]; then
-    RSYNC_VERBOSE="-v"
-  fi
 }
 
 function isVolumeSet() {
@@ -86,30 +67,6 @@ function calculateVolumeName() {
   logVerbose "SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_ONCE_VOLUME_NAME"
 }
 
-function recreateKeystore() {
-  local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
-  local keystoredir="$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
-  mkdir -p $keystoredir
-
-  # Keystore
-  banner "Keystore"
-  if [ -f "$keystoredir/keystore.p12" ]; then
-    logVerbose "Already existing keystore.p12..."
-  else
-    logVerbose "Creating new keystore.p12..."
-    if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
-      log "Using certificates from $certdir"
-      openssl x509 -noout -fingerprint -sha256 -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
-      openssl x509 -noout -fingerprint -sha1 -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
-      openssl x509 -noout -text -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
-
-      openssl pkcs12 -export -out "$keystoredir/keystore.p12" -in "$certdir/fullchain.pem" -inkey "$certdir/privkey.pem" -password pass:qazwsx#123 > $VERBOSEPIPE
-    else
-      logError "No certificates found!"
-    fi
-  fi
-}
-
 function recreateOnceCerts() {
   local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
 
@@ -143,7 +100,7 @@ function up() {
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  recreateKeystore
+  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
   # TODO: Use default structr server if file is a server or none
 
@@ -282,7 +239,7 @@ EOF
 }
 
 function start() {
-  recreateKeystore
+  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
   # Start container
   banner "Start container"

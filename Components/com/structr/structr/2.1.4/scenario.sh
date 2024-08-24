@@ -2,6 +2,7 @@
 
 # 'source' isn't available on all systems, so use . instead
 . .env
+. ./structr/.env
 . deploy-tools.sh
 
 # Set some variables
@@ -9,15 +10,24 @@ function setEnvironment() {
   setBaseEnvironment
 }
 
+# TODO: Add backup step to all scenarios
+
 function up() {
   # Set environment
   setEnvironment
 
-  # Create jenkins image
-  banner "Create jenkins image"
-  log "Building image..."
-  docker pull jenkins/jenkins
-  docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
+  mkdir -p structr/_data
+  mkdir -p $SCENARIO_SRC_CACHEDIR
+  pushd structr/_data > /dev/null
+
+  # If none
+  if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
+    recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  else
+    # TODO: Create a keystore if it does not exist and remove it from git
+    mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+    cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+  fi
 
   # Check data volume
   banner "Check data volume"
@@ -37,8 +47,7 @@ function up() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into directory: $SCENARIO_DATA_VOLUME"
-        # TODO: --strip-components=1, fix in backup before
-        tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=2
+        tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=1
       fi
     else
       FILES=$(docker run --rm -v $SCENARIO_DATA_VOLUME:/data alpine sh -c "ls -A /data")
@@ -47,39 +56,50 @@ function up() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into volume: $SCENARIO_DATA_VOLUME"
-        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=2 > /dev/null"
-        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v $CONFIG_DIR/structr/_data/_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=1 > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v $CONFIG_DIR/structr/_data/_data_restore:/backup alpine sh -c "chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} /data > /dev/null"
       fi
     fi
+  fi
+
+  # Download structr.zip
+  banner "Download structr.zip"
+  downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
+  popd > /dev/null
+
+  # Create structr image
+  banner "Create structr image"
+  log "Building image..."
+  # Only pull if image contains a "/" (means it's a repository)
+  if [[ $SCENARIO_STRUCTR_IMAGE == *"/"* ]]; then
+    docker pull ${SCENARIO_STRUCTR_IMAGE}
+  fi
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS build > $VERBOSEPIPE
+  docker image ls | grep $SCENARIO_STRUCTR_IMAGE > $VERBOSEPIPE
+
+  # Check netwrok ${SCENARIO_SERVER_NETWORKNAME}
+  banner "Check network ${SCENARIO_SERVER_NETWORKNAME}"
+  if [[ -z $(docker network ls | grep ${SCENARIO_SERVER_NETWORKNAME}) ]]; then
+    log "Creating network ${SCENARIO_SERVER_NETWORKNAME}"
+    docker network create ${SCENARIO_SERVER_NETWORKNAME}
   fi
 
   # Create and run container
   banner "Create and run container"
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
+    docker ps
   fi
-
-  # Add user jenkins to group docker inside container
-  GROUP_ID=$(getent group docker | cut -d: -f3)
-  log "Group ID: $GROUP_ID"
-  docker exec -i -u root ${SCENARIO_NAME}_jenkins_container bash -s << EOF
-    if [ -z "$(getent group dockerofhost)" ]; then
-      echo "Create group dockerofhost"
-      groupadd -g $GROUP_ID dockerofhost
-      usermod -aG dockerofhost jenkins
-      usermod -aG docker jenkins
-    else
-      echo "Group dockerofhost already exists"
-    fi
-EOF
-  log "User jenkins groups:"
-  docker exec -i ${SCENARIO_NAME}_jenkins_container groups jenkins
 }
 
 function start() {
-  # Set environment
-  setEnvironment
+  if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
+    recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  else
+    # TODO: Create a keystore if it does not exist and remove it from git
+    mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+    cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+  fi
 
   # Start container
   banner "Start container"
@@ -90,9 +110,6 @@ function start() {
 }
 
 function stop() {
-  # Set environment
-  setEnvironment
-
   # Stop container
   banner "Stop container"
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
@@ -102,7 +119,6 @@ function stop() {
 }
 
 function down() {
-  # Set environment
   setEnvironment
 
   # Shutdown and remove containers
@@ -123,35 +139,43 @@ function down() {
   fi
 
   # Cleanup docker
-  banner "Cleanup docker"
+  banner "Cleanup docker volumes and images"
   docker image prune -f
+
+  # Remove structr dir and other stuff
+  rm -rf structr
 
   # Test
   banner "Test"
   if [ "$VERBOSITY" == "-v" ]; then
+    docker volume ls | grep ${REAL_VOLUME_NAME}
     tree -L 3 -a .
   fi
 }
 
 function test() {
-  # Set environment
   setEnvironment
 
+  # Test
   # Print volumes, images, containers and files
-  if [ "$VERBOSITY" = "-v" ]; then
+  if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
     docker volume ls | grep ${SCENARIO_DATA_VOLUME}
     log "Images:"
-    docker image ls | grep ${SCENARIO_NAME}_jenkins_image
+    docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_jenkins_container
+    docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
   fi
 
-  # Check EAMD.ucp git status
-  banner "Check Jenkins $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  checkURL "Jenkins (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/jenkins
-  return $? # Return the result of the last command
+  # Check running servers
+  banner "Check running servers"
+  checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTP/structr/
+  checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/
+  checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  #checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  #checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
+  #checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
 function printUsage() {
