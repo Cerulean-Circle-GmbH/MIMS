@@ -117,14 +117,20 @@ function addToFile() {
 function downloadFile() {
   url=$1
   file=$2
+  dirs=$(dirname $file)
 
   # Create leading directories
-  mkdir -p ${SCENARIO_SRC_CACHEDIR}
+  if [[ $dirs != "." && $dirs != "/" ]]; then
+    mkdir -p $dirs
+  fi
 
   # Download into cache dir
+  mkdir -p ${SCENARIO_SRC_CACHEDIR}
   pushd ${SCENARIO_SRC_CACHEDIR} > /dev/null
-  if [[ $file == *"/"* ]]; then
-    mkdir -p $(dirname $file)
+
+  # Create leading directories
+  if [[ $dirs != "." && $dirs != "/" ]]; then
+    mkdir -p $dirs
   fi
 
   # If it is a URL use curl
@@ -146,7 +152,7 @@ function downloadFile() {
   popd > /dev/null
 
   rsync -aP $RSYNC_VERBOSE -L -e "ssh -o StrictHostKeyChecking=no" "${SCENARIO_SRC_CACHEDIR}/${file}" "${file}" > /dev/null
-  logVerbose "Downloaded $url to $file"
+  logVerbose "Downloaded $url to ${SCENARIO_SRC_CACHEDIR}/$file"
 }
 
 # Check if data volume is a path or a volume

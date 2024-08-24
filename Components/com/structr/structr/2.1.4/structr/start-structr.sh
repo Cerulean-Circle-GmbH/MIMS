@@ -15,6 +15,7 @@ echo "============================="
 echo "Show /var/lib/structr/:"
 ls -la .
 echo "-----------------------------"
+echo "Show /var/lib/structr-volume/:"
 ls -la /var/lib/structr-volume/
 echo "============================="
 

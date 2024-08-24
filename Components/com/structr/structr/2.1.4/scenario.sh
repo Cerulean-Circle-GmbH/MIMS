@@ -18,8 +18,27 @@ function up() {
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
-  chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  # If none
+  if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
+    recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  else
+    # TODO: Create a keystore if it does not exist and remove it from git
+    mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+    cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+  fi
+  echo "============================="
+  echo "Show $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR:"
+  ls -la $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR
+  echo "-----------------------------"
+  echo "Show $CONFIG_DIR/structr:"
+  ls -la $CONFIG_DIR/structr
+  echo "============================="
+  #echo "Check keystore.p12"
+  #openssl pkcs12 -info -in $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/keystore.p12 -noout
+  #echo "-----------------------------"
+  #echo "Check keystore.p12.bak"
+  #openssl pkcs12 -info -in $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/keystore.p12.bak -noout
+  #echo "============================="
 
   # Check data volume
   banner "Check data volume"
@@ -48,8 +67,8 @@ function up() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into volume: $SCENARIO_DATA_VOLUME"
-        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=1 > /dev/null"
-        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v ./_data_restore:/backup alpine sh -c "chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} /data > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v $CONFIG_DIR/structr/_data/_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=1 > /dev/null"
+        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v $CONFIG_DIR/structr/_data/_data_restore:/backup alpine sh -c "chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} /data > /dev/null"
       fi
     fi
   fi
@@ -85,8 +104,13 @@ function up() {
 }
 
 function start() {
-  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
-  chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
+    recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  else
+    # TODO: Create a keystore if it does not exist and remove it from git
+    mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+    cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+  fi
 
   # Start container
   banner "Start container"
@@ -157,12 +181,12 @@ function test() {
 
   # Check running servers
   banner "Check running servers"
-  checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/
-  checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/
-  checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-  checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-  checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
-  checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
+  checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTP/structr/
+  checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/
+  checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  #checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  #checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
+  #checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
 function printUsage() {
