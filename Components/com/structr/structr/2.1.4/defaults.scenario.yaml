@@ -23,6 +23,7 @@ scenario:
 
   ## Config data setup
   data:
+    # TODO: This must be move to a better and backuped place
     # What is the path of the data volume (e.g. './data' or 'jenkins_home'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
     volume: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/2_systems/Docker/StructrServer.v2.1/Workspaces/structrAppWorkspace/WODA-current
     # Where to find the restore data (none - if not applicable)?

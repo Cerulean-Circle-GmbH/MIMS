@@ -10,6 +10,8 @@ function setEnvironment() {
   setBaseEnvironment
 }
 
+# TODO: Add backup step to all scenarios
+
 function up() {
   # Set environment
   setEnvironment
@@ -26,19 +28,6 @@ function up() {
     mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
-  echo "============================="
-  echo "Show $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR:"
-  ls -la $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR
-  echo "-----------------------------"
-  echo "Show $CONFIG_DIR/structr:"
-  ls -la $CONFIG_DIR/structr
-  echo "============================="
-  #echo "Check keystore.p12"
-  #openssl pkcs12 -info -in $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/keystore.p12 -noout
-  #echo "-----------------------------"
-  #echo "Check keystore.p12.bak"
-  #openssl pkcs12 -info -in $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/keystore.p12.bak -noout
-  #echo "============================="
 
   # Check data volume
   banner "Check data volume"
