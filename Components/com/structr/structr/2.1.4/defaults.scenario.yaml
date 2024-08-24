@@ -14,10 +14,12 @@ scenario:
     sshconfig: WODA.test
     # What is the scenarios root directory on the server?
     configsdir: /var/dev/ONCE.2023-Scenarios
-    # What is the EAMD root directory on the server?
-    eamddir: /var/dev/EAMD.ucp/
+    # Where to find the servers letsencrypt base dir?
+    certconfigdir: /var/dev/ssl/data/certbot
     # Where to find the servers certificate?
     certificatedir: /var/dev/ssl/data/certbot/conf/live/test.wo-da.de
+    # What is the EAMD root directory on the server?
+    eamddir: /var/dev/EAMD.ucp/
     # What is the servers network name?
     networkname: once-woda-network
 
