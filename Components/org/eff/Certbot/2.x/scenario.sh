@@ -58,7 +58,7 @@ function test() {
 
   # Check EAMD.ucp git status
   banner "Check Certbot $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  checkContainer "Certbot (docker)" certbot_container
+  deploy-tools.checkContainer "Certbot (docker)" certbot_container
   return $? # Return the result of the last command
 }
 

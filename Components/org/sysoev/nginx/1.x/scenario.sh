@@ -58,7 +58,7 @@ function test() {
 
   # Check EAMD.ucp git status
   banner "Check nginx $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  checkContainer "NGINX (docker)" nginx_proxy_container
+  deploy-tools.checkContainer "NGINX (docker)" nginx_proxy_container
   return $? # Return the result of the last command
 }
 

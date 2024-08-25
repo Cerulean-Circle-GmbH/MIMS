@@ -70,7 +70,7 @@ function deploy-tools.setEnvironment() {
   fi
 }
 
-function checkContainer() {
+function deploy-tools.checkContainer() {
   comment=$1
   shift
   logVerbose
@@ -84,7 +84,7 @@ function checkContainer() {
   fi
 }
 
-function checkURL() {
+function deploy-tools.checkURL() {
   comment=$1
   shift
   logVerbose
@@ -100,7 +100,7 @@ function checkURL() {
 }
 
 # TODO: Is this good practice?
-function addToFile() {
+function deploy-tools.addToFile() {
   local file=$1
   local envvar=$2
   if [ -f "$file" ]; then
@@ -114,7 +114,7 @@ function addToFile() {
 }
 
 # Download file
-function downloadFile() {
+function deploy-tools.downloadFile() {
   url=$1
   file=$2
   dirs=$(dirname $file)
@@ -156,7 +156,7 @@ function downloadFile() {
 }
 
 # Check if data volume is a path or a volume
-function checkAndCreateDataVolume() {
+function deploy-tools.checkAndCreateDataVolume() {
   datavolume=$1
   if [[ $datavolume == *"/"* ]]; then
     log "Volume name contains a slash, so it is a path: $datavolume"
@@ -179,8 +179,8 @@ function checkAndCreateDataVolume() {
     SCENARIO_DATA_MOUNTPOINT="service-volume"
     SCENARIO_DATA_VOLUME_NAME=$datavolume
   fi
-  addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT
-  addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
+  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT
+  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
 
   # Check SCENARIO_DATA_EXTERNAL
   if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
@@ -189,7 +189,7 @@ function checkAndCreateDataVolume() {
   fi
 }
 
-function recreateKeystore() {
+function deploy-tools.recreateKeystore() {
   local certdir="$1"
   local keystoredir="$2"
   mkdir -p $keystoredir
@@ -223,7 +223,7 @@ function deploy-tools.checkAndRestoreDataVolume() {
   if [ "$restoresource" != "none" ]; then
     banner "Restore data backup"
     mkdir -p _data_restore
-    downloadFile $restoresource _data_restore/data.tar.gz
+    deploy-tools.downloadFile $restoresource _data_restore/data.tar.gz
 
     # Move data to volume if empty
     if [[ $datavolume == *"/"* ]]; then
