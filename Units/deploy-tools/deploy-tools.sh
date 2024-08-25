@@ -53,7 +53,7 @@ function banner() {
 }
 
 # Set some variables
-function setBaseEnvironment() {
+function deploy-tools.setEnvironment() {
   # This separation is necessary because of the old version of docker on WODA.test
   if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
     # SCENARIO_DATA_VOLUME is a path

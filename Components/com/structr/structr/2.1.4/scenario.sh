@@ -7,7 +7,7 @@
 
 # Set some variables
 function setEnvironment() {
-  setBaseEnvironment
+  deploy-tools.setEnvironment
 }
 
 # TODO: Add backup step to all scenarios

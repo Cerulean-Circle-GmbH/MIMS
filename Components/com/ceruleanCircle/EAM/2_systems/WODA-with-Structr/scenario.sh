@@ -6,7 +6,7 @@
 
 # Set some variables
 function setEnvironment() {
-  setBaseEnvironment
+  deploy-tools.setEnvironment
 
   # Handle volume
   calculateVolumeName
