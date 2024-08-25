@@ -213,3 +213,16 @@ function recreateKeystore() {
     fi
   fi
 }
+
+function createArgonHash() {
+  local pass="$1"
+
+  if ! command -v argon2 &> /dev/null; then
+    echo "Command argon2 could not be found!"
+    exit 1
+  fi
+
+  # Generate the ADMIN_TOKEN
+  echo $(echo -n "$pass" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4)
+  exit 0
+}
