@@ -14,6 +14,8 @@ if docker compose version > /dev/null 2>&1; then
   alias docker-compose='docker compose'
 fi
 
+## Simple tools without namespace
+
 # Log verbose
 function logVerbose() {
   # Check for verbosity not equal to -v
@@ -51,6 +53,8 @@ function banner() {
   logVerbose "--- $1"
   logVerbose
 }
+
+## Namespace deploy-tools
 
 # Set some variables
 function deploy-tools.setEnvironment() {
