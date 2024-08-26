@@ -303,8 +303,8 @@ function config() {
         logVerbose "Preset SCENARIO_SERVER_CONFIGSDIR=$SCENARIO_SERVER_CONFIGSDIR"
 
         # TODO: This should be handled in a better way, not at this common script level
-        SCENARIO_SRC_ONCE_OUTERCONFIG="none"
-        logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
+        #SCENARIO_SRC_ONCE_OUTERCONFIG="none"
+        #logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
       fi
 
       # Check namespace
@@ -575,11 +575,14 @@ else
 fi
 shift
 
+VERBOSEPIPE="/dev/null"
+
 # Parse all "-" args
 for i in "$@"; do
   case $i in
     -v | --verbose)
       VERBOSITY="-v"
+      VERBOSEPIPE="/dev/stdout"
       ;;
     -s | --silent)
       VERBOSITY="-s"

@@ -15,10 +15,6 @@ scenario:
   ## Unique resources
   resource:
     once:
-      # Which volume should be used (if srcpath is not set, none means a temporary volume will be created)?
-      volume: none
-      # Which ONCE source path should be mounted into the ONCE container? (e.g. _var_dev relative to the scenarios root directory, leave empty or '<none>' to use volume)
-      srcpath: none
       # What is the ONCE http port?
       http: 8080
       # What is the ONCE https port?
