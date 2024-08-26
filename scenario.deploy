@@ -269,8 +269,10 @@ function config() {
 
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
   SCENARIO_DEFAULTS_YAML=$cwd/Components/$SCENARIO_SRC_COMPONENT/defaults.scenario.yaml
+  SCENARIO_BASEDEFAULTS_YAML=$cwd/Units/deploy-tools/basedefaults.scenario.yaml
   SCENARIO_DEFAULTS_ENV=$cwd/Components/$SCENARIO_SRC_COMPONENT/_defaults.scenario.sh
-  parse_yaml $SCENARIO_DEFAULTS_YAML > $SCENARIO_DEFAULTS_ENV
+  parse_yaml $SCENARIO_BASEDEFAULTS_YAML > $SCENARIO_DEFAULTS_ENV
+  parse_yaml $SCENARIO_DEFAULTS_YAML >> $SCENARIO_DEFAULTS_ENV
 
   # Check $SCENARIO_FILE_NAME for missing variables
   local current_comment=""
@@ -301,8 +303,8 @@ function config() {
         logVerbose "Preset SCENARIO_SERVER_CONFIGSDIR=$SCENARIO_SERVER_CONFIGSDIR"
 
         # TODO: This should be handled in a better way, not at this common script level
-        SCENARIO_SRC_ONCE_OUTERCONFIG="none"
-        logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
+        #SCENARIO_SRC_ONCE_OUTERCONFIG="none"
+        #logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
       fi
 
       # Check namespace
@@ -351,7 +353,7 @@ function init() {
   bannerBig "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
-  cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $LOCAL_CONFIG_DIR/
+  cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $cwd/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     echo "$ENV_VAR=${!ENV_VAR}"
@@ -573,11 +575,14 @@ else
 fi
 shift
 
+VERBOSEPIPE="/dev/null"
+
 # Parse all "-" args
 for i in "$@"; do
   case $i in
     -v | --verbose)
       VERBOSITY="-v"
+      VERBOSEPIPE="/dev/stdout"
       ;;
     -s | --silent)
       VERBOSITY="-s"
