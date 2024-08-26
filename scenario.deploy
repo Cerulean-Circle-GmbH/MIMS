@@ -100,7 +100,7 @@ function printUsage() {
   log "          updateconfig - update local scenario config"
   log
   log "        Options:"
-  log "          -v|--verbose - verbosee"
+  log "          -v|--verbose - verbose"
   log "          -s|--silent  - silent"
   log "          -h|--help    - help"
   log
