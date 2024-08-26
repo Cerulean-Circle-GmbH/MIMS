@@ -6,65 +6,7 @@
 
 # Set some variables
 function setEnvironment() {
-  setBaseEnvironment
-
-  # Handle volume
-  calculateVolumeName
-  addToFile $CONFIG_DIR/.env SCENARIO_ONCE_VOLUME_NAME
-  REAL_VOLUME_NAME=${SCENARIO_ONCE_VOLUME_NAME}
-  if [[ "$SCENARIO_ONCE_VOLUME_NAME" == "var_dev" ]]; then
-    REAL_VOLUME_NAME=${SCENARIO_NAME}_${SCENARIO_ONCE_VOLUME_NAME}
-  fi
-
-  logVerbose "REAL_VOLUME_NAME=$REAL_VOLUME_NAME"
-}
-
-function isVolumeSet() {
-  if [[ -n "$SCENARIO_RESOURCE_ONCE_VOLUME" && "$SCENARIO_RESOURCE_ONCE_VOLUME" != "none" ]]; then
-    return 0
-  fi
-  return 1
-}
-
-function isSrcpathSet() {
-  if [[ -n "$SCENARIO_RESOURCE_ONCE_SRCPATH" && "$SCENARIO_RESOURCE_ONCE_SRCPATH" != "none" ]]; then
-    return 0
-  fi
-  return 1
-}
-
-function calculateVolumeName() {
-  # Evaluate source path (on Windows only provide "volume")
-  IS_WIN_OS=$(echo $OS | grep -i win)
-
-  # Verbose
-  if [ "$VERBOSITY" == "-v" ]; then
-    if isSrcpathSet; then
-      echo "isSrcpathSet YES - $SCENARIO_RESOURCE_ONCE_SRCPATH"
-    else
-      echo "isSrcpathSet NO - $SCENARIO_RESOURCE_ONCE_SRCPATH"
-    fi
-    if isVolumeSet; then
-      echo "isVolumeSet YES - $SCENARIO_RESOURCE_ONCE_VOLUME"
-    else
-      echo "isVolumeSet NO - $SCENARIO_RESOURCE_ONCE_VOLUME"
-    fi
-  fi
-
-  # TODO: Ist die klammer um isSrcpathSet und isVolumeSet richtig?
-  if isSrcpathSet && [ -z "$IS_WIN_OS" ]; then
-    SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_SRCPATH
-    # If SCENARIO_ONCE_VOLUME_NAME doesn't start with "/" or ".", add a "./"
-    if [[ ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^/ && ! "$SCENARIO_ONCE_VOLUME_NAME" =~ ^"." ]]; then
-      # TODO: Test this
-      SCENARIO_ONCE_VOLUME_NAME="./$SCENARIO_ONCE_VOLUME_NAME"
-    fi
-  elif isVolumeSet; then
-    SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_RESOURCE_ONCE_VOLUME
-  else
-    SCENARIO_ONCE_VOLUME_NAME=var_dev
-  fi
-  logVerbose "SCENARIO_ONCE_VOLUME_NAME=$SCENARIO_ONCE_VOLUME_NAME"
+  deploy-tools.setEnvironment
 }
 
 function recreateOnceCerts() {
@@ -94,38 +36,32 @@ EOF
 }
 
 function up() {
+  # Set environment
   setEnvironment
 
   mkdir -p structr/_data
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
   # TODO: Use default structr server if file is a server or none
 
-  # Download structr workspace
-  banner "Download structr workspace ($SCENARIO_SRC_STRUCTR_DATAFILE)"
-  if [ -d "WODA-current" ]; then
-    logVerbose "Already existing workspace..."
-  else
-    logVerbose "Fetching workspace..."
-    downloadFile $SCENARIO_SRC_STRUCTR_DATAFILE WODA-current.tar.gz
-    tar xzf WODA-current.tar.gz -C ./ > $VERBOSEPIPE
-  fi
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+
+  # TODO: --strip-components=1, fix in backup before
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
 
   # Download structr.zip
   banner "Download structr.zip"
-  downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
+  deploy-tools.downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
   popd > /dev/null
 
   # Create structr image
   banner "Create structr image"
   log "Building image..."
-  # Only pull if image contains a "/" (means it's a repository)
-  if [[ $SCENARIO_STRUCTR_IMAGE == *"/"* ]]; then
-    docker pull ${SCENARIO_STRUCTR_IMAGE}
-  fi
   docker-compose build > $VERBOSEPIPE
   docker image ls > $VERBOSEPIPE
 
@@ -146,8 +82,11 @@ function up() {
 
   # Create and run container
   banner "Create and run container"
-  docker-compose pull
-  docker-compose -p $SCENARIO_NAME up -d
+  # Only pull if image contains a "/" (means it's a repository)
+  if [[ $SCENARIO_SRC_ONCE_IMAGE == *"/"* ]]; then
+    docker pull ${SCENARIO_SRC_ONCE_IMAGE}
+  fi
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi
@@ -239,14 +178,9 @@ EOF
 }
 
 function start() {
-  recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
-  # Start container
-  banner "Start container"
-  docker-compose -p $SCENARIO_NAME start
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
-  fi
+  deploy-tools.start
 
   recreateOnceCerts
   private.restart.once
@@ -270,46 +204,16 @@ EOF
 }
 
 function stop() {
-  # Stop container
-  banner "Stop container"
-  docker-compose -p $SCENARIO_NAME stop
-  docker ps | grep $SCENARIO_NAME
+  deploy-tools.stop
 }
 
 function down() {
   setEnvironment
 
-  # Shutdown and remove containers
-  banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
-  fi
-
-  # Cleanup docker
-  banner "Cleanup docker volumes and images"
-  if ! isSrcpathSet; then
-    if ! isVolumeSet; then
-      # TODO: Wird das volume auch gelöscht, wenn es ein Pfad ist oder ist ein default volume da, wenn es nicht sollte?
-      docker volume rm ${REAL_VOLUME_NAME}
-      log "Removed volume ${REAL_VOLUME_NAME}"
-    else
-      log "Not removing volume ${SCENARIO_RESOURCE_ONCE_VOLUME}, seems to be custom volume"
-    fi
-  else
-    log "Not removing volume ${SCENARIO_RESOURCE_ONCE_VOLUME}, seems to be a path"
-  fi
-  docker image prune -f
+  deploy-tools.down
 
   # Remove structr dir and other stuff
   rm -rf structr
-
-  # Test
-  banner "Test"
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker volume ls | grep ${REAL_VOLUME_NAME}
-    tree -L 3 -a .
-  fi
 }
 
 function test() {
@@ -320,7 +224,7 @@ function test() {
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${REAL_VOLUME_NAME}
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
 
     log "Images:"
     docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
@@ -339,59 +243,28 @@ function test() {
 
   # Check running servers
   banner "Check running servers"
-  checkURL "EAMD.ucp repository (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/
-  checkURL "EAMD.ucp installation status" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
-  checkURL "EAMD.ucp repository (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/
-  checkURL "NEOM CityManagement app" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/apps/neom/CityManagement.html
-  checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/
-  checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/
-  checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-  checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-  checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
-  checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
-}
-
-function printUsage() {
-  log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
-  exit 1
+  deploy-tools.checkURL "EAMD.ucp repository (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/
+  deploy-tools.checkURL "EAMD.ucp installation status" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTP/EAMD.ucp/installation-status.log
+  deploy-tools.checkURL "EAMD.ucp repository (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/
+  deploy-tools.checkURL "NEOM CityManagement app" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_HTTPS/EAMD.ucp/apps/neom/CityManagement.html
+  deploy-tools.checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTP/structr/
+  deploy-tools.checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/
+  deploy-tools.checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_STRUCTR_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  deploy-tools.checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  deploy-tools.checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
+  deploy-tools.checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
 # Scenario vars
 if [ -z "$1" ]; then
-  printUsage
+  deploy-tools.printUsage
   exit 1
 fi
 
 STEP=$1
 shift
 
-VERBOSEPIPE="/dev/null"
-
-# Parse all "-" args
-for i in "$@"; do
-  case $i in
-    -v | --verbose)
-      VERBOSITY=$i
-      VERBOSEPIPE="/dev/stdout"
-      ;;
-    -s | --silent)
-      VERBOSITY=$i
-      ;;
-    -h | --help)
-      HELP=true
-      ;;
-    *)
-      # unknown option
-      logError "Unknown option: $i"
-      printUsage
-      ;;
-  esac
-done
-
-# Print help
-if [ "$HELP" = true ]; then
-  printUsage
-fi
+deploy-tools.parseArguments
 
 if [ $STEP = "up" ]; then
   up
@@ -404,7 +277,7 @@ elif [ $STEP = "down" ]; then
 elif [ $STEP = "test" ]; then
   test
 else
-  printUsage
+  deploy-tools.printUsage
   exit 1
 fi
 
