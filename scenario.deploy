@@ -100,7 +100,7 @@ function printUsage() {
   log "          updateconfig - update local scenario config"
   log
   log "        Options:"
-  log "          -v|--verbose - verbosee"
+  log "          -v|--verbose - verbose"
   log "          -s|--silent  - silent"
   log "          -h|--help    - help"
   log
@@ -115,6 +115,7 @@ function printUsage() {
   log
   log "Available scenarios:"
   log "$AVAILABLE_SCENARIOS"
+  kljshdfk
 }
 
 # ask with default
