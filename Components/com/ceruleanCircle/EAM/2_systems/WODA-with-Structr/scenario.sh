@@ -86,7 +86,7 @@ function up() {
   if [[ $SCENARIO_SRC_ONCE_IMAGE == *"/"* ]]; then
     docker pull ${SCENARIO_SRC_ONCE_IMAGE}
   fi
-  docker-compose -p $SCENARIO_NAME up -d
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps
   fi
