@@ -100,7 +100,7 @@ function printUsage() {
   log "          updateconfig - update local scenario config"
   log
   log "        Options:"
-  log "          -v|--verbose - verbosee"
+  log "          -v|--verbose - verbose"
   log "          -s|--silent  - silent"
   log "          -h|--help    - help"
   log
@@ -269,8 +269,10 @@ function config() {
 
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
   SCENARIO_DEFAULTS_YAML=$cwd/Components/$SCENARIO_SRC_COMPONENT/defaults.scenario.yaml
+  SCENARIO_BASEDEFAULTS_YAML=$cwd/Units/deploy-tools/basedefaults.scenario.yaml
   SCENARIO_DEFAULTS_ENV=$cwd/Components/$SCENARIO_SRC_COMPONENT/_defaults.scenario.sh
-  parse_yaml $SCENARIO_DEFAULTS_YAML > $SCENARIO_DEFAULTS_ENV
+  parse_yaml $SCENARIO_BASEDEFAULTS_YAML > $SCENARIO_DEFAULTS_ENV
+  parse_yaml $SCENARIO_DEFAULTS_YAML >> $SCENARIO_DEFAULTS_ENV
 
   # Check $SCENARIO_FILE_NAME for missing variables
   local current_comment=""
@@ -301,8 +303,8 @@ function config() {
         logVerbose "Preset SCENARIO_SERVER_CONFIGSDIR=$SCENARIO_SERVER_CONFIGSDIR"
 
         # TODO: This should be handled in a better way, not at this common script level
-        SCENARIO_SRC_ONCE_OUTERCONFIG="none"
-        logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
+        #SCENARIO_SRC_ONCE_OUTERCONFIG="none"
+        #logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
       fi
 
       # Check namespace
@@ -351,7 +353,7 @@ function init() {
   bannerBig "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
-  cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $LOCAL_CONFIG_DIR/
+  cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $cwd/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     echo "$ENV_VAR=${!ENV_VAR}"
@@ -381,8 +383,8 @@ EOF
     rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $LOCAL_CONFIG_DIR/ $SCENARIO_SERVER_SSHCONFIG:$REMOTE_CONFIG_DIR/
 
     # Create certbot renewal-hook deploy script
-    if [ -n "$SCENARIO_SERVER_LETSENCRYPTDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
-      local deploy_hook="$SCENARIO_SERVER_LETSENCRYPTDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
 
       # declare script content for remote file
       cat << EOF | ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "cat > $deploy_hook"
@@ -496,8 +498,8 @@ function deinit() {
   rmdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE 2> /dev/null || true
   if ! isLocal; then
     # remove remote renewal-hook deploy script
-    if [ -n "$SCENARIO_SERVER_LETSENCRYPTDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
-      local deploy_hook="$SCENARIO_SERVER_LETSENCRYPTDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
       ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "rm -f $deploy_hook"
     fi
 
@@ -573,11 +575,14 @@ else
 fi
 shift
 
+VERBOSEPIPE="/dev/null"
+
 # Parse all "-" args
 for i in "$@"; do
   case $i in
     -v | --verbose)
       VERBOSITY="-v"
+      VERBOSEPIPE="/dev/stdout"
       ;;
     -s | --silent)
       VERBOSITY="-s"

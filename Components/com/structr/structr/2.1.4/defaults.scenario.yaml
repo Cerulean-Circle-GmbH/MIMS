@@ -1,0 +1,20 @@
+scenario:
+  ## Server setup
+  server:
+    # What is the EAMD root directory on the server?
+    eamddir: /var/dev/EAMD.ucp/
+    # What is the servers network name?
+    networkname: once-woda-network
+
+  ## Config data setup
+  #data:
+  # TODO: This must be move to a better and backuped place
+  # What is the path of the data volume (e.g. './data' or 'jenkins_home'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+  #volume: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/2_systems/Docker/StructrServer.v2.1/Workspaces/structrAppWorkspace/WODA-current
+
+  ## Unique resources
+  resource:
+    # What is the STRUCTR http port?
+    http: 8082
+    # What is the STRUCTR https port?
+    https: 8083

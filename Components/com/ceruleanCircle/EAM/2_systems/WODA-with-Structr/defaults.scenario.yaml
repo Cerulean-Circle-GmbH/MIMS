@@ -1,10 +1,6 @@
 scenario:
   ## Source setup
   src:
-    # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
-    component: .
-    # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
-    cachedir: ~/.cache/ONCE.2023-Scenarios
     once:
       # Which ONCE docker image should be used?
       image: donges/once:latest
@@ -16,26 +12,9 @@ scenario:
       # What is the URI of the struct data backup file (maybe tag dependent)?
       datafile: backup.sfsre.com:/var/backups/structr/backup-structr-latest_WODA-current.tar.gz
 
-  ## Server setup
-  server:
-    # What is the server, the scenario will be deployed?
-    name: test.wo-da.de
-    # What is the SSH config the server can be connected with?
-    sshconfig: WODA.test
-    # What is the scenarios root directory on the server?
-    configsdir: /var/dev/ONCE.2023-Scenarios
-    # Where to find the servers letsencrypt base dir?
-    letsencryptdir: /var/dev/ssl/data/certbot
-    # Where to find the servers certificate?
-    certificatedir: /var/dev/ssl/data/certbot/conf/live/test.wo-da.de
-
   ## Unique resources
   resource:
     once:
-      # Which volume should be used (if srcpath is not set, none means a temporary volume will be created)?
-      volume: none
-      # Which ONCE source path should be mounted into the ONCE container? (e.g. _var_dev relative to the scenarios root directory, leave empty or '<none>' to use volume)
-      srcpath: none
       # What is the ONCE http port?
       http: 8080
       # What is the ONCE https port?

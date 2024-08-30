@@ -1,0 +1,24 @@
+version: "3.4"
+
+services:
+  woda-structr-server:
+    container_name: ${SCENARIO_STRUCTR_CONTAINER}
+    build: "./structr"
+    image: ${SCENARIO_STRUCTR_IMAGE}
+    user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
+    restart: unless-stopped
+    env_file: ".env"
+    ports:
+      - ${SCENARIO_RESOURCE_HTTP}:8082
+      - ${SCENARIO_RESOURCE_HTTPS}:8083
+    volumes:
+      - ${SCENARIO_DATA_MOUNTPOINT}:/var/lib/structr-volume/
+      - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.pkcs12:ro
+      - ${SCENARIO_SERVER_EAMDDIR}:/EAMD.ucp
+      - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
+    environment:
+      - PROXY_ADDRESS_FORWARDING=true
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORKNAME}

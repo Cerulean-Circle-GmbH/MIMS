@@ -4,7 +4,19 @@
 . .env
 . deploy-tools.sh
 
+# Set some variables
+function setEnvironment() {
+  deploy-tools.setEnvironment
+}
+
 function up() {
+  # Set environment
+  setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+
   # Create and run container
   banner "Create and run container"
   docker-compose pull
@@ -15,35 +27,15 @@ function up() {
 }
 
 function start() {
-  # Start container
-  banner "Start container"
-  docker-compose -p $SCENARIO_NAME start
+  deploy-tools.start
 }
 
 function stop() {
-  # Stop container
-  banner "Stop container"
-  docker-compose -p $SCENARIO_NAME stop
-  docker ps | grep $SCENARIO_NAME
+  deploy-tools.stop
 }
 
 function down() {
-  # Shutdown and remove containers
-  banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
-  fi
-
-  # Cleanup docker
-  banner "Cleanup docker"
-  docker image prune -f
-
-  # Test
-  banner "Test"
-  if [ "$VERBOSITY" == "-v" ]; then
-    tree -L 3 -a .
-  fi
+  deploy-tools.down
 }
 
 function test() {
@@ -58,50 +50,19 @@ function test() {
 
   # Check EAMD.ucp git status
   banner "Check nginx $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  checkContainer "NGINX (docker)" nginx_proxy_container
+  deploy-tools.checkContainer "NGINX (docker)" nginx_proxy_container
   return $? # Return the result of the last command
-}
-
-function printUsage() {
-  log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
-  exit 1
 }
 
 # Scenario vars
 if [ -z "$1" ]; then
-  printUsage
+  deploy-tools.printUsage
 fi
 
 STEP=$1
 shift
 
-VERBOSEPIPE="/dev/null"
-
-# Parse all "-" args
-for i in "$@"; do
-  case $i in
-    -v | --verbose)
-      VERBOSITY=$i
-      VERBOSEPIPE="/dev/stdout"
-      ;;
-    -s | --silent)
-      VERBOSITY=$i
-      ;;
-    -h | --help)
-      HELP=true
-      ;;
-    *)
-      # unknown option
-      logError "Unknown option: $i"
-      printUsage
-      ;;
-  esac
-done
-
-# Print help
-if [ "$HELP" = true ]; then
-  printUsage
-fi
+deploy-tools.parseArguments
 
 if [ $STEP = "up" ]; then
   up
@@ -114,7 +75,7 @@ elif [ $STEP = "down" ]; then
 elif [ $STEP = "test" ]; then
   test
 else
-  printUsage
+  deploy-tools.printUsage
   exit 1
 fi
 
