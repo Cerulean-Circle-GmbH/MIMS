@@ -10,20 +10,7 @@ function setEnvironment() {
 }
 
 function up() {
-  # Set environment
-  setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
-
-  # Create and run container
-  banner "Create and run container"
-  docker-compose pull
-  docker-compose -p $SCENARIO_NAME up -d
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
-  fi
+  deploy-tools.up
 }
 
 function start() {
@@ -39,16 +26,25 @@ function down() {
 }
 
 function test() {
+  # Set environment
+  setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
+    log "Volumes:"
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
     log "Images:"
-    docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
+    docker image ls | grep ${SCENARIO_NAME}
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_container
+    docker ps -all | grep nginx_proxy_container
   fi
 
-  # Check EAMD.ucp git status
+  # Check nginx status
   banner "Check nginx $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
   deploy-tools.checkContainer "NGINX (docker)" nginx_proxy_container
   return $? # Return the result of the last command
@@ -57,12 +53,13 @@ function test() {
 # Scenario vars
 if [ -z "$1" ]; then
   deploy-tools.printUsage
+  exit 1
 fi
 
 STEP=$1
 shift
 
-deploy-tools.parseArguments
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up

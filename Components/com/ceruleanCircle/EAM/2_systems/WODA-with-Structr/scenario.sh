@@ -49,7 +49,7 @@ function up() {
 
   # Check data volume
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
@@ -208,8 +208,6 @@ function stop() {
 }
 
 function down() {
-  setEnvironment
-
   deploy-tools.down
 
   # Remove structr dir and other stuff
@@ -217,7 +215,12 @@ function down() {
 }
 
 function test() {
+  # Set environment
   setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Test
   # Print volumes, images, containers and files
@@ -264,7 +267,7 @@ fi
 STEP=$1
 shift
 
-deploy-tools.parseArguments
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up
