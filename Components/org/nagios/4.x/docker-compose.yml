@@ -5,10 +5,6 @@ services:
     container_name: ${SCENARIO_NAME}_nagios_container
     image: jasonrivers/nagios:4.5.2
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT}/nagios/etc/:/opt/nagios/etc/
-      - ${SCENARIO_DATA_MOUNTPOINT}/nagios/var:/opt/nagios/var/
-      - ${SCENARIO_DATA_MOUNTPOINT}/Custom-Nagios-Plugins:/opt/Custom-Nagios-Plugins
-      - ${SCENARIO_DATA_MOUNTPOINT}/nagiosgraph/var:/opt/nagiosgraph/var
-      - ${SCENARIO_DATA_MOUNTPOINT}/nagiosgraph/etc:/opt/nagiosgraph/etc
+      - ${SCENARIO_DATA_MOUNTPOINT}:/opt/nagios/
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:80"
