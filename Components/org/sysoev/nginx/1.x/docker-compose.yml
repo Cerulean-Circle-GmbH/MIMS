@@ -15,5 +15,5 @@ services:
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
 networks:
   default:
-    external:
-      name: ${SCENARIO_SERVER_NETWORKNAME}
+    external: true
+    name: ${SCENARIO_SERVER_NETWORKNAME}

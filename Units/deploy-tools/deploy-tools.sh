@@ -253,9 +253,30 @@ function deploy-tools.checkAndRestoreDataVolume() {
   fi
 }
 
+function deploy-tools.up() {
+  # Set environment
+  setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+
+  # Create and run container
+  banner "Create and run container"
+  docker-compose pull
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
+  if [ "$VERBOSITY" == "-v" ]; then
+    docker ps | grep $SCENARIO_NAME
+  fi
+}
+
 function deploy-tools.start() {
   # Set environment
   deploy-tools.setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Start container
   banner "Start container"
@@ -269,6 +290,10 @@ function deploy-tools.stop() {
   # Set environment
   deploy-tools.setEnvironment
 
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+
   # Stop container
   banner "Stop container"
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
@@ -280,6 +305,10 @@ function deploy-tools.stop() {
 function deploy-tools.down() {
   # Set environment
   deploy-tools.setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
@@ -334,6 +363,7 @@ function deploy-tools.parseArguments() {
         # unknown option
         logError "Unknown option: $i"
         deploy-tools.printUsage
+        exit 1
         ;;
     esac
   done
@@ -341,5 +371,6 @@ function deploy-tools.parseArguments() {
   # Print help
   if [ "$HELP" = true ]; then
     deploy-tools.printUsage
+    exit 1
   fi
 }
