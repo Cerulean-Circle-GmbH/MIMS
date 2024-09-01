@@ -7,3 +7,8 @@ scenario:
   resource:
     # What is the http port of the docker container?
     httpport: 9000
+
+  ## Server setup
+  server:
+    # What is the servers network name?
+    networkname: once-woda-network
