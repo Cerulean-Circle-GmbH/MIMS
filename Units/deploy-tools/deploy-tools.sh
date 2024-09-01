@@ -364,8 +364,15 @@ function deploy-tools.down() {
   fi
 }
 
+function deploy-tools.logs() {
+  # Set environment
+  deploy-tools.setEnvironment
+
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS logs
+}
+
 function deploy-tools.printUsage() {
-  log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
+  log "Usage: $0 (up,start,stop,down,logs,test)  [-v|-s|-h]"
   exit 1
 }
 
