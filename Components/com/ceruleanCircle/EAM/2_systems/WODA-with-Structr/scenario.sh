@@ -9,6 +9,11 @@ function setEnvironment() {
   deploy-tools.setEnvironment
 }
 
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+}
+
 function recreateOnceCerts() {
   local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
 
@@ -36,6 +41,9 @@ EOF
 }
 
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -46,10 +54,6 @@ function up() {
   deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
   # TODO: Use default structr server if file is a server or none
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
 
   # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
@@ -178,6 +182,9 @@ EOF
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
 
   deploy-tools.start
@@ -204,11 +211,15 @@ EOF
 }
 
 function stop() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.stop
 }
 
 function down() {
-  setEnvironment
+  # Check data volume
+  checkAndCreateDataVolume
 
   deploy-tools.down
 
@@ -217,6 +228,10 @@ function down() {
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  # Set environment
   setEnvironment
 
   # Test
@@ -264,7 +279,7 @@ fi
 STEP=$1
 shift
 
-deploy-tools.parseArguments
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up

@@ -10,9 +10,17 @@ function setEnvironment() {
   deploy-tools.setEnvironment
 }
 
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+}
+
 # TODO: Add backup step to all scenarios
 
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -28,10 +36,6 @@ function up() {
     mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
 
   # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
@@ -67,6 +71,9 @@ function up() {
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -82,10 +89,16 @@ function start() {
 }
 
 function stop() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.stop
 }
 
 function down() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.down
 
   # Remove structr dir and other stuff
@@ -93,6 +106,10 @@ function down() {
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  # Set environment
   setEnvironment
 
   # Test
@@ -126,7 +143,7 @@ fi
 STEP=$1
 shift
 
-deploy-tools.parseArguments
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up
