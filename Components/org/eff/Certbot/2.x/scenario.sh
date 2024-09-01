@@ -48,6 +48,13 @@ function test() {
   return $? # Return the result of the last command
 }
 
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
+}
+
 # Scenario vars
 if [ -z "$1" ]; then
   deploy-tools.printUsage
@@ -69,6 +76,8 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
   deploy-tools.printUsage
   exit 1
