@@ -1,0 +1,21 @@
+version: "3.4"
+
+services:
+  cadvisor-service:
+    container_name: ${SCENARIO_NAME}_cadvisor_container
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    hostname: cadvisor
+    platform: linux/aarch64
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
+
+networks:
+  default:
+    external: true
+    name: ${SCENARIO_SERVER_NETWORKNAME}
