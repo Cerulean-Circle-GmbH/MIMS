@@ -164,6 +164,9 @@ function deploy-tools.checkAndCreateDataVolume() {
   local datavolume=$1
   local target=$2
 
+  # set separator for handling of arrays as environment variables
+  IFS=','
+
   # Retrieve and convert the string back to an array
   read -r -a mountpoints_array <<< "$SCENARIO_DATA_MOUNTPOINTS"
   read -r -a names_array <<< "$SCENARIO_DATA_VOLUME_NAMES"
@@ -228,6 +231,9 @@ function deploy-tools.checkAndCreateDataVolume() {
     logError "SCENARIO_DATA_EXTERNAL must be true or false (but is $SCENARIO_DATA_EXTERNAL)"
     exit 1
   fi
+
+  # set separator to default value, otherwise docker-compose command will fail
+  IFS=' '
 }
 
 function deploy-tools.recreateKeystore() {
