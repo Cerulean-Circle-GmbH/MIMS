@@ -6,45 +6,52 @@
 
 # Set some variables
 function setEnvironment() {
-  # This separation is necessary because of the old version of docker on WODA.test
-  if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
-    # SCENARIO_DATA_VOLUME is a path
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.path.yml"
-  else
-    # SCENARIO_DATA_VOLUME is a volume
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
-  fi
+  deploy-tools.setEnvironment
+}
 
-  # Rsync verbosity
-  RSYNC_VERBOSE="-q"
-  if [ "$VERBOSITY" != "-s" ]; then
-    RSYNC_VERBOSE="-v"
-  fi
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME} "etc-volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME1} "var-volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME2} "plugin-volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME3} "graph-etc-volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME4} "graph-var-volume"
 }
 
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.up
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.start
 }
 
 function stop() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.stop
 }
 
 function down() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.down
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
@@ -61,6 +68,13 @@ function test() {
   banner "Check nagios $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
   deploy-tools.checkContainer "Nagios (docker)" ${SCENARIO_NAME}_nagios_container
   return $? # Return the result of the last command
+}
+
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
 }
 
 # Scenario vars
@@ -84,6 +98,8 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
   deploy-tools.printUsage
   exit 1

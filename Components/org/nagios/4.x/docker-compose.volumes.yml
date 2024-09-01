@@ -1,6 +1,22 @@
 version: "3.4"
 
 volumes:
-  service-volume:
+  etc-volume:
     external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME}
+    name: ${SCENARIO_DATA_VOLUME_NAME1}
+
+  var-volume:
+    external: ${SCENARIO_DATA_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_NAME2}
+
+  plugin-volume:
+    external: ${SCENARIO_DATA_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_NAME3}
+
+  graph-etc-volume:
+    external: ${SCENARIO_DATA_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_NAME4}
+
+  graph-var-volume:
+    external: ${SCENARIO_DATA_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_NAME5}
