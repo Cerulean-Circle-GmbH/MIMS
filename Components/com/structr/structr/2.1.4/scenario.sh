@@ -7,12 +7,20 @@
 
 # Set some variables
 function setEnvironment() {
-  setBaseEnvironment
+  deploy-tools.setEnvironment
+}
+
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 }
 
 # TODO: Add backup step to all scenarios
 
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -22,49 +30,19 @@ function up() {
 
   # If none
   if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
-    recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+    deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   else
     # TODO: Create a keystore if it does not exist and remove it from git
     mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
 
-  # Check data volume
-  banner "Check data volume"
-  checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
-
-  # If there is a restore source (!=none), download the file
-  if [ "$SCENARIO_DATA_RESTORESOURCE" != "none" ]; then
-    banner "Restore data backup"
-    mkdir -p _data_restore
-    downloadFile $SCENARIO_DATA_RESTORESOURCE _data_restore/data.tar.gz
-
-    # Move data to volume if empty
-    if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
-      # Move data to data dir if empty
-      if [ "$(ls -A $SCENARIO_DATA_VOLUME)" ]; then
-        logError "Data dir is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
-      else
-        # Extract data and strip /var/jenkins_home from the tar
-        log "Extracting data into directory: $SCENARIO_DATA_VOLUME"
-        tar -xzf _data_restore/data.tar.gz -C $SCENARIO_DATA_VOLUME --strip-components=1
-      fi
-    else
-      FILES=$(docker run --rm -v $SCENARIO_DATA_VOLUME:/data alpine sh -c "ls -A /data")
-      if [ -n "$FILES" ]; then
-        logError "Data volume is not empty: $SCENARIO_DATA_VOLUME (skip restore)"
-      else
-        # Extract data and strip /var/jenkins_home from the tar
-        log "Extracting data into volume: $SCENARIO_DATA_VOLUME"
-        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v $CONFIG_DIR/structr/_data/_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=1 > /dev/null"
-        docker run --rm -v $SCENARIO_DATA_VOLUME:/data -v $CONFIG_DIR/structr/_data/_data_restore:/backup alpine sh -c "chown -R ${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID} /data > /dev/null"
-      fi
-    fi
-  fi
+  # TODO: --strip-components=1, fix in backup before
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
 
   # Download structr.zip
   banner "Download structr.zip"
-  downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
+  deploy-tools.downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
   popd > /dev/null
 
   # Create structr image
@@ -93,67 +71,45 @@ function up() {
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  # Set environment
+  setEnvironment
+
   if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
-    recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+    deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   else
     # TODO: Create a keystore if it does not exist and remove it from git
     mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
 
-  # Start container
-  banner "Start container"
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS start
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
-  fi
+  deploy-tools.start
 }
 
 function stop() {
-  # Stop container
-  banner "Stop container"
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
-  fi
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.stop
 }
 
 function down() {
-  setEnvironment
+  # Check data volume
+  checkAndCreateDataVolume
 
-  # Shutdown and remove containers
-  banner "Shutdown and remove containers"
-  CLEANUP=""
-  if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
-    CLEANUP="--volumes"
-  fi
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
-  fi
-
-  # Remove data directory if it is a path and SCENARIO_DATA_EXTERNAL is false
-  if [[ $SCENARIO_DATA_VOLUME == *"/"* && "$SCENARIO_DATA_EXTERNAL" == "false" ]]; then
-    log "Removing data directory: $SCENARIO_DATA_VOLUME"
-    rm -rf $SCENARIO_DATA_VOLUME
-  fi
-
-  # Cleanup docker
-  banner "Cleanup docker volumes and images"
-  docker image prune -f
+  deploy-tools.down
 
   # Remove structr dir and other stuff
   rm -rf structr
-
-  # Test
-  banner "Test"
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker volume ls | grep ${REAL_VOLUME_NAME}
-    tree -L 3 -a .
-  fi
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  # Set environment
   setEnvironment
 
   # Test
@@ -170,55 +126,31 @@ function test() {
 
   # Check running servers
   banner "Check running servers"
-  checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTP/structr/
-  checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/
-  checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-  #checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
-  #checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
-  #checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
+  deploy-tools.checkURL "structr server (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTP/structr/
+  deploy-tools.checkURL "structr server (https)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/
+  deploy-tools.checkURL "structr server (https) login" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  #deploy-tools.checkURL "structr server (https) login via reverse proxy (admin)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "admin", "password": "*******" }'
+  #deploy-tools.checkURL "structr server (https) login via reverse proxy (NeomCityManager)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "NeomCityManager", "password": "secret" }'
+  #deploy-tools.checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
-function printUsage() {
-  log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
-  exit 1
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
 }
 
 # Scenario vars
 if [ -z "$1" ]; then
-  printUsage
+  deploy-tools.printUsage
   exit 1
 fi
 
 STEP=$1
 shift
 
-VERBOSEPIPE="/dev/null"
-
-# Parse all "-" args
-for i in "$@"; do
-  case $i in
-    -v | --verbose)
-      VERBOSITY=$i
-      VERBOSEPIPE="/dev/stdout"
-      ;;
-    -s | --silent)
-      VERBOSITY=$i
-      ;;
-    -h | --help)
-      HELP=true
-      ;;
-    *)
-      # unknown option
-      logError "Unknown option: $i"
-      printUsage
-      ;;
-  esac
-done
-
-# Print help
-if [ "$HELP" = true ]; then
-  printUsage
-fi
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up
@@ -230,8 +162,10 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
-  printUsage
+  deploy-tools.printUsage
   exit 1
 fi
 

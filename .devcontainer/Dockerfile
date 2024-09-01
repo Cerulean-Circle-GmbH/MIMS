@@ -127,6 +127,36 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   # Clean up
   && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
 
+# Install necessary tools for cryptography
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends \
+  argon2 \
+  # Clean up
+  && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
+
+# Install openssl 1.1.1f in addition
+ENV SSL_VERSION=1.1.1f
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends \
+  build-essential \
+  curl \
+  perl-base \
+  zlib1g-dev \
+  && \
+  mkdir -p /usr/local/src/ && cd /usr/local/src/ && \
+  curl https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz -o openssl-${SSL_VERSION}.tar.gz && \
+  tar -xf openssl-${SSL_VERSION}.tar.gz
+RUN cd /usr/local/src/openssl-${SSL_VERSION} && \
+  ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib && \
+  make -j$(nproc) && \
+  make install && \
+  echo "/usr/local/ssl/lib" > /etc/ld.so.conf.d/openssl.conf && \
+  ldconfig
+# Clean up
+RUN rm /usr/local/src/openssl-${SSL_VERSION}.tar.gz
+# Add to PATH before openssl version 3.0.2
+ENV PATH=/usr/local/ssl/bin:${PATH}
+
 # TODO: Needs to be fixed in a better way (Understanding the real problem)
 # Unset DISPLAY in vscodes .bashrc as user vscode
 USER vscode

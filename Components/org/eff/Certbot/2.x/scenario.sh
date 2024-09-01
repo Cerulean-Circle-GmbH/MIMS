@@ -4,104 +4,67 @@
 . .env
 . deploy-tools.sh
 
+# Set some variables
+function setEnvironment() {
+  deploy-tools.setEnvironment
+}
+
 function up() {
-  # Create and run container
-  banner "Create and run container"
-  docker-compose pull
-  docker-compose -p $SCENARIO_NAME up -d
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
-  fi
+  deploy-tools.up
 }
 
 function start() {
-  # Start container
-  banner "Start container"
-  docker-compose -p $SCENARIO_NAME start
+  deploy-tools.start
 }
 
 function stop() {
-  # Stop container
-  banner "Stop container"
-  docker-compose -p $SCENARIO_NAME stop
-  docker ps | grep $SCENARIO_NAME
+  deploy-tools.stop
 }
 
 function down() {
-  # Shutdown and remove containers
-  banner "Shutdown and remove containers"
-  docker-compose -p $SCENARIO_NAME down
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps
-  fi
-
-  # Cleanup docker
-  banner "Cleanup docker"
-  docker image prune -f
-
-  # Test
-  banner "Test"
-  if [ "$VERBOSITY" == "-v" ]; then
-    tree -L 3 -a .
-  fi
+  deploy-tools.down
 }
 
 function test() {
+  # Set environment
+  setEnvironment
+
+  # Check data volume
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Images:"
-    docker image ls | grep $SCENARIO_DOCKER_IMAGENAME
+    docker image ls | grep ${SCENARIO_DOCKER_IMAGENAME}
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_container
   fi
 
-  # Check EAMD.ucp git status
+  # Check Certbot status
   banner "Check Certbot $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  checkContainer "Certbot (docker)" certbot_container
+  deploy-tools.checkContainer "Certbot (docker)" certbot_container
   return $? # Return the result of the last command
 }
 
-function printUsage() {
-  log "Usage: $0 (up,start,stop,down,test)  [-v|-s|-h]"
-  exit 1
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
 }
 
 # Scenario vars
 if [ -z "$1" ]; then
-  printUsage
+  deploy-tools.printUsage
+  exit 1
 fi
 
 STEP=$1
 shift
 
-VERBOSEPIPE="/dev/null"
-
-# Parse all "-" args
-for i in "$@"; do
-  case $i in
-    -v | --verbose)
-      VERBOSITY=$i
-      VERBOSEPIPE="/dev/stdout"
-      ;;
-    -s | --silent)
-      VERBOSITY=$i
-      ;;
-    -h | --help)
-      HELP=true
-      ;;
-    *)
-      # unknown option
-      logError "Unknown option: $i"
-      printUsage
-      ;;
-  esac
-done
-
-# Print help
-if [ "$HELP" = true ]; then
-  printUsage
-fi
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up
@@ -113,8 +76,10 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
-  printUsage
+  deploy-tools.printUsage
   exit 1
 fi
 
