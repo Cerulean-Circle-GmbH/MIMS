@@ -9,29 +9,45 @@ function setEnvironment() {
   deploy-tools.setEnvironment
 }
 
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+}
+
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.up
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.start
 }
 
 function stop() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.stop
 }
 
 function down() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.down
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
@@ -48,6 +64,13 @@ function test() {
   banner "Check nginx $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
   deploy-tools.checkContainer "NGINX (docker)" nginx_proxy_container
   return $? # Return the result of the last command
+}
+
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
 }
 
 # Scenario vars
@@ -71,6 +94,8 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
   deploy-tools.printUsage
   exit 1

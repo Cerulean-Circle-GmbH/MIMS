@@ -10,9 +10,17 @@ function setEnvironment() {
   deploy-tools.setEnvironment
 }
 
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+}
+
 # TODO: Add backup step to all scenarios
 
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -28,10 +36,6 @@ function up() {
     mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
@@ -67,6 +71,9 @@ function up() {
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -82,10 +89,16 @@ function start() {
 }
 
 function stop() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.stop
 }
 
 function down() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.down
 
   # Remove structr dir and other stuff
@@ -93,12 +106,11 @@ function down() {
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Test
   # Print volumes, images, containers and files
@@ -122,6 +134,13 @@ function test() {
   #deploy-tools.checkURL "structr server (https) login via reverse proxy (Visitor)" https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS/structr/rest/login -XPOST -d '{ "name": "Visitor", "password": "secret" }'
 }
 
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
+}
+
 # Scenario vars
 if [ -z "$1" ]; then
   deploy-tools.printUsage
@@ -143,6 +162,8 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
   deploy-tools.printUsage
   exit 1
