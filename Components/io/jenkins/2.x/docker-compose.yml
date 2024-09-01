@@ -6,7 +6,7 @@ services:
     image: ${SCENARIO_NAME}_jenkins_image
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${SCENARIO_DATA_MOUNTPOINT}:/var/jenkins_home
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/jenkins_home
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
       - "${SCENARIO_RESOURCE_AGENTPORT}:50000"

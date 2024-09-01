@@ -161,13 +161,29 @@ function deploy-tools.downloadFile() {
 
 # Check if data volume is a path or a volume
 function deploy-tools.checkAndCreateDataVolume() {
-  datavolume=$1
+  local datavolume=$1
+  local target=$2
+
+  # Retrieve and convert the string back to an array
+  read -r -a mountpoints_array <<< "$SCENARIO_DATA_MOUNTPOINTS"
+  read -r -a names_array <<< "$SCENARIO_DATA_VOLUME_NAMES"
+
+  if [ -z $target ]; then
+    # default value
+    local target="service-volume"
+  fi
+
   if [[ $datavolume == *"/"* ]]; then
     log "Volume name contains a slash, so it is a path: $datavolume"
     mkdir -p $datavolume
     chmod 777 $datavolume
-    SCENARIO_DATA_MOUNTPOINT=$datavolume
-    SCENARIO_DATA_VOLUME_NAME="/notapplicable/"
+
+    # Use the function to check if the array contains the string
+    if ! deploy-tools.contains mountpoints_array "$datavolume"; then
+      # Appending string '$datavolume' to the array.
+      mountpoints_array+=($datavolume)
+      names_array+=("/notapplicable/")
+    fi
   else
     log "Volume name does not contain a slash, so it is a volume: $datavolume"
     if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
@@ -180,11 +196,32 @@ function deploy-tools.checkAndCreateDataVolume() {
     else
       log "Volume already exists: $datavolume"
     fi
-    SCENARIO_DATA_MOUNTPOINT="service-volume"
-    SCENARIO_DATA_VOLUME_NAME=$datavolume
+
+    # Use the function to check if the array contains the string
+    if ! deploy-tools.contains mountpoints_array "$target"; then
+      # Appending string '$datavolume' to the array.
+      mountpoints_array+=($target)
+      names_array+=($datavolume)
+    fi
   fi
-  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT
-  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME
+  # Convert the arrays to strings (e.g., using IFS as separators)
+  SCENARIO_DATA_MOUNTPOINTS=${mountpoints_array[*]}
+  SCENARIO_DATA_VOLUME_NAMES=${names_array[*]}
+  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINTS
+  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAMES
+
+  # Add each volume as an environment variable
+  i=1
+  for volume in "${mountpoints_array[@]}"; do
+    j=$((i - 1))
+
+    eval "SCENARIO_DATA_MOUNTPOINT$i=${volume}"
+    eval "SCENARIO_DATA_VOLUME_NAME$i=${names_array[$j]}"
+    deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT$i
+    deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME$i
+
+    i=$((i + 1))
+  done
 
   # Check SCENARIO_DATA_EXTERNAL
   if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
@@ -255,15 +292,10 @@ function deploy-tools.checkAndRestoreDataVolume() {
 
 function deploy-tools.up() {
   # Set environment
-  setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+  deploy-tools.setEnvironment
 
   # Create and run container
   banner "Create and run container"
-  docker-compose pull
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps | grep $SCENARIO_NAME
@@ -273,10 +305,6 @@ function deploy-tools.up() {
 function deploy-tools.start() {
   # Set environment
   deploy-tools.setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Start container
   banner "Start container"
@@ -290,10 +318,6 @@ function deploy-tools.stop() {
   # Set environment
   deploy-tools.setEnvironment
 
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
-
   # Stop container
   banner "Stop container"
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS stop
@@ -305,10 +329,6 @@ function deploy-tools.stop() {
 function deploy-tools.down() {
   # Set environment
   deploy-tools.setEnvironment
-
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
@@ -373,4 +393,18 @@ function deploy-tools.parseArguments() {
     deploy-tools.printUsage
     exit 1
   fi
+}
+
+# Function to check if an array contains a string
+function deploy-tools.contains() {
+  local array="$1[@]"
+  local seeking=$2
+  local in=1 # 1 = false, 0 = true
+  for element in "${!array}"; do
+    if [[ "$element" == "$seeking" ]]; then
+      in=0
+      break
+    fi
+  done
+  return $in
 }
