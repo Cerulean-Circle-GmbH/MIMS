@@ -19,18 +19,7 @@ function up() {
   # Check data volume
   checkAndCreateDataVolume
 
-  # Set environment
-  setEnvironment
-
-  # TODO: --strip-components=1, fix in backup before
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
-
-  # Create and run container
-  banner "Create and run container"
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS up -d
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
-  fi
+  deploy-tools.up
 }
 
 function start() {
