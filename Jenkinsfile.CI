@@ -86,6 +86,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy cadvisor-dev on backup.sfsre.com') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        ./scenario.deploy com/sfsre/backup/cadvisor-dev deinit
+                        ./scenario.deploy com/sfsre/backup/cadvisor-dev init,up,test
+                        ./scenario.deploy com/sfsre/backup/cadvisor-dev test -v > $WORKSPACE/_results/com.sfsre.backup.cadvisor-dev.log
+                    '''
+                }
+            }
+        }
     }
     post {
         success {
