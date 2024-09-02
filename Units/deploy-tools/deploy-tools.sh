@@ -80,7 +80,7 @@ function deploy-tools.checkContainer() {
   logVerbose
   logVerbose call: docker ps \| grep "$@"
   if [[ -z $(docker ps | grep "$@") ]]; then
-    log "$1 is not running - $comment"
+    log "--: not running: $1 - $comment"
     return 1
   else
     log "OK: running: $1 - $comment"
@@ -95,7 +95,7 @@ function deploy-tools.checkURL() {
   logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
   up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
   if [[ "$up" != "200" && "$up" != "302" ]]; then
-    log "$1 is not running (returned $up) - $comment"
+    log "--: not running (returned $up): $1 - $comment"
     return 1
   else
     log "OK: running: $1 - $comment"

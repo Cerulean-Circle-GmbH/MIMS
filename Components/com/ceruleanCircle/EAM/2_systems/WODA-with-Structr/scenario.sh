@@ -51,7 +51,14 @@ function up() {
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  # If no certificate
+  if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
+    deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  else
+    # TODO: Create a keystore if it does not exist and remove it from git
+    mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+    cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+  fi
 
   # TODO: Use default structr server if file is a server or none
 
@@ -185,7 +192,14 @@ function start() {
   # Check data volume
   checkAndCreateDataVolume
 
-  deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  # If no certificate
+  if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
+    deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
+  else
+    # TODO: Create a keystore if it does not exist and remove it from git
+    mkdir -p $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+    cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
+  fi
 
   deploy-tools.start
 
