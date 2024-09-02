@@ -1,0 +1,5 @@
+scenario:
+  ## Unique resources
+  resource:
+    # What is the http port of the docker container?
+    httpport: 8090

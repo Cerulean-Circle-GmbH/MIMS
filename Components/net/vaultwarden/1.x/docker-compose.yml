@@ -1,0 +1,19 @@
+services:
+  vaultwarden-service:
+    image: vaultwarden/server:1.32.0
+    container_name: ${SCENARIO_NAME}_vaultwarden_container
+    restart: always
+    environment:
+      - ADMIN_TOKEN_FILE=/run/secrets/vw_admin_token
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/data/
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:80"
+    secrets:
+      - vw_admin_token
+
+# https://docs.docker.com/reference/compose-file/services/#secrets
+secrets:
+  vw_admin_token:
+    file: ${SCENARIO_SRC_SECRETSDIR}/vaultwarden_admin_token.txt
