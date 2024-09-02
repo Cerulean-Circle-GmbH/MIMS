@@ -385,7 +385,6 @@ function deploy-tools.logs() {
 
 function deploy-tools.printUsage() {
   log "Usage: $0 (up,start,stop,down,logs,test)  [-v|-s|-h]"
-  exit 1
 }
 
 function deploy-tools.parseArguments() {
@@ -416,7 +415,7 @@ function deploy-tools.parseArguments() {
   # Print help
   if [ "$HELP" = true ]; then
     deploy-tools.printUsage
-    exit 1
+    exit 0
   fi
 }
 

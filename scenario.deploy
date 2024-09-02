@@ -619,7 +619,7 @@ done
 # Print help
 if [ -n "$HELP" ]; then
   printUsage
-  exit 1
+  exit 0
 fi
 
 # Collect scenarios to run

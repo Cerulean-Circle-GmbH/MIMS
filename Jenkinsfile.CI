@@ -83,7 +83,7 @@ pipeline {
                           EXP=$2
                           MSG=$3
                           if [ $RV -ne $EXP ]; then
-                            echo "Error: return value $EXP expected but $RV : $MSG"
+                            echo "Error: return value $EXP expected but was $RV : $MSG"
                             exit 1
                           fi
                         }
