@@ -1,0 +1,10 @@
+scenario:
+  ## Unique resources
+  resource:
+    # What is the http port of the docker container?
+    httpport: 9100
+
+  ## Server setup
+  server:
+    # What is the servers network name?
+    networkname: once-woda-network
