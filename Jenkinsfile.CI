@@ -74,6 +74,17 @@ pipeline {
             }
         }
 
+        stage('Deploy check deploy script') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        ./scenario.deploy
+                    '''
+                }
+            }
+        }
+
         stage('Deploy dev/neom with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
