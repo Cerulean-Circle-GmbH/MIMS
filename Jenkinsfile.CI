@@ -91,7 +91,7 @@ pipeline {
                         set +e
                         ./scenario.deploy
                         checkError $? 1 "no arguments should return an error value (1)"
-                        ./scenario.deploy de/wo-da/test/dev-ci -h
+                        ./scenario.deploy de/wo-da/test/dev-ci test -h
                         checkError $? 0 "help should return 0"
                     '''
                 }
