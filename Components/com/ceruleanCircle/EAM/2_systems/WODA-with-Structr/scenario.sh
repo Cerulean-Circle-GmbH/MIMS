@@ -18,7 +18,7 @@ function recreateOnceCerts() {
   local certdir="$SCENARIO_SERVER_CERTIFICATEDIR"
 
   # Copy certificates to container
-  if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+  if [ -n "$certdir" ] && [ "$certdir" != "none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
     banner "Copy certificates to container"
     local CERT=$(cat $certdir/fullchain.pem)
     local KEY=$(cat $certdir/privkey.pem)

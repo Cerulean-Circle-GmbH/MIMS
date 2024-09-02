@@ -96,6 +96,7 @@ function deploy-tools.checkURL() {
   up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
   if [[ "$up" != "200" && "$up" != "302" ]]; then
     log "--: not running (returned $up): $1 - $comment"
+    curl -k -s "$@"
     return 1
   else
     log "OK: running: $1 - $comment"
@@ -247,7 +248,7 @@ function deploy-tools.recreateKeystore() {
     logVerbose "Already existing keystore.p12..."
   else
     logVerbose "Creating new $keystoredir/keystore.p12..."
-    if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+    if [ -n "$certdir" ] && [ "$certdir" != "none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
       log "Using certificates from $certdir"
       openssl x509 -noout -fingerprint -sha256 -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
       openssl x509 -noout -fingerprint -sha1 -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
