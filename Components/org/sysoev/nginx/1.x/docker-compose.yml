@@ -6,7 +6,7 @@ services:
     image: nginx:1-alpine3.18
     restart: unless-stopped
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT}:/etc/nginx/conf.d/
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/nginx/conf.d/
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/conf:/etc/letsencrypt
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/www:/var/www/certbot
     ports:
@@ -15,5 +15,5 @@ services:
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
 networks:
   default:
-    external:
-      name: ${SCENARIO_SERVER_NETWORKNAME}
+    external: true
+    name: ${SCENARIO_SERVER_NETWORKNAME}

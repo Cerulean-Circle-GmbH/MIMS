@@ -85,7 +85,7 @@ function convert_to_namespace() {
 
 # Print usage
 function printUsage() {
-  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,updateconfig] [-v|-s|-h]"
+  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,logs,updateconfig] [-v|-s|-h]"
   log
   log "        Lifecycle actions:"
   log "          init   - init remote scenario dir"
@@ -97,6 +97,7 @@ function printUsage() {
   log
   log "        Service actions:"
   log "          test   - Test the running scenario"
+  log "          logs   - Collect logs of scenario"
   log "          updateconfig - update local scenario config"
   log
   log "        Options:"
@@ -539,6 +540,18 @@ function test() {
   fi
 }
 
+# Collect logs of scenario
+function logs() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Collect logs remotely
+  bannerBig "Shutdown remotely"
+  callScript ./scenario.sh logs $VERBOSITY || true
+}
+
 # Update local scenario config
 function updateconfig() {
   config
@@ -602,7 +615,7 @@ done
 # Print help
 if [ -n "$HELP" ]; then
   printUsage
-  exit 0
+  exit 1
 fi
 
 # Collect scenarios to run
@@ -659,6 +672,9 @@ for s in $SCENARIOS_LIST; do
       RETVAL=$? # return value
     elif [ "$STEP" == "test" ]; then
       test
+      RETVAL=$? # return value
+    elif [ "$STEP" == "logs" ]; then
+      logs
       RETVAL=$? # return value
     elif [ "$STEP" == "updateconfig" ]; then
       updateconfig

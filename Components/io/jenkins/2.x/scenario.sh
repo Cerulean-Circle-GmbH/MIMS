@@ -9,19 +9,27 @@ function setEnvironment() {
   deploy-tools.setEnvironment
 }
 
+function checkAndCreateDataVolume() {
+  banner "Check data volume"
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+}
+
 function up() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
   # Create jenkins image
   banner "Create jenkins image"
   log "Building image..."
-  docker pull jenkins/jenkins
+  docker pull jenkins/jenkins:2.474-jdk17
   docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
 
   # Check data volume
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
 
   # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
@@ -51,18 +59,30 @@ EOF
 }
 
 function start() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.start
 }
 
 function stop() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.stop
 }
 
 function down() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   deploy-tools.down
 }
 
 function test() {
+  # Check data volume
+  checkAndCreateDataVolume
+
   # Set environment
   setEnvironment
 
@@ -83,6 +103,13 @@ function test() {
   return $? # Return the result of the last command
 }
 
+function logs() {
+  # Check data volume
+  checkAndCreateDataVolume
+
+  deploy-tools.logs
+}
+
 # Scenario vars
 if [ -z "$1" ]; then
   deploy-tools.printUsage
@@ -92,7 +119,7 @@ fi
 STEP=$1
 shift
 
-deploy-tools.parseArguments
+deploy-tools.parseArguments $@
 
 if [ $STEP = "up" ]; then
   up
@@ -104,6 +131,8 @@ elif [ $STEP = "down" ]; then
   down
 elif [ $STEP = "test" ]; then
   test
+elif [ $STEP = "logs" ]; then
+  logs
 else
   deploy-tools.printUsage
   exit 1
