@@ -74,6 +74,30 @@ pipeline {
             }
         }
 
+        stage('Deploy check deploy script') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        function checkError() {
+                          RV=$1
+                          EXP=$2
+                          MSG=$3
+                          if [ $RV -ne $EXP ]; then
+                            echo "Error: return value $EXP expected but was $RV : $MSG"
+                            exit 1
+                          fi
+                        }
+
+                        set +e
+                        ./scenario.deploy
+                        checkError $? 1 "no arguments should return an error value (1)"
+                        ./scenario.deploy de/wo-da/test/dev-ci test -h
+                        checkError $? 0 "help should return 0"
+                    '''
+                }
+            }
+        }
+
         stage('Deploy dev/neom with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
@@ -82,6 +106,19 @@ pipeline {
                         ./scenario.deploy de/wo-da/test/dev-ci deinit
                         ./scenario.deploy de/wo-da/test/dev-ci init,up,test
                         ./scenario.deploy de/wo-da/test/dev-ci test -v > $WORKSPACE/_results/com.sfsre.backup.dev-neom.log
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy cadvisor-dev on backup.sfsre.com') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        ./scenario.deploy com/sfsre/backup/cadvisor-dev deinit
+                        ./scenario.deploy com/sfsre/backup/cadvisor-dev init,up,test
+                        ./scenario.deploy com/sfsre/backup/cadvisor-dev test -v > $WORKSPACE/_results/com.sfsre.backup.cadvisor-dev.log
                     '''
                 }
             }

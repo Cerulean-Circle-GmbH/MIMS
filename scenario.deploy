@@ -384,7 +384,7 @@ EOF
     rsync -azP $RSYNC_VERBOSE --exclude=_data --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $LOCAL_CONFIG_DIR/ $SCENARIO_SERVER_SSHCONFIG:$REMOTE_CONFIG_DIR/
 
     # Create certbot renewal-hook deploy script
-    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
       local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
 
       # declare script content for remote file
@@ -499,7 +499,7 @@ function deinit() {
   rmdir -p $SCENARIOS_DIR_LOCAL/$SCENARIO_NAME_SPACE 2> /dev/null || true
   if ! isLocal; then
     # remove remote renewal-hook deploy script
-    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR"!="none" ]; then
+    if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
       local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
       ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "rm -f $deploy_hook"
     fi
@@ -525,7 +525,11 @@ function test() {
   # Test remote
   bannerBig "Test remote"
   if isInited; then
-    log "Scenario '$SCENARIO_NAME' is available on remote server."
+    if isLocal; then
+      log "Scenario '$SCENARIO_NAME' is inited."
+    else
+      log "Scenario '$SCENARIO_NAME' is inited and available on remote server."
+    fi
     callScript ./scenario.sh test $VERBOSITY
     if [ "$VERBOSITY" == "-v" ]; then
       callScript hostname
@@ -615,7 +619,7 @@ done
 # Print help
 if [ -n "$HELP" ]; then
   printUsage
-  exit 1
+  exit 0
 fi
 
 # Collect scenarios to run

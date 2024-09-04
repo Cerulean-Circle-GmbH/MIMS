@@ -28,7 +28,7 @@ function up() {
   mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
-  # If none
+  # If no certificate
   if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
     deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   else
@@ -77,6 +77,7 @@ function start() {
   # Set environment
   setEnvironment
 
+  # If no certificate
   if [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
     deploy-tools.recreateKeystore "$SCENARIO_SERVER_CERTIFICATEDIR" "$CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR"
   else

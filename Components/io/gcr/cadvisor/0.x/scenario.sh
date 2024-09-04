@@ -64,7 +64,7 @@ function test() {
   # Check cAdvisor status
   banner "Check cAdvisor $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
   deploy-tools.checkContainer "cAdvisor (docker)" ${SCENARIO_NAME}_cadvisor_container
-  deploy-tools.checkURL "cAdvisor (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/cadvisor
+  deploy-tools.checkURL "cAdvisor (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/containers/
   return $? # Return the result of the last command
 }
 

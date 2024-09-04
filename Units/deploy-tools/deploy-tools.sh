@@ -80,7 +80,7 @@ function deploy-tools.checkContainer() {
   logVerbose
   logVerbose call: docker ps \| grep "$@"
   if [[ -z $(docker ps | grep "$@") ]]; then
-    log "$1 is not running - $comment"
+    log "--: not running: $1 - $comment"
     return 1
   else
     log "OK: running: $1 - $comment"
@@ -95,7 +95,8 @@ function deploy-tools.checkURL() {
   logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
   up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
   if [[ "$up" != "200" && "$up" != "302" ]]; then
-    log "$1 is not running (returned $up) - $comment"
+    log "--: not running (returned $up): $1 - $comment"
+    curl -k -s "$@"
     return 1
   else
     log "OK: running: $1 - $comment"
@@ -247,7 +248,7 @@ function deploy-tools.recreateKeystore() {
     logVerbose "Already existing keystore.p12..."
   else
     logVerbose "Creating new $keystoredir/keystore.p12..."
-    if [ -n "$certdir" ] && [ "$certdir"!="none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
+    if [ -n "$certdir" ] && [ "$certdir" != "none" ] && [ -f "$certdir/fullchain.pem" ] && [ -f "$certdir/privkey.pem" ]; then
       log "Using certificates from $certdir"
       openssl x509 -noout -fingerprint -sha256 -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
       openssl x509 -noout -fingerprint -sha1 -inform pem -in "$certdir/fullchain.pem" > $VERBOSEPIPE
@@ -384,7 +385,6 @@ function deploy-tools.logs() {
 
 function deploy-tools.printUsage() {
   log "Usage: $0 (up,start,stop,down,logs,test)  [-v|-s|-h]"
-  exit 1
 }
 
 function deploy-tools.parseArguments() {
@@ -415,7 +415,7 @@ function deploy-tools.parseArguments() {
   # Print help
   if [ "$HELP" = true ]; then
     deploy-tools.printUsage
-    exit 1
+    exit 0
   fi
 }
 
