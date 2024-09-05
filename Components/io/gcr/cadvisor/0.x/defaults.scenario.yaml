@@ -6,5 +6,7 @@ scenario:
 
   ## Server setup
   server:
+    # What is the servers hostname?
+    hostname: cadvisor
     # What is the servers network name?
     networkname: once-woda-network

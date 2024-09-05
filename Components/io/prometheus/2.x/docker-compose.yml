@@ -4,7 +4,7 @@ services:
   prometheus-service:
     container_name: ${SCENARIO_NAME}_prometheus_container
     image: prom/prometheus:v2.54.1
-    hostname: prometheus
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-prometheus}
     volumes:
       - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/prometheus
       - ${SCENARIO_DATA_MOUNTPOINT2}:/prometheus
