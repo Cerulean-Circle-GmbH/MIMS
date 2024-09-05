@@ -64,7 +64,7 @@ function test() {
   # Check Prometheus status
   banner "Check Prometheus $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
   deploy-tools.checkContainer "Prometheus (docker)" ${SCENARIO_NAME}_prometheus_container
-  deploy-tools.checkURL "Prometheus (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/prometheus
+  deploy-tools.checkURL "Prometheus (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/alerts
   return $? # Return the result of the last command
 }
 
