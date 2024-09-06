@@ -4,7 +4,7 @@ services:
   cadvisor-service:
     container_name: ${SCENARIO_NAME}_cadvisor_container
     image: gcr.io/cadvisor/cadvisor:v0.49.1
-    hostname: cadvisor
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-cadvisor}
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"

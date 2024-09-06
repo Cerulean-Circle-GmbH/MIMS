@@ -1,0 +1,19 @@
+version: "3.4"
+
+services:
+  process-exporter-service:
+    container_name: ${SCENARIO_NAME}_process_exporter_container
+    image: ncabatoff/process-exporter:0.8.1
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-process-exporter}
+    volumes:
+      - /proc:/host/proc
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/config
+    command: --procfs /host/proc -config.path /config/exporter.yml
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:9256"
+    privileged: true
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORKNAME}

@@ -11,8 +11,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
 }
 
 function up() {
@@ -58,13 +57,13 @@ function test() {
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_prometheus_container
+    docker ps -all | grep ${SCENARIO_NAME}_process_exporter_container
   fi
 
-  # Check Prometheus status
-  banner "Check Prometheus $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  deploy-tools.checkContainer "Prometheus (docker)" ${SCENARIO_NAME}_prometheus_container
-  deploy-tools.checkURL "Prometheus (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/alerts
+  # Check Process Exporter status
+  banner "Check Process Exporter $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "Process Exporter (docker)" ${SCENARIO_NAME}_process_exporter_container
+  deploy-tools.checkURL "Process Exporter (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/metrics
   return $? # Return the result of the last command
 }
 
