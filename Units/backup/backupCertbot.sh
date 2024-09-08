@@ -18,7 +18,7 @@ if [[ -n "${keyfile}" ]]; then
   use_key="-i ${keyfile}"
 fi
 
-CERTBOT_CONFIG_DIR="/var/dev/ssl/data/certbot"
+CERTBOT_CONFIG_DIR="/var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/conf"
 LOCAL_CONFIG_DIR="./certbot"
 BACKUP_DIR="/var/backups/test.wo-da.de_certbot"
 BACKUP_DESTINATION="backup.sfsre.com:$BACKUP_DIR"
