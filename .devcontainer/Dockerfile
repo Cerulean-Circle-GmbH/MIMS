@@ -1,6 +1,6 @@
 ################
 ##### Builder
-FROM rust:1.80.0-slim AS builder
+FROM rust:1.80.0-slim AS nubuilder
 
 # Install additional OS packages
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -14,7 +14,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 WORKDIR /usr/src
 
 # Create blank project
-RUN git clone https://github.com/nushell/nushell.git
+RUN git clone --branch 0.97.1 --single-branch https://github.com/nushell/nushell.git
 
 # Set the working directory
 WORKDIR /usr/src/nushell
@@ -109,11 +109,6 @@ RUN set -eux; \
 # Install Cross-RS
 RUN cargo install cross --git https://github.com/cross-rs/cross
 
-# Copy Nushell binary from builder image
-COPY --from=builder /usr/src/nushell/target/release/nu /usr/local/bin
-COPY nushell/* /home/vscode/.config/nushell/
-RUN chown vscode -R /home/vscode/.config/nushell
-
 # Fix cargo registry for user vscode
 RUN chown vscode -R /usr/local/cargo/registry
 
@@ -156,6 +151,11 @@ RUN cd /usr/local/src/openssl-${SSL_VERSION} && \
 RUN rm /usr/local/src/openssl-${SSL_VERSION}.tar.gz
 # Add to PATH before openssl version 3.0.2
 ENV PATH=/usr/local/ssl/bin:${PATH}
+
+# Copy Nushell binary from nubuilder image - This step should be one of the last, because we want to reuse the cached docker build steps
+COPY --from=nubuilder /usr/src/nushell/target/release/nu /usr/local/bin
+COPY nushell/* /home/vscode/.config/nushell/
+RUN chown vscode -R /home/vscode/.config/nushell
 
 # TODO: Needs to be fixed in a better way (Understanding the real problem)
 # Unset DISPLAY in vscodes .bashrc as user vscode
