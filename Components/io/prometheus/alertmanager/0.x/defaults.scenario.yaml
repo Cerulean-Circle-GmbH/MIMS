@@ -1,0 +1,16 @@
+scenario:
+  data:
+    # What is the path used to store the scraped data (e.g. './db' or 'db-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+    volume1: ./db
+
+  ## Unique resources
+  resource:
+    # What is the http port of the docker container?
+    httpport: 9093
+
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: prometheus-alertmgr
+    # What is the servers network name?
+    networkname: monitoring-network
