@@ -50,6 +50,7 @@ function up() {
       groupadd -g $GROUP_ID dockerofhost
       usermod -aG dockerofhost jenkins
       usermod -aG docker jenkins
+      setfacl -m user:jenkins:rw /var/run/docker.sock
     else
       echo "Group dockerofhost already exists"
     fi
