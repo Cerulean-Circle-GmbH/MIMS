@@ -237,6 +237,19 @@ function deploy-tools.checkAndCreateDataVolume() {
   IFS=' '
 }
 
+# Check if network name exists and create it if necessary
+function deploy-tools.checkAndCreateNetwork() {
+  local network=$1
+
+  log "Checking network name: $network"
+  if [[ -z $(docker network ls | grep ${network}) ]]; then
+    log "Network does not exist yet: $network. Creating it."
+    docker network create $network
+  else
+    log "Network already exists: $network"
+  fi
+}
+
 function deploy-tools.recreateKeystore() {
   local certdir="$1"
   local keystoredir="$2"

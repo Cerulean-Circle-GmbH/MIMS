@@ -18,6 +18,9 @@ function checkAndCreateDataVolume() {
 # TODO: Add backup step to all scenarios
 
 function up() {
+  # Check network
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORKNAME
+
   # Check data volume
   checkAndCreateDataVolume
 
@@ -54,13 +57,6 @@ function up() {
   fi
   docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS build > $VERBOSEPIPE
   docker image ls | grep $SCENARIO_STRUCTR_IMAGE > $VERBOSEPIPE
-
-  # Check netwrok ${SCENARIO_SERVER_NETWORKNAME}
-  banner "Check network ${SCENARIO_SERVER_NETWORKNAME}"
-  if [[ -z $(docker network ls | grep ${SCENARIO_SERVER_NETWORKNAME}) ]]; then
-    log "Creating network ${SCENARIO_SERVER_NETWORKNAME}"
-    docker network create ${SCENARIO_SERVER_NETWORKNAME}
-  fi
 
   # Create and run container
   banner "Create and run container"

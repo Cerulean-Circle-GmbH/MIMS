@@ -16,6 +16,9 @@ function checkAndCreateDataVolume() {
 }
 
 function up() {
+  # Check network
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORKNAME
+
   # Check data volume
   checkAndCreateDataVolume
 
