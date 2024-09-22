@@ -57,7 +57,8 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
                         set -e
-                        find $WORKSPACE -name "_*" | xargs rm -rf
+                        # ignore parent dir, because it could start with a _ and will be deleted as well!
+                        find $WORKSPACE -mindepth 1 -name "_*" | xargs rm -rf
                         mkdir -p $WORKSPACE/_results
                         ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "tree /var/backups" > $WORKSPACE/_results/tree.txt
                         ssh -i ${keyfile} -o 'StrictHostKeyChecking no' backup.sfsre.com "du -skh /var/backups/*" > $WORKSPACE/_results/du.txt
