@@ -3,7 +3,7 @@ version: "3"
 services:
   nginx-service:
     container_name: nginx_proxy_container
-    image: nginx:1-alpine3.18
+    image: nginx:1.21.3-alpine
     restart: unless-stopped
     volumes:
       - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/nginx/conf.d/
