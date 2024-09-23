@@ -9,55 +9,32 @@ function setEnvironment() {
   deploy-tools.setEnvironment
 }
 
-function checkAndCreateDataVolume() {
-  banner "Check data volume"
-  #deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  #deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
-}
-
 function up() {
   # Check network
   deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORKNAME
-
-  # Check data volume
-  checkAndCreateDataVolume
 
   deploy-tools.up
 }
 
 function start() {
-  # Check data volume
-  checkAndCreateDataVolume
-
   deploy-tools.start
 }
 
 function stop() {
-  # Check data volume
-  checkAndCreateDataVolume
-
   deploy-tools.stop
 }
 
 function down() {
-  # Check data volume
-  checkAndCreateDataVolume
-
   deploy-tools.down
 }
 
 function test() {
-  # Check data volume
-  checkAndCreateDataVolume
-
   # Set environment
   setEnvironment
 
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
-    log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
     log "Containers:"
@@ -72,9 +49,6 @@ function test() {
 }
 
 function logs() {
-  # Check data volume
-  checkAndCreateDataVolume
-
   deploy-tools.logs
 }
 
