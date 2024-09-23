@@ -6,7 +6,7 @@ scenario:
   ## Unique resources
   resource:
     # What is the http port of the docker container?
-    httpport: 9000
+    httpport: 9090
 
   ## Server setup
   server:
