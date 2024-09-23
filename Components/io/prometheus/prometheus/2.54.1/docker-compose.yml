@@ -4,6 +4,7 @@ services:
   prometheus-service:
     container_name: ${SCENARIO_NAME}_prometheus_container
     image: prom/prometheus:v2.54.1
+    restart: unless-stopped
     hostname: ${SCENARIO_SERVER_HOSTNAME:-prometheus}
     volumes:
       - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/prometheus

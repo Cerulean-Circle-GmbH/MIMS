@@ -1,0 +1,18 @@
+version: "3.4"
+
+services:
+  alertmanager:
+    container_name: ${SCENARIO_NAME}_alertmgr_container
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:9093"
+    volumes:
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/config
+      - ${SCENARIO_DATA_MOUNTPOINT2}:/data
+    command: --log.level=debug --config.file=/config/alertmanager.yml
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORKNAME}

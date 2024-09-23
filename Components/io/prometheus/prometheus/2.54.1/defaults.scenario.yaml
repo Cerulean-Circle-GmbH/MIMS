@@ -6,11 +6,11 @@ scenario:
   ## Unique resources
   resource:
     # What is the http port of the docker container?
-    httpport: 9000
+    httpport: 9090
 
   ## Server setup
   server:
     # What is the servers hostname?
     hostname: prometheus
     # What is the servers network name?
-    networkname: once-woda-network
+    networkname: monitoring-network

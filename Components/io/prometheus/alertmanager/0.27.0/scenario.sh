@@ -11,8 +11,8 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  #deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  #deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
 }
 
 function up() {
@@ -61,13 +61,13 @@ function test() {
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_cadvisor_container
+    docker ps -all | grep ${SCENARIO_NAME}_alertmgr_container
   fi
 
-  # Check cAdvisor status
-  banner "Check cAdvisor $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  deploy-tools.checkContainer "cAdvisor (docker)" ${SCENARIO_NAME}_cadvisor_container
-  deploy-tools.checkURL "cAdvisor (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/containers/
+  # Check Alertmanager status
+  banner "Check Alertmanager $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "Alertmanager (docker)" ${SCENARIO_NAME}_alertmgr_container
+  deploy-tools.checkURL "Alertmanager (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/#/alerts
   return $? # Return the result of the last command
 }
 
