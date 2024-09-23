@@ -1,0 +1,20 @@
+version: "3.4"
+
+services:
+  prometheus-service:
+    container_name: ${SCENARIO_NAME}_prometheus_container
+    image: prom/prometheus:v2.54.1
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-prometheus}
+    volumes:
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/prometheus
+      - ${SCENARIO_DATA_MOUNTPOINT2}:/prometheus
+    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORKNAME}
