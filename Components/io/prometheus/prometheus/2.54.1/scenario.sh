@@ -61,13 +61,13 @@ function test() {
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_alertmgr_container
+    docker ps -all | grep ${SCENARIO_NAME}_prometheus_container
   fi
 
-  # Check Alertmanager status
-  banner "Check Alertmanager $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  deploy-tools.checkContainer "Alertmanager (docker)" ${SCENARIO_NAME}_alertmgr_container
-  deploy-tools.checkURL "Alertmanager (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/#/alerts
+  # Check Prometheus status
+  banner "Check Prometheus $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "Prometheus (docker)" ${SCENARIO_NAME}_prometheus_container
+  deploy-tools.checkURL "Prometheus (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/alerts
   return $? # Return the result of the last command
 }
 
