@@ -1,16 +1,16 @@
 version: "3.4"
 
 services:
-  alertmanager:
+  alertmanager-service:
     container_name: ${SCENARIO_NAME}_alertmgr_container
     image: prom/alertmanager:v0.27.0
     restart: unless-stopped
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-prometheus-alertmgr}
+    volumes:
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/alertmanager
+    command: --log.level=debug --config.file=/etc/alertmanager/alertmanager.yml
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:9093"
-    volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/config
-      - ${SCENARIO_DATA_MOUNTPOINT2}:/data
-    command: --log.level=debug --config.file=/config/alertmanager.yml
 
 networks:
   default:
