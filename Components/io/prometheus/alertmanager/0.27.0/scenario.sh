@@ -12,7 +12,6 @@ function setEnvironment() {
 function checkAndCreateDataVolume() {
   banner "Check data volume"
   deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
 }
 
 function up() {

@@ -4,7 +4,3 @@ volumes:
   data-volume:
     external: ${SCENARIO_DATA_EXTERNAL}
     name: ${SCENARIO_DATA_VOLUME_NAME1}
-
-  db-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME2}
