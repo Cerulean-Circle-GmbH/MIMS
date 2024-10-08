@@ -93,7 +93,8 @@ function deploy-tools.checkURL() {
   shift
   logVerbose
   logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
-  up=$(curl -k -s -o /dev/null -w "%{http_code}" "$@")
+  # cUrl option -L follows redirects, e.g. if http code is 301
+  up=$(curl -k -s -L -o /dev/null -w "%{http_code}" "$@")
   if [[ "$up" != "200" && "$up" != "302" ]]; then
     log "--: not running (returned $up): $1 - $comment"
     curl -k -s "$@"
