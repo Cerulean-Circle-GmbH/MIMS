@@ -5,7 +5,7 @@
     "dockerfile": "Dockerfile"
   },
   "runArgs": [
-    "--name=ONCE.2023_devcontainer",
+    "--name=MIMS_devcontainer",
     "--init",
     "--privileged",
     "--cap-add=SYS_PTRACE",
