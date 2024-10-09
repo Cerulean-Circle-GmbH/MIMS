@@ -20,6 +20,6 @@ git reset --hard
 git checkout $BRANCH
 git pull
 
-# Remove Once.2023 (obsolete after Jenkiins in green again)
+# Remove MIMS (obsolete after Jenkins in green again)
 cd /var/dev
-rm -rf Once.2023
+rm -rf MIMS

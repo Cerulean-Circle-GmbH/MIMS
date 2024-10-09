@@ -137,9 +137,10 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   curl \
   perl-base \
   zlib1g-dev \
-  && \
-  mkdir -p /usr/local/src/ && cd /usr/local/src/ && \
-  curl https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz -o openssl-${SSL_VERSION}.tar.gz && \
+  # Clean up
+  && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
+RUN mkdir -p /usr/local/src/ && cd /usr/local/src/ && \
+  curl -L https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz -o openssl-${SSL_VERSION}.tar.gz && \
   tar -xf openssl-${SSL_VERSION}.tar.gz
 RUN cd /usr/local/src/openssl-${SSL_VERSION} && \
   ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib && \
