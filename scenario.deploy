@@ -390,7 +390,7 @@ EOF
 
     # Create certbot renewal-hook deploy script
     if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
-      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
 
       # declare script content for remote file
       cat << EOF | ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "cat > $deploy_hook"
@@ -506,7 +506,7 @@ function deinit() {
   if ! isLocal; then
     # remove remote renewal-hook deploy script
     if [ -n "$SCENARIO_SERVER_CERTCONFIGDIR" ] && [ -n "$SCENARIO_SERVER_CERTIFICATEDIR" ] && [ "$SCENARIO_SERVER_CERTIFICATEDIR" != "none" ]; then
-      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
+      local deploy_hook="$SCENARIO_SERVER_CERTCONFIGDIR/conf/renewal-hooks/deploy/${SCENARIO_NAME_SPACE//\//.}.$SCENARIO_NAME-scenario.sh"
       ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "rm -f $deploy_hook"
     fi
 
