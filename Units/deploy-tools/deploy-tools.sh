@@ -92,12 +92,12 @@ function deploy-tools.checkURL() {
   comment=$1
   shift
   logVerbose
-  logVerbose call: curl -k -s -o /dev/null -w "%{http_code}" "$@"
+  logVerbose call: curl --connect-timeout 0 -ksL -m 10 -o /dev/null -w "%{http_code}" "$@"
   # cUrl option -L follows redirects, e.g. if http code is 301
-  up=$(curl -k -s -L -o /dev/null -w "%{http_code}" "$@")
+  up=$(curl --connect-timeout 0 -ksL -m 10 -o /dev/null -w "%{http_code}" "$@")
   if [[ "$up" != "200" && "$up" != "302" ]]; then
     log "--: not running (returned $up): $1 - $comment"
-    curl -k -s "$@"
+    curl --connect-timeout 0 -ksL -m 10 "$@"
     return 1
   else
     log "OK: running: $1 - $comment"
@@ -179,6 +179,11 @@ function deploy-tools.checkAndCreateDataVolume() {
   fi
 
   if [[ $datavolume == *"/"* ]]; then
+    # if relative path, prepend CONFIG_DIR
+    if [[ $datavolume == .* ]]; then
+      local datavolume="${datavolume/#./$CONFIG_DIR}"
+    fi
+
     log "Volume name contains a slash, so it is a path: $datavolume"
     mkdir -p $datavolume
     chmod 777 $datavolume
@@ -277,9 +282,9 @@ function deploy-tools.recreateKeystore() {
 }
 
 function deploy-tools.checkAndRestoreDataVolume() {
-  restoresource=$1
-  datavolume=$2
-  stripcomments=$3
+  local restoresource=$1
+  local datavolume=$2
+  local stripcomponents=$3
 
   # If there is a restore source (!=none), download the file
   if [ "$restoresource" != "none" ]; then
@@ -289,13 +294,18 @@ function deploy-tools.checkAndRestoreDataVolume() {
 
     # Move data to volume if empty
     if [[ $datavolume == *"/"* ]]; then
+      # if relative path, prepend CONFIG_DIR
+      if [[ $datavolume == .* ]]; then
+        local datavolume="${datavolume/#./$CONFIG_DIR}"
+      fi
+
       # Move data to data dir if empty
       if [ "$(ls -A $datavolume)" ]; then
         logError "Data dir is not empty: $datavolume (skip restore)"
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into directory: $datavolume"
-        tar -xzf _data_restore/data.tar.gz -C $datavolume --strip-components=$stripcomments
+        tar -xzf _data_restore/data.tar.gz -C $datavolume --strip-components=$stripcomponents
       fi
     else
       files=$(docker run --rm -v $datavolume:/data alpine sh -c "ls -A /data")
@@ -304,7 +314,7 @@ function deploy-tools.checkAndRestoreDataVolume() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into volume: $datavolume"
-        docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=$stripcomments > /dev/null"
+        docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=$stripcomponents > /dev/null"
         docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
       fi
     fi

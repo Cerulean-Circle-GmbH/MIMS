@@ -40,7 +40,6 @@ function up() {
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
 
-  # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
 
   # Download structr.zip

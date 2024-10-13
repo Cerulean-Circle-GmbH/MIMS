@@ -2,6 +2,7 @@
 
 # 'source' isn't available on all systems, so use . instead
 . .env
+. ./structr/.env
 . deploy-tools.sh
 
 # Set some variables
@@ -11,7 +12,8 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
+  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
 }
 
 function recreateOnceCerts() {
@@ -64,6 +66,7 @@ function up() {
 
   # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_SRC_STRUCTR_DATAFILE $SCENARIO_DATA_VOLUME1 1
 
   # Download structr.zip
   banner "Download structr.zip"
@@ -73,8 +76,12 @@ function up() {
   # Create structr image
   banner "Create structr image"
   log "Building image..."
-  docker-compose build > $VERBOSEPIPE
-  docker image ls > $VERBOSEPIPE
+  # Only pull if image contains a "/" (means it's a repository)
+  if [[ $SCENARIO_STRUCTR_IMAGE == *"/"* ]]; then
+    docker pull ${SCENARIO_STRUCTR_IMAGE}
+  fi
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS build > $VERBOSEPIPE
+  docker image ls | grep $SCENARIO_STRUCTR_IMAGE > $VERBOSEPIPE
 
   # Create .gitconfig
   if [ $SCENARIO_SRC_ONCE_OUTERCONFIG != "none" ] && [ ! -f $SCENARIO_SRC_ONCE_OUTERCONFIG/.gitconfig ]; then

@@ -2,6 +2,23 @@
 . bin/config
 LOGS_DIR="logs"
 
+# Link from /var/lib/structr-volume/ (we are in /var/lib/structr)
+for dir in db files layouts logs sessions snapshots; do
+  echo "Checking $dir"
+  if [ ! -L '$dir' ]; then
+    echo "Linking /var/lib/structr-volume/$dir to $dir"
+    ln -s /var/lib/structr-volume/$dir $dir
+  fi
+done
+
+echo "============================="
+echo "Show /var/lib/structr/:"
+ls -la .
+echo "-----------------------------"
+echo "Show /var/lib/structr-volume/:"
+ls -la /var/lib/structr-volume/
+echo "============================="
+
 if [ -e $PID_FILE ]; then
 
   $(ps aux | grep "org.structr.Server" | grep -v grep)
