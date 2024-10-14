@@ -50,7 +50,6 @@ function up() {
   setEnvironment
 
   mkdir -p structr/_data
-  mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
   # If no certificate
@@ -65,7 +64,7 @@ function up() {
   # TODO: Use default structr server if file is a server or none
 
   # TODO: --strip-components=1, fix in backup before
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_SRC_STRUCTR_DATAFILE $SCENARIO_DATA_VOLUME1 1
 
   # Download structr.zip
@@ -244,8 +243,8 @@ function down() {
 
   deploy-tools.down
 
-  # Remove structr dir and other stuff
-  rm -rf structr
+  # Remove structr data dir
+  rm -rf structr/_data
 }
 
 function test() {

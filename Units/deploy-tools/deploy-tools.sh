@@ -290,7 +290,8 @@ function deploy-tools.checkAndRestoreDataVolume() {
   if [ "$restoresource" != "none" ]; then
     banner "Restore data backup"
     mkdir -p _data_restore
-    deploy-tools.downloadFile $restoresource _data_restore/data.tar.gz
+    # use shell expansion to get last part of path for $datavolume
+    deploy-tools.downloadFile $restoresource _data_restore/${datavolume##*/}.tar.gz
 
     # Move data to volume if empty
     if [[ $datavolume == *"/"* ]]; then
@@ -305,7 +306,8 @@ function deploy-tools.checkAndRestoreDataVolume() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into directory: $datavolume"
-        tar -xzf _data_restore/data.tar.gz -C $datavolume --strip-components=$stripcomponents
+        # use shell expansion to get last part of path for $datavolume
+        tar -xzf _data_restore/${datavolume##*/}.tar.gz -C $datavolume --strip-components=$stripcomponents
       fi
     else
       files=$(docker run --rm -v $datavolume:/data alpine sh -c "ls -A /data")
@@ -314,7 +316,8 @@ function deploy-tools.checkAndRestoreDataVolume() {
       else
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into volume: $datavolume"
-        docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/data.tar.gz -C /data --strip-components=$stripcomponents > /dev/null"
+        # use shell expansion to get last part of path for $datavolume
+        docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/${datavolume##*/}.tar.gz -C /data --strip-components=$stripcomponents > /dev/null"
         docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
       fi
     fi
@@ -366,14 +369,7 @@ function deploy-tools.down() {
   CLEANUP=""
   if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
     CLEANUP="--volumes"
-  fi
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
-  if [ "$VERBOSITY" == "-v" ]; then
-    docker ps | grep $SCENARIO_NAME
-  fi
 
-  # Remove data directory if it is a path and SCENARIO_DATA_EXTERNAL is false
-  if [[ $SCENARIO_DATA_VOLUME == *"/"* && "$SCENARIO_DATA_EXTERNAL" == "false" ]]; then
     # set separator for handling of arrays as environment variables
     IFS=','
 
@@ -381,12 +377,19 @@ function deploy-tools.down() {
     read -r -a mountpoints_array <<< "$SCENARIO_DATA_MOUNTPOINTS"
 
     for volume in "${mountpoints_array[@]}"; do
-      log "Removing data directory: $volume"
-      rm -rf $volume
+      # Remove data directory if it is a path
+      if [[ $volume == *"/"* ]]; then
+        log "Removing data directory: $volume"
+        rm -rf $volume
+      fi
     done
 
     # set separator to default value, otherwise docker-compose command will fail
     IFS=' '
+  fi
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
+  if [ "$VERBOSITY" == "-v" ]; then
+    docker ps | grep $SCENARIO_NAME
   fi
 
   # Cleanup docker

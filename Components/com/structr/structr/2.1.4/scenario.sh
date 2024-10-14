@@ -28,7 +28,6 @@ function up() {
   setEnvironment
 
   mkdir -p structr/_data
-  mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
   # If no certificate
@@ -97,8 +96,8 @@ function down() {
 
   deploy-tools.down
 
-  # Remove structr dir and other stuff
-  rm -rf structr
+  # Remove structr data dir
+  rm -rf structr/_data
 }
 
 function test() {
