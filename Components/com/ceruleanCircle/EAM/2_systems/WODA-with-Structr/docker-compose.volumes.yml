@@ -5,6 +5,7 @@ volumes:
     external: ${SCENARIO_DATA_EXTERNAL}
     name: ${SCENARIO_DATA_VOLUME_NAME1}
 
-  db-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME2}
+  # Uncomment when using a docker volume, instead of a folder
+  #db-volume:
+  #  external: ${SCENARIO_DATA_EXTERNAL}
+  #  name: ${SCENARIO_DATA_VOLUME_NAME2}
