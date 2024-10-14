@@ -28,7 +28,6 @@ function up() {
   setEnvironment
 
   mkdir -p structr/_data
-  mkdir -p $SCENARIO_SRC_CACHEDIR
   pushd structr/_data > /dev/null
 
   # If no certificate
@@ -40,7 +39,6 @@ function up() {
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
 
-  # TODO: --strip-components=1, fix in backup before
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
 
   # Download structr.zip
@@ -98,8 +96,8 @@ function down() {
 
   deploy-tools.down
 
-  # Remove structr dir and other stuff
-  rm -rf structr
+  # Remove structr data dir
+  rm -rf structr/_data
 }
 
 function test() {
