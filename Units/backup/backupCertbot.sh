@@ -13,6 +13,7 @@ cd _build
 
 # Initialization
 date=$(date +%Y-%m-%d-%H_%M)
+tarfile=backup-certbot-${date}.tar.gz
 if [[ -n "${keyfile}" ]]; then
   echo "Use ${keyfile}"
   use_key="-i ${keyfile}"
@@ -27,11 +28,11 @@ BACKUP_DESTINATION="backup.sfsre.com:$BACKUP_DIR"
 banner "Get certbot directory"
 mkdir -p $LOCAL_CONFIG_DIR
 rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" WODA.test:$CERTBOT_CONFIG_DIR/ $LOCAL_CONFIG_DIR/
-tar -czf certbot-${date}.tar.gz $LOCAL_CONFIG_DIR
+tar -czf $tarfile $LOCAL_CONFIG_DIR
 
 # Copy to backup server
 banner "Copy to backup server"
-rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" certbot-${date}.tar.gz $BACKUP_DESTINATION
+rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile $BACKUP_DESTINATION
 
 # Show backup
 banner "Show backup"
