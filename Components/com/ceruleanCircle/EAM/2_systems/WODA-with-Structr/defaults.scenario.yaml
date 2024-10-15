@@ -20,7 +20,7 @@ scenario:
   ## Config data setup
   data:
     # What is the path used to store the structr data (e.g. './db' or 'db-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume1: ./db
+    volume1: ./structr/_data/structr-db
 
   ## Unique resources
   resource:
