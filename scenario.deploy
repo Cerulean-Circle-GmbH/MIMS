@@ -269,7 +269,7 @@ function config() {
 
   if [ -z "$SCENARIO_SRC_COMPONENT" ]; then
     log "Available component dirs:"
-    cd $cwd && find Components -name defaults.scenario.yaml | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
+    cd $cwd && find Components -name defaults.scenario.yaml | sort | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
     SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir  :" "")
   fi
 
@@ -579,7 +579,7 @@ fi
 # Check for available scenarios
 SCENARIOS_STORAGE_DIR=${SCENARIOS_STORAGE_DIR:-"$cwd/Scenarios"}
 SCENARIO_FILE_TYPE=env
-AVAILABLE_SCENARIOS=$(find $SCENARIOS_STORAGE_DIR -name "*.scenario.$SCENARIO_FILE_TYPE" | sed "s;$SCENARIOS_STORAGE_DIR/;;" | sed "s/.scenario.${SCENARIO_FILE_TYPE}//" | sed "s/ /\\ /g")
+AVAILABLE_SCENARIOS=$(find $SCENARIOS_STORAGE_DIR -name "*.scenario.$SCENARIO_FILE_TYPE" | sort | sed "s;$SCENARIOS_STORAGE_DIR/;;" | sed "s/.scenario.${SCENARIO_FILE_TYPE}//" | sed "s/ /\\ /g")
 
 # Scan for scenario
 if [ -z "$1" ]; then
