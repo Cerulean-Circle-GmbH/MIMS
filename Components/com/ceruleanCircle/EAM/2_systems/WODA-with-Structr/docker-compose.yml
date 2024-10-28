@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   once.sh:
-    container_name: ${SCENARIO_ONCE_CONTAINER}
+    container_name: ${SCENARIO_SRC_ONCE_CONTAINER}
     image: ${SCENARIO_SRC_ONCE_IMAGE}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

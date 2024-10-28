@@ -2,6 +2,8 @@ scenario:
   ## Source setup
   src:
     once:
+      # What is the docker container name?
+      container: ${SCENARIO_NAME}_once.sh_container
       # Which ONCE docker image should be used?
       image: donges/once:latest
       # Which ONCE branch should be restored (maybe tag dependent)?

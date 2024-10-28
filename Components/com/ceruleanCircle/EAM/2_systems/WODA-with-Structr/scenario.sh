@@ -25,7 +25,7 @@ function recreateOnceCerts() {
     local CERT=$(cat $certdir/fullchain.pem)
     local KEY=$(cat $certdir/privkey.pem)
     DOCKEROUTPUT=$(
-      docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+      docker exec -i $SCENARIO_SRC_ONCE_CONTAINER bash -s << EOF
             source /root/.once
             cd \$ONCE_DEFAULT_SCENARIO
             mv once.cert.pem once.cert.pem.bak
@@ -121,7 +121,7 @@ function up() {
   while [ -z "$found" ]; do
     local UP='\033[7A'
     local LINEFEED='\033[0G'
-    local STR=$(docker logs -n 5 $SCENARIO_ONCE_CONTAINER 2>&1)
+    local STR=$(docker logs -n 5 $SCENARIO_SRC_ONCE_CONTAINER 2>&1)
     log -e "$LINEFEED$UP"
     log "== Wait for startup... ==========================================================="
     if [ "$VERBOSITY" != "-s" ]; then
@@ -131,7 +131,7 @@ function up() {
       done < <(printf '%s\n' "$STR")
     fi
     sleep 0.3
-    found=$(docker logs $SCENARIO_ONCE_CONTAINER 2> /dev/null | grep "Welcome to Web 4.0")
+    found=$(docker logs $SCENARIO_SRC_ONCE_CONTAINER 2> /dev/null | grep "Welcome to Web 4.0")
   done
   logVerbose "===================="
   log "Startup done ($found)"
@@ -139,9 +139,9 @@ function up() {
   recreateOnceCerts
 
   # Reconfigure ONCE server and connect structr
-  banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_ONCE_CONTAINER)"
+  banner "Reconfigure ONCE server and connect structr (in container $SCENARIO_SRC_ONCE_CONTAINER)"
   DOCKEROUTPUT=$(
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    docker exec -i $SCENARIO_SRC_ONCE_CONTAINER bash -s << EOF
         source /root/.once
         export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
@@ -159,10 +159,10 @@ EOF
 
   # Checkout correct branch
   if [ -n "$SCENARIO_SRC_ONCE_BRANCH" ] && [ "$SCENARIO_SRC_ONCE_BRANCH" != "none" ]; then
-    banner "Checkout correct branch (in container $SCENARIO_ONCE_CONTAINER)"
+    banner "Checkout correct branch (in container $SCENARIO_SRC_ONCE_CONTAINER)"
     local ENV_CONTENT=$(< $CONFIG_DIR/.env)
     DOCKEROUTPUT=$(
-      docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+      docker exec -i $SCENARIO_SRC_ONCE_CONTAINER bash -s << EOF
             cd /var/dev/EAMD.ucp
             git checkout $SCENARIO_SRC_ONCE_BRANCH > /dev/null 2>&1
             git reset --hard
@@ -216,9 +216,9 @@ function start() {
 function private.restart.once() {
   # Start ONCE server
   banner "Start ONCE server"
-  #docker exec $SCENARIO_ONCE_CONTAINER bash -c "source /root/.once && once restart"
+  #docker exec $SCENARIO_SRC_ONCE_CONTAINER bash -c "source /root/.once && once restart"
   DOCKEROUTPUT=$(
-    docker exec -i $SCENARIO_ONCE_CONTAINER bash -s << EOF
+    docker exec -i $SCENARIO_SRC_ONCE_CONTAINER bash -s << EOF
         cd /var/dev/EAMD.ucp
         source /root/.once
         once restart > /dev/null 2>&1
@@ -266,7 +266,7 @@ function test() {
     docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
 
     log "Containers:"
-    docker ps | grep ${SCENARIO_ONCE_CONTAINER}
+    docker ps | grep ${SCENARIO_SRC_ONCE_CONTAINER}
     docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
   fi
 
