@@ -298,7 +298,13 @@ function config() {
         value=$(ask_with_default "$current_comment" "$default")
         #logVerbose "I ASKED AND GOT : \"$value\""
       fi
-      echo "$variable=\"$value\"" >> $SCENARIO_FILE_NAME_TMP
+      # Test if value contains a variable
+      if [[ $value = *\$* ]]; then
+        # Use single quotes to prevent variable expansion
+        echo "$variable='$value'" >> $SCENARIO_FILE_NAME_TMP
+      else
+        echo "$variable=\"$value\"" >> $SCENARIO_FILE_NAME_TMP
+      fi
 
       # Preset some variables
       if [[ "$variable" == "SCENARIO_SERVER_NAME" && "$value" == "localhost" ]]; then
