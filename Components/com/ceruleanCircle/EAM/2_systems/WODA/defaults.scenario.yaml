@@ -1,0 +1,27 @@
+scenario:
+  ## Source setup
+  src:
+    once:
+      # What is the docker container name?
+      container: ${SCENARIO_NAME}_once.sh_container
+      # Which ONCE docker image should be used?
+      image: donges/once:latest
+      # Which ONCE branch should be restored (maybe tag dependent)?
+      branch: none
+      # Which path should be used as outer config?
+      outerconfig: ~
+
+  ## Unique resources
+  resource:
+    once:
+      # What is the ONCE http port?
+      http: 8080
+      # What is the ONCE https port?
+      https: 8443
+      # What is the ONCE container SSH port?
+      ssh: 8022
+      reverseproxy:
+        # What is the ONCE reverse proxy http port?
+        http: 5002
+        # What is the ONCE reverse proxy https port?
+        https: 5005
