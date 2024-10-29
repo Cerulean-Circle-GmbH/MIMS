@@ -368,7 +368,15 @@ function init() {
   cp -R -a $cwd/Components/$SCENARIO_SRC_COMPONENT/* $cwd/Units/deploy-tools/*.sh $cwd/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
-    echo "$ENV_VAR=${!ENV_VAR}"
+    local value=${!ENV_VAR}
+    # Test if value contains a variable
+    if [[ $value = *\$* ]]; then
+      # Use eval to expand variable
+      local var_expanded=$(eval printf '%s' "$value")
+      echo "$ENV_VAR=$var_expanded"
+    else
+      echo "$ENV_VAR=$value"
+    fi
   done > $LOCAL_CONFIG_DIR/.env
 
   if ! isLocal; then
