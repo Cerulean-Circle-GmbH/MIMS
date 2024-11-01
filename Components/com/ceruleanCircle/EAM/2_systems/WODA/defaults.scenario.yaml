@@ -10,19 +10,6 @@ scenario:
       branch: none
       # Which path should be used as outer config?
       outerconfig: ~
-    structr:
-      # What is the URI of the struct data backup file (maybe tag dependent)?
-      datafile: backup.sfsre.com:/var/backups/structr/backup-structr-latest_WODA-current.tar.gz
-
-  ## Server setup
-  server:
-    # What is the EAMD root directory on the server?
-    eamddir: /var/dev/EAMD.ucp/
-
-  ## Config data setup
-  data:
-    # What is the path used to store the structr data (e.g. './db' or 'db-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume1: ./structr/_data/structr-db
 
   ## Unique resources
   resource:
@@ -38,8 +25,3 @@ scenario:
         http: 5002
         # What is the ONCE reverse proxy https port?
         https: 5005
-    structr:
-      # What is the STRUCTR http port?
-      http: 9382
-      # What is the STRUCTR https port?
-      https: 9383
