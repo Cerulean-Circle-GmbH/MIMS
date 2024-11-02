@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  traefik-proxy-service:
+    container_name: ${SCENARIO_NAME}_traefik_container
+    image: traefik:3.2.0
+    hostname: ${SCENARIO_SERVER_HOSTNAME}
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 1s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # So that Traefik can listen to the Docker events
+      - /var/log/traefik/:/var/log/traefik/
+      - ${SCENARIO_SERVER_CERTIFICATEDIR}:/certs:ro
+      - ${SCENARIO_DATA_MOUNTPOINT1}/configs:/etc/traefik:ro
+    networks:
+      proxy:
+        ipv4_address: ${SCENARIO_SERVER_NETWORK_IPV4ADDRESS}
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT}:80" # The HTTP port
+      - "${SCENARIO_RESOURCE_HTTPSPORT}:443" # HTTPS
+      - "${SCENARIO_RESOURCE_TLSPORT}:4443" # mTLS
+      - "${SCENARIO_RESOURCE_APIPORT}:8080" # The Web UI (enabled by --api)
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  # definition of the 'proxy' network
+  proxy:
+    name: ${SCENARIO_SERVER_NETWORK_NAME}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SCENARIO_SERVER_NETWORK_IPV4SUBNET}
+    # if 'attachable' is set to 'true', standalone containers can be attached to this network
+    attachable: true
