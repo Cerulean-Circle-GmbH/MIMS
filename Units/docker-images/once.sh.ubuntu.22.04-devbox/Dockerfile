@@ -1,5 +1,6 @@
-# Ubuntu 20.04 enhanced container with docker-in-docker
-FROM cruizba/ubuntu-dind:focal-latest
+# Use a build argument to specify the base image
+ARG BASE_IMAGE=ubuntu:22.04
+FROM ${BASE_IMAGE}
 
 # Define environment variable
 # ENV DEBUG ON
@@ -27,11 +28,6 @@ RUN echo "\n# Use devbox as global package manager\n" \
   >> ~/.bashrc
 # Backup of the nix-store
 RUN cp -a /nix/store /nix-store-backup
-# Add start script
-COPY scripts/start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
-# Set start script as entrypoint
-ENTRYPOINT ["/usr/local/bin/start.sh"]
 
 # Installing devbox
 RUN curl -fsSL https://get.jetify.com/devbox | bash -s -- -f
@@ -45,5 +41,11 @@ COPY nushell/* /root/.config/nushell/
 RUN echo "unset DISPLAY" >> /root/.bashrc
 
 WORKDIR /workspace
+
+# Set start script as entrypoint
+ADD entrypoint /entrypoint
+RUN chmod +x /entrypoint/start.sh
+ENTRYPOINT ["/entrypoint/start.sh"]
+
 # use sh ant not bash, because bash will initialize devbox runtime
 CMD ["sh"]
