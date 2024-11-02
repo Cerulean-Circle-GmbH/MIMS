@@ -1,0 +1,7 @@
+scenario:
+  ## Unique resources
+  resource:
+    # What is the http port of the docker container?
+    httpport: 8086
+    # What is the jenkins agent communication port?
+    agentport: 50000
