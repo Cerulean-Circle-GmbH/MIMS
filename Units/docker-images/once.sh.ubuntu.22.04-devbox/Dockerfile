@@ -26,6 +26,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/
 RUN echo "\n# Use devbox as global package manager\n" \
   'eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r' \
   >> ~/.bashrc
+COPY devbox.json /root/.local/share/devbox/global/default/devbox.json
+COPY devbox.lock /root/.local/share/devbox/global/default/devbox.lock
 # Backup of the nix-store
 RUN cp -a /nix/store /nix-store-backup
 

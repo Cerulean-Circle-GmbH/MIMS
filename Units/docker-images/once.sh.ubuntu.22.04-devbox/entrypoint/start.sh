@@ -9,7 +9,9 @@ else
 fi
 
 # Start docker-in-docker process
-/usr/local/bin/start-docker.sh
+if [ -f "/etc/supervisor/conf.d/dockerd.conf" ]; then
+  /usr/local/bin/start-docker.sh
+fi
 
 # Start the normal container process
 exec "$@"

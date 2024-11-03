@@ -6,15 +6,15 @@ services:
       dockerfile: Dockerfile
       args:
         DOCKER_BUILDKIT: 1
-        # Ubuntu 20.04 enhanced container with docker-in-docker
-        BASE_IMAGE: cruizba/ubuntu-dind:focal-latest
+        # Ubuntu 22.04 enhanced container with docker-in-docker
+        BASE_IMAGE: cruizba/ubuntu-dind:jammy-latest
     restart: unless-stopped
     environment:
       - SHELL=/bin/bash
     volumes:
       # to persist global packages
-      - ../Units/docker-images/once.sh.ubuntu.22.04-devbox/devbox.json:/root/.local/share/devbox/global/default/devbox.json
-      - ../Units/docker-images/once.sh.ubuntu.22.04-devbox/devbox.lock:/root/.local/share/devbox/global/default/devbox.lock
+      - ./devbox.json:/root/.local/share/devbox/global/default/devbox.json
+      - ./devbox.lock:/root/.local/share/devbox/global/default/devbox.lock
       # mount users .ssh directory
       - ~/.ssh:/root/.ssh:ro
       # mount workspace
