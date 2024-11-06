@@ -49,6 +49,54 @@
         }
       }
     },
+    "docker-buildx@0.11.2": {
+      "last_modified": "2023-11-17T14:14:56Z",
+      "resolved": "github:NixOS/nixpkgs/a71323f68d4377d12c04a5410e214495ec598d4c#docker-buildx",
+      "source": "devbox-search",
+      "version": "0.11.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/43fk2j7ffhlcv6iw2g6fk95chxfqp9vl-docker-buildx-0.11.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/43fk2j7ffhlcv6iw2g6fk95chxfqp9vl-docker-buildx-0.11.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/k1w2zkfvzykvwqfrjjmfrbnldmnpfcc2-docker-buildx-0.11.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/k1w2zkfvzykvwqfrjjmfrbnldmnpfcc2-docker-buildx-0.11.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/qmfxvr8mjwmrw9n0y14kaw61vp25rl0f-docker-buildx-0.11.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/qmfxvr8mjwmrw9n0y14kaw61vp25rl0f-docker-buildx-0.11.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3dsxyck77cr51hqlinb0d79sc10i1bai-docker-buildx-0.11.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3dsxyck77cr51hqlinb0d79sc10i1bai-docker-buildx-0.11.2"
+        }
+      }
+    },
     "docker-compose@1.25.5": {
       "last_modified": "2020-06-30T02:44:55Z",
       "resolved": "github:NixOS/nixpkgs/e912fb83d2155a393e7146da98cda0e455a80fb6#docker-compose",

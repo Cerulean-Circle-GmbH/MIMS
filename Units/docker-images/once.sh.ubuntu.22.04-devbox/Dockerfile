@@ -23,11 +23,6 @@ RUN apt-get update \
 
 # Install Nix package manager
 RUN curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install linux --init none --no-confirm
-RUN echo "\n# Use devbox as global package manager\n" \
-  'eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r' \
-  >> ~/.bashrc
-COPY devbox.json /root/.local/share/devbox/global/default/devbox.json
-COPY devbox.lock /root/.local/share/devbox/global/default/devbox.lock
 # Backup of the nix-store
 RUN cp -a /nix/store /nix-store-backup
 
@@ -44,10 +39,21 @@ RUN echo "unset DISPLAY" >> /root/.bashrc
 
 WORKDIR /workspace
 
-# Set start script as entrypoint
+# Install OOSH from entrypoint scripts
 ADD entrypoint /entrypoint
+RUN chmod +x /entrypoint/install-oosh.sh
+RUN /entrypoint/install-oosh.sh
+
+# Set start script as entrypoint
 RUN chmod +x /entrypoint/start.sh
 ENTRYPOINT ["/entrypoint/start.sh"]
+
+# Set devbox as global package manager - Must be set after OOSH installation!
+RUN echo "\n# Use devbox as global package manager\n" \
+  'eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r' \
+  >> ~/.bashrc
+COPY devbox.json /root/.local/share/devbox/global/default/devbox.json
+COPY devbox.lock /root/.local/share/devbox/global/default/devbox.lock
 
 # use sh ant not bash, because bash will initialize devbox runtime
 CMD ["sh"]
