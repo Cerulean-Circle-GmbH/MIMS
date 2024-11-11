@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('Deploy dev/neom with latest structr server') {
+        stage('Deploy scenario with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash

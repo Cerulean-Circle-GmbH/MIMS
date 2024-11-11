@@ -52,7 +52,7 @@ devTool.docker.buildx.use() { # # creates, uses and starts a "myoncebuilder" bui
     mkdir -p ${DOCKER_BUILDX_DIR}
     pushd ${DOCKER_BUILDX_DIR}
     export DOCKER_BUILDKIT=1
-    docker build --platform=local -o . "https://github.com/docker/buildx.git"
+    docker build --platform=local -o . "https://github.com/docker/buildx.git#v0.10"
     mkdir -p ~/.docker/cli-plugins
     mv buildx ~/.docker/cli-plugins/docker-buildx
     popd
@@ -121,21 +121,35 @@ devTool.docker.build() { # <?imageName:${DOCKER_IMAGE_NAME}> # builds the docker
     return 22
   fi
 
+  # Clean variables (because the once.sh installation could be installed
+  # in a different branch or another location)
+  unset OOSH_INSTALL_SOURCE
+  unset OOSH_BRANCH
+
   # Set 1 of the 2 variables in your shell to install a local oosh or one from a specific branch
   #export OOSH_INSTALL_SOURCE=/home/shared/EAMD.ucp/Components/com/ceruleanCircle/EAM/1_infrastructure/Once.sh/dev
-  #export OOSH_BRANCH="feature/neom/N1-185_Several_fixes_for_ONCE_state_machine"
+
+  # klappt nicht: once: command not found (in ~/config/user.env CONFIG="/root/config")
+  #export OOSH_BRANCH="feature/neom/N1-418-test-086d8c0-on-oosh-repository-in-dev-branch"
+
+  # klappt nicht (erster von Marcels Änderungen): in "once init" console.log: command not found
+  #export OOSH_BRANCH="7f96c9379c49bcced884e6a3b2863565b072b3db"
+
+  # klappt (erster vor Marcels Änderungen)
+  #export OOSH_BRANCH="728840c212fc2ce1fd40530c227b1cbfc267ca0a"
 
   cwd=$(pwd)
   OOSH_TAR=$cwd/entrypoint/_oosh.tar
-  rm -rf ${OOSH_TAR} $cwd/entrypoint/_env
+  OOSH_TAR_ENVFILE=$cwd/entrypoint/_env
+  rm -rf ${OOSH_TAR} ${OOSH_TAR_ENVFILE}
   # Create tar of local oosh dev
   if [ ! -z ${OOSH_INSTALL_SOURCE} ] && [ -d ${OOSH_INSTALL_SOURCE} ]; then
     pushd ${OOSH_INSTALL_SOURCE}
     tar -cf ${OOSH_TAR} .
     popd
-    echo "export OOSH_TAR=/root/entrypoint/_oosh.tar" > $cwd/entrypoint/_env
+    echo "export OOSH_TAR=/root/entrypoint/_oosh.tar" > ${OOSH_TAR_ENVFILE}
   elif [ ! -z ${OOSH_BRANCH} ]; then
-    echo "export OOSH_BRANCH=${OOSH_BRANCH}" > $cwd/entrypoint/_env
+    echo "export OOSH_BRANCH=${OOSH_BRANCH}" > ${OOSH_TAR_ENVFILE}
   fi
 
   docker pull ubuntu:latest
