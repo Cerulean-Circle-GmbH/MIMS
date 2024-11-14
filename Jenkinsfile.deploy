@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('Deploy dev/neom with latest structr server') {
+        stage('Deploy scenario with latest structr server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
@@ -30,7 +30,7 @@ pipeline {
                             echo "SCENARIO_SRC_TAG is not set"
                         else
                             echo "SCENARIO_SRC_TAG is set to $SCENARIO_SRC_TAG"
-                            sed -i "s;SCENARIO_SRC_TAG=.*;SCENARIO_SRC_TAG=\"${SCENARIO_SRC_TAG}\";g" Scenarios/${SCENARIO_FULL_NAME}.scenario.env
+                            sed -i "s;\${SCENARIO_SRC_TAG:-latest};${SCENARIO_SRC_TAG};g" Scenarios/${SCENARIO_FULL_NAME}.scenario.env
                         fi
                         # ignore parent dir, because it could start with a _ and will be deleted as well!
                         find $WORKSPACE -mindepth 1 -name "_*" | xargs rm -rf
