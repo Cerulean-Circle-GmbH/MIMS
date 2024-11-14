@@ -270,7 +270,7 @@ function config() {
   if [ -z "$SCENARIO_SRC_COMPONENT" ]; then
     log "Available component dirs:"
     cd $cwd && find Components -name defaults.scenario.yaml | sort | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
-    SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir  :" "")
+    SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir" "")
   fi
 
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
