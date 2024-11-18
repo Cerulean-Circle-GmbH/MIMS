@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('Deploy scenario with latest structr server') {
+        stage('Deploy scenario to remote server') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
                     sh '''#!/usr/bin/bash
