@@ -1,13 +1,14 @@
-version: "3"
+version: "3.4"
 
 services:
   once.sh:
-    container_name: ${SCENARIO_ONCE_CONTAINER}
+    container_name: ${SCENARIO_SRC_ONCE_CONTAINER}
     image: ${SCENARIO_SRC_ONCE_IMAGE}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
-      - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
+      # TODO: Das geht nicht, wenn das volume unten nicht existiert (none wird behandelt)
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
@@ -22,24 +23,20 @@ services:
       ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}
   woda-structr-server:
     container_name: ${SCENARIO_STRUCTR_CONTAINER}
-    build: './structr'
+    build: "./structr"
     image: ${SCENARIO_STRUCTR_IMAGE}
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
     restart: unless-stopped
-    env_file: '.env'
+    env_file: ".env"
     ports:
       - ${SCENARIO_RESOURCE_STRUCTR_HTTP}:8082
       - ${SCENARIO_RESOURCE_STRUCTR_HTTPS}:8083
     volumes:
-      - ${SCENARIO_STRUCTR_DIR}/db/:/var/lib/structr/db/
-      - ${SCENARIO_STRUCTR_DIR}/files/:/var/lib/structr/files/
-      - ${SCENARIO_STRUCTR_DIR}/layouts/:/var/lib/structr/layouts/
-      - ${SCENARIO_STRUCTR_DIR}/logs/:/var/lib/structr/logs/
-      - ${SCENARIO_STRUCTR_DIR}/sessions/:/var/lib/structr/sessions/
-      - ${SCENARIO_STRUCTR_DIR}/snapshots/:/var/lib/structr/snapshots/
-      - ${SCENARIO_ONCE_VOLUME_NAME}:/var/dev
+      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
+      - ${SCENARIO_DATA_MOUNTPOINT2}:/var/lib/structr-volume/
+      - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.pkcs12:ro
+      - ${SCENARIO_SERVER_EAMDDIR}:/EAMD.ucp
+      - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
     environment:
       - PROXY_ADDRESS_FORWARDING=true
-volumes:
-  var_dev:

@@ -1,0 +1,6 @@
+version: "3.4"
+
+volumes:
+  data-volume:
+    external: ${SCENARIO_DATA_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_NAME1}

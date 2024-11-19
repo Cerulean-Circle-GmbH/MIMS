@@ -1,10 +1,10 @@
 #!/bin/bash
 
 banner() {
-    echo
-    echo "============================================="
-    echo $1
-    echo "============================================="
+  echo
+  echo "============================================="
+  echo $1
+  echo "============================================="
 }
 
 # Work in build dir
@@ -20,20 +20,23 @@ tarfile=backup-structr-${date}_${dirname}.tar.gz
 rsynclog=_rsync.log
 rm -rf backup-structr-* $rsynclog
 if [[ -n "${keyfile}" ]]; then
-    echo "Use ${keyfile}"
-    use_key="-i ${keyfile}"
+  echo "Use ${keyfile}"
+  use_key="-i ${keyfile}"
 fi
+
+BACKUP_DIR="/var/backups/test.wo-da.de_structr"
+BACKUP_DESTINATION="backup.sfsre.com:$BACKUP_DIR"
 
 # Get data
 banner "Get data from $sourcedir"
 while true; do
-    rsync -avzP --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $sourcedir/$dirname $destdir | tee $rsynclog
-    if [ -z "$(cat $rsynclog | grep $dirname)" ]; then
-        break;
-    else
-        echo "Repeat because changes applied"
-        sleep 5
-    fi
+  rsync -avzP --delete -e "ssh $use_key -o 'StrictHostKeyChecking no'" $sourcedir/$dirname $destdir | tee $rsynclog
+  if [ -z "$(cat $rsynclog | grep $dirname)" ]; then
+    break
+  else
+    echo "Repeat because changes applied"
+    sleep 5
+  fi
 done
 
 # Create tar
@@ -44,10 +47,10 @@ ls -lah
 
 # Copy to backup server
 banner "Copy to backup server"
-rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile backup.sfsre.com:/var/backups/structr/
+rsync -avzP -e "ssh $use_key -o 'StrictHostKeyChecking no'" $tarfile $BACKUP_DESTINATION/
 latest_tarfile=backup-structr-latest_${dirname}.tar.gz
 ssh $use_key -o 'StrictHostKeyChecking no' backup.sfsre.com bash -s << EOF
-cd /var/backups/structr/
+cd $BACKUP_DIR
 rm -rf $latest_tarfile
 ln -s $tarfile $latest_tarfile
 EOF
@@ -61,7 +64,7 @@ git tag $tag
 
 # Push tag to bitbucket
 if ! git remote | grep -q token; then
-    git remote add token https://x-token-auth:$BBTOKEN@bitbucket.org/donges/eamd.ucp.git
+  git remote add token https://x-token-auth:$BBTOKEN@bitbucket.org/donges/eamd.ucp.git
 fi
 git push -v token $tag
 

@@ -1,0 +1,168 @@
+pipeline {
+    agent {
+        docker {
+            image 'once.sh-builder'
+            args '-v once_jenkins:/var/dev -v jenkins_jenkins_home:/var/jenkins_home -v /root/.ssh:/root/.ssh -w /var/dev --entrypoint "" --user root'
+            // docker run --rm -v .:/root/src -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash -c "source ~/config/user.env && cd src/Units/docker-images/once.sh.ubuntu.22.04-server && ./devTool docker.build"
+            // docker run --rm -v .:/root/src -v /var/run/docker.sock:/var/run/docker.sock --entrypoint "" once.sh-builder /bin/bash -c "source ~/config/user.env && cd src/Units/docker-images/once.sh.ubuntu.22.04-builder && docker build -t once.sh-builder.inner ."
+            reuseNode true
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage('Print Checkout') {
+            steps {
+                script {
+                    updateGitHubCommitStatus('pending', 'Build in progress')
+                    def scmVars = checkout scm
+                    echo "Checked out branch: ${scmVars.GIT_BRANCH}"
+                }
+            }
+        }
+
+        stage('Cleanup & update (dev/neom)') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    set -e
+                    Units/cleanupAndUpdateEAMD.sh dev/neom
+                    # ignore parent dir, because it could start with a _ and will be deleted as well!
+                    find $WORKSPACE -mindepth 1 -name "_*" | xargs rm -rf
+                    mkdir -p $WORKSPACE/_results
+                    git config --global --add safe.directory "*"
+                    '''
+            }
+        }
+
+        stage('build image once.sh-builder') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    set -e
+                    source ~/config/user.env
+                    cd Units/docker-images/once.sh.ubuntu.22.04-builder
+                    ./devTool docker.build
+                    '''
+            }
+        }
+
+        stage('build image once.sh-server') {
+            steps {
+                sh '''#!/usr/bin/bash
+                    set -e
+                    source ~/config/user.env
+                    cd Units/docker-images/once.sh.ubuntu.22.04-server
+                    ./devTool docker.build
+                    '''
+            }
+        }
+
+        stage('build & deploy image once.sh-server multi-branch') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_IO_CRED', passwordVariable: 'DOCKER_PW', usernameVariable: 'DOCKER_LOGIN')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        source ~/config/user.env
+                        cd Units/docker-images/once.sh.ubuntu.22.04-server
+                        ./devTool docker.buildx.use
+                        docker login -u ${DOCKER_LOGIN} --password ${DOCKER_PW}
+                        ./devTool docker.buildx.push
+                        ./devTool docker.buildx.unuse
+                        '''
+                }
+            }
+        }
+
+        stage('Deploy check deploy script') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        function checkError() {
+                          RV=$1
+                          EXP=$2
+                          MSG=$3
+                          if [ $RV -ne $EXP ]; then
+                            echo "Error: return value $EXP expected but was $RV : $MSG"
+                            exit 1
+                          fi
+                        }
+
+                        set +e
+                        ./scenario.deploy
+                        checkError $? 1 "no arguments should return an error value (1)"
+                        ./scenario.deploy de/wo-da/test/dev-ci test -h
+                        checkError $? 0 "help should return 0"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy dev/WODA with latest structr server') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+                    sh '''#!/usr/bin/bash
+                        set -e
+                        ./scenario.deploy de/wo-da/test/dev-ci deinit
+                        ./scenario.deploy de/wo-da/test/dev-ci init,up,test
+                        ./scenario.deploy de/wo-da/test/dev-ci test -v > $WORKSPACE/_results/com.sfsre.backup.dev-ci.log
+                    '''
+                }
+            }
+        }
+
+        // stage('Deploy cadvisor-dev on backup.sfsre.com') {
+        //     steps {
+        //         withCredentials([sshUserPrivateKey(credentialsId: "agent.jenkins", keyFileVariable: 'keyfile')]) {
+        //             sh '''#!/usr/bin/bash
+        //                 set -e
+        //                 ./scenario.deploy com/sfsre/backup/cadvisor-dev deinit
+        //                 ./scenario.deploy com/sfsre/backup/cadvisor-dev init,up,test
+        //                 ./scenario.deploy com/sfsre/backup/cadvisor-dev test -v > $WORKSPACE/_results/com.sfsre.backup.cadvisor-dev.log
+        //             '''
+        //         }
+        //     }
+        // }
+    }
+    post {
+        success {
+            script {
+                updateGitHubCommitStatus('success', 'Build succeeded')
+            }
+        }
+        failure {
+            script {
+                updateGitHubCommitStatus('failure', 'Build failed')
+            }
+        }
+        unstable {
+            script {
+                updateGitHubCommitStatus('failure', 'Build unstable')
+            }
+        }
+        always {
+            archiveArtifacts artifacts: '_results/*', onlyIfSuccessful: true
+        }
+    }
+}
+
+def updateGitHubCommitStatus(String state, String description) {
+    def context = 'continuous-integration/jenkins'
+    def gitCommit = env.GIT_COMMIT
+    def repoUrl = 'https://api.github.com/repos/Cerulean-Circle-GmbH/MIMS/statuses/' + gitCommit
+    def payload = [
+        state       : state,
+        target_url  : env.BUILD_URL,
+        description : description,
+        context     : context
+    ]
+    def payloadJson = groovy.json.JsonOutput.toJson(payload)
+
+    withCredentials([string(credentialsId: 'GithubPersonalAccessToken', variable: 'GITHUB_TOKEN')]) {
+        sh """curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '${payloadJson}' \
+              ${repoUrl}"""
+    }
+}

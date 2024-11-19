@@ -1,0 +1,29 @@
+scenario:
+  ## Source setup
+  src:
+    # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.
+    component: .
+    # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
+    cachedir: ~/.cache/MIMS-Scenarios
+
+  ## Server setup
+  server:
+    # What is the server, the scenario will be deployed?
+    name: test.wo-da.de
+    # What is the SSH config the server can be connected with?
+    sshconfig: WODA.test
+    # What is the scenarios root directory on the server?
+    configsdir: /var/dev/MIMS-Scenarios
+    # Where to find the servers letsencrypt base dir?
+    certconfigdir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config
+    # Where to find the servers certificate?
+    certificatedir: /var/dev/EAMD.ucp/Scenarios/de/1blu/v36421/vhosts/de/wo-da/test/EAM/1_infrastructure/Docker/CertBot.v1.7.0/config/conf/live/test.wo-da.de
+
+  ## Config data setup
+  data:
+    # What is the path of the data volume (e.g. './data' or 'data-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+    volume: ./data
+    # Where to find the restore data (none - if not applicable)?
+    restoresource: none
+    # Is the data volume external (true or false; if not external, it will be deleted on down)?
+    external: true

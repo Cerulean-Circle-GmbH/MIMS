@@ -1,0 +1,19 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt"
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "[nushell]": {
+    "editor.defaultFormatter": "TheNuProjectContributors.vscode-nushell-lang"
+  },
+  "rust-analyzer.linkedProjects": [
+    "./Packages/sh/nushell/crates/nu_plugin_once/Cargo.toml"
+  ]
+}

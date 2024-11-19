@@ -1,0 +1,199 @@
+#!/usr/bin/env nu
+
+use std assert
+
+# global script vars
+$env.SCENARIO_SRC_COMPONENT = ""
+$env.SCENARIO_NAME = ""
+$env.SCENARIO_DEFAULTS_ENV = []
+$env.SILENTLY = false
+$env.VERBOSITY = false
+
+# don't declare type for 'msg' because it can be anything
+def print_unsilent [msg] {
+  if not $env.SILENTLY {
+    print $msg
+  }
+}
+
+# don't declare type for 'msg' because it can be anything
+def print_verbose [msg] {
+  if $env.VERBOSITY {
+    print $msg
+  }
+}
+
+def banner [msg: string] {
+  print_verbose $""
+  print_verbose $"####################################################################################################"
+  print_verbose $"## ($msg)"
+  print_verbose $"####################################################################################################"
+  print_verbose $""
+}
+
+def ask_with_default [question: string, answer: string] {
+  # user input as text with default value
+  let user_input = (input $"($question) [($answer)] ")
+
+  if ($user_input | is-empty) {
+    $"($answer)"
+  } else {
+    $"($user_input)"
+  }
+}
+
+def get_components [] {
+  # get all available components without base path
+  let base = $env.FILE_PWD | path expand
+  let components = glob ./Components/**/defaults.scenario.yaml | sort # glob .. --exclude [**/localhost/*]
+  $components | each { |it| str replace $"($base)/Components/" "" | str replace $"/defaults.scenario.yaml" "" }
+}
+
+def get_scenarios [] {
+  # get all available scenarios without base path
+  let base = $env.FILE_PWD | path expand
+  let scenarios = glob ./Scenarios/**/*.{scenario,env} | sort # glob .. --exclude [**/localhost/*]
+  $scenarios | each { |it| str replace $"($base)/Scenarios/" "" }
+}
+
+def parse_yaml [file: string] {
+  let yaml_content = (open $file --raw)
+
+  def get_comments_for [search] {
+    # get index of search string
+    let comment_idx = ($yaml_content
+      | lines
+      | enumerate
+      | each { |e| if ($e.item =~ $search) { if ($e.index > 0) { $e.index - 1 } else { 0 } } }
+      | get 0 # destruct list by returning first element
+    )
+
+    # get all $max_comment_count lines before search string
+    mut result = []
+    let max_comment_count = 5;
+    let start_idx = if ($comment_idx - $max_comment_count) < 0 { 0 } else { $comment_idx - $max_comment_count }
+
+    for idx in $start_idx..$comment_idx {
+      let line = $yaml_content | lines | get $idx
+
+      # comments start with #
+      if ($line =~ '^\s*##?\s?.*') {
+        # add extra newline for comments with ##
+        if ($start_idx > 0) and ($line =~ '^\s*##\s?.*') {
+          $result = ($result | append $"")
+        }
+
+        # add all other comments
+        $result = ($result | append $"($line | str trim)")
+      } else {
+        $result = []
+      }
+    }
+
+    $result
+  }
+
+  # run with --env to keep the env variables defined inside the script's global scope
+  def --env recursive_parse [data, parent = ""] {
+    # set separator character
+    mut separator = ""
+    if ($parent | is-not-empty) {
+      $separator = "_"
+    }
+
+    for node in ($data | transpose key value) {
+      # add YAML comments
+      for comment in (get_comments_for $"($node.key):") {
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV | append $comment)
+      }
+
+      if ($node.value | describe | str starts-with "record") {
+        recursive_parse $node.value $"($parent)($separator)($node.key)"
+      } else {
+        # add YAML values
+        $env.SCENARIO_DEFAULTS_ENV = ($env.SCENARIO_DEFAULTS_ENV
+          | append $'($parent | str upcase)($separator)($node.key | str upcase)="($node.value)"')
+      }
+    }
+  }
+
+  # start recursion
+  let yaml_structured = ($yaml_content | from yaml)
+  recursive_parse $yaml_structured ""
+
+  $env.SCENARIO_DEFAULTS_ENV
+}
+
+# run with --env to keep the env variables defined inside the script's global scope
+def --env config [] {
+  # Configure scenario
+  banner $"Configure scenario"
+
+  if ($env.SCENARIO_SRC_COMPONENT | is-empty) {
+    # user input as select list
+    $env.SCENARIO_SRC_COMPONENT = (get_components | input list "Choose available component dir")
+  }
+
+  if ($env.SCENARIO_NAME | is-empty) {
+    # user input as select list
+    $env.SCENARIO_NAME = (get_scenarios | input list "Choose available scenario")
+  }
+
+  # Convert defaults.scenario.yaml > _defaults.scenario.sh
+  let base = $env.FILE_PWD | path expand
+  parse_yaml $"($base)/Components/($env.SCENARIO_SRC_COMPONENT)/defaults.scenario.yaml"
+    | save -f $"($base)/Components/($env.SCENARIO_SRC_COMPONENT)/_defaults.scenario.sh"
+  # TODO: This is next to implement!
+}
+
+# Manage once scenarios on local or remote servers.
+def main [] {
+  print_unsilent $"Manage once scenarios on local or remote servers.
+
+(ansi green)Usage:(ansi reset) scenario list
+       scenario deploy
+  "
+}
+
+# List available once scenarios.
+def "main list" [] {
+  print_unsilent $"Available scenarios:"
+  print_unsilent (get_scenarios)
+}
+
+# Deploy once scenarios on local or remote servers.
+def "main deploy" [
+  action: string  # Actions [init,up,start,stop,down,deinit,test,updateconfig]
+  scenario: string = "", # Set scenario name under which component will be deployed, e.g localhost/dev
+  --verbose (-v) # Set verbosity for command
+  --silent (-s) # Set silent mode for command
+] {
+  if $verbose {
+    # set print level to debug
+    $env.VERBOSITY = true
+    $env.SILENTLY = false
+  }
+
+  if $silent {
+    # set print level to silent
+    $env.VERBOSITY = false
+    $env.SILENTLY = true
+  }
+
+  $env.SCENARIO_NAME = $scenario
+  config
+
+  for $_action in ($action | split words) {
+    match $_action {
+      "init" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "up" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "start" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "stop" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "down" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "deinit" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "test" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      "updateconfig" => (print_verbose $"Call ($_action) ($env.SCENARIO_NAME)"),
+      _ => (print_verbose $"Unknown action ($_action)")
+    }
+  }
+}
