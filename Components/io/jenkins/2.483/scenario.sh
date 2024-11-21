@@ -24,7 +24,6 @@ function up() {
   # Create jenkins image
   banner "Create jenkins image"
   log "Building image..."
-  docker pull jenkins/jenkins:2.474-jdk17
   docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
 
   # Check data volume
