@@ -256,6 +256,31 @@ function deploy-tools.checkAndCreateNetwork() {
   fi
 }
 
+# Create secrets and show them once during initialization
+function deploy-tools.checkAndCreateSecret() {
+  local filename=$1
+  local cipher=$2
+
+  if [ ! -d "${SCENARIO_SRC_SECRETSDIR}" ]; then
+    mkdir -p "${SCENARIO_SRC_SECRETSDIR}"
+  fi
+
+  if [ ! -f "${SCENARIO_SRC_SECRETSDIR}/$filename" ]; then
+    temp_password=$(openssl rand -base64 15)
+    log ""
+    log "********************************************************************************************"
+    log "*** Your password string is: ${temp_password} - Please write it down somewhere safe! ***"
+    log "********************************************************************************************"
+    log ""
+
+    if [ $cipher = "argon2" ]; then
+      echo -n "${temp_password}" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4 > ${SCENARIO_SRC_SECRETSDIR}/$filename
+    else
+      log "Non existing cipher method selected! Cannot create secret file!"
+    fi
+  fi
+}
+
 function deploy-tools.recreateKeystore() {
   local certdir="$1"
   local keystoredir="$2"

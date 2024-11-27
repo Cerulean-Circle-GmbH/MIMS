@@ -487,6 +487,54 @@
         }
       }
     },
+    "libargon2@latest": {
+      "last_modified": "2024-11-16T04:25:12Z",
+      "resolved": "github:NixOS/nixpkgs/34a626458d686f1b58139620a8b2793e9e123bba#libargon2",
+      "source": "devbox-search",
+      "version": "20190702",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/c8cn9kjh9pxm7zah36dldvlqh8w22s63-libargon2-20190702",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/c8cn9kjh9pxm7zah36dldvlqh8w22s63-libargon2-20190702"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/4bnfb1fz8h3blmd31d28v5sl5ynh5r2x-libargon2-20190702",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/4bnfb1fz8h3blmd31d28v5sl5ynh5r2x-libargon2-20190702"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ysammfrqwwn3w6qa78gkmgqsfzdygyi5-libargon2-20190702",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ysammfrqwwn3w6qa78gkmgqsfzdygyi5-libargon2-20190702"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kkghhixwfzs1y4pkir5piifjbcdjplyg-libargon2-20190702",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/kkghhixwfzs1y4pkir5piifjbcdjplyg-libargon2-20190702"
+        }
+      }
+    },
     "nushell@0.97.1": {
       "last_modified": "2024-09-10T15:01:03Z",
       "resolved": "github:NixOS/nixpkgs/5ed627539ac84809c78b2dd6d26a5cebeb5ae269#nushell",

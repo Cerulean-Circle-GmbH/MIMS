@@ -18,6 +18,9 @@ function up() {
   # Check data volume
   checkAndCreateDataVolume
 
+  # Create secret
+  deploy-tools.checkAndCreateSecret vaultwarden_admin_token.txt argon2
+
   deploy-tools.up
 }
 

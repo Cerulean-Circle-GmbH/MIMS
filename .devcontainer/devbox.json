@@ -9,6 +9,7 @@
     "git-lfs@3.5.1",
     "git@2.46.0",
     "jq@1.7.1",
+    "libargon2@latest",
     "nushell@0.97.1",
     "openssh@8.2p1",
     "openssl_1_1@1.1.1g",
