@@ -4,6 +4,8 @@ services:
   once.sh:
     container_name: ${SCENARIO_SRC_ONCE_CONTAINER}
     image: ${SCENARIO_SRC_ONCE_IMAGE}
+    restart: always
+    hostname: ${SCENARIO_SERVER_ONCE_HOSTNAME:-once}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
@@ -21,12 +23,16 @@ services:
       ONCE_DOCKER_HTTPS_PORT: 8443
       ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: 5002
       ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: 5005
+    networks:
+      - default
+
   woda-structr-server:
     container_name: ${SCENARIO_STRUCTR_CONTAINER}
     build: "./structr"
     image: ${SCENARIO_STRUCTR_IMAGE}
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
-    restart: unless-stopped
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-structr}
     env_file: ".env"
     ports:
       - ${SCENARIO_RESOURCE_STRUCTR_HTTP}:8082
@@ -40,3 +46,10 @@ services:
       - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
     environment:
       - PROXY_ADDRESS_FORWARDING=true
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

@@ -62,6 +62,9 @@ function deploy-tools.setEnvironment() {
   if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
     # SCENARIO_DATA_VOLUME is a path
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml"
+  elif [[ $SCENARIO_TRAEFIK_ENABLE = "true" ]]; then
+    # add traefik related stuff
+    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml -f docker-compose.traefik.yml"
   else
     # SCENARIO_DATA_VOLUME is a volume
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"

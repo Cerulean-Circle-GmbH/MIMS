@@ -25,3 +25,19 @@ scenario:
         http: 5002
         # What is the ONCE reverse proxy https port?
         https: 5005
+
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: once
+    network:
+      # What is the servers network name?
+      name: once-network
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy

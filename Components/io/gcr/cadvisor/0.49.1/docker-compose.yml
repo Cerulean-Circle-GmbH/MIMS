@@ -4,6 +4,7 @@ services:
   cadvisor-service:
     container_name: ${SCENARIO_NAME}_cadvisor_container
     image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: always
     hostname: ${SCENARIO_SERVER_HOSTNAME:-cadvisor}
     volumes:
       - "/:/rootfs:ro"
@@ -13,8 +14,10 @@ services:
       - "/dev/disk/:/dev/disk:ro"
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
+    networks:
+      - default
 
 networks:
   default:
     external:
-      name: ${SCENARIO_SERVER_NETWORKNAME}
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

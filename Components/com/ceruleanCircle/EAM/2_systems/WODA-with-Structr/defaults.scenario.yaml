@@ -18,6 +18,23 @@ scenario:
   server:
     # What is the EAMD root directory on the server?
     eamddir: /var/dev/EAMD.ucp/
+    once:
+      # What is the once servers hostname?
+      hostname: once
+    structr:
+      # What is the structr servers hostname?
+      hostname: structr
+    network:
+      # What is the servers network name?
+      name: once-network
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy
 
   ## Config data setup
   data:

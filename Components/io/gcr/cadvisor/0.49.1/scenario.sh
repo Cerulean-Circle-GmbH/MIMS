@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function up() {
   # Check network
-  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORKNAME
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
 
   deploy-tools.up
 }

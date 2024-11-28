@@ -5,3 +5,19 @@ scenario:
     httpport: 8086
     # What is the jenkins agent communication port?
     agentport: 50000
+
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: jenkins
+    network:
+      # What is the servers network name?
+      name: jenkins-network
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy

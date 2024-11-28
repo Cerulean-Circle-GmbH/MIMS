@@ -1,5 +1,21 @@
 scenario:
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: vaultwarden
+    network:
+      # What is the servers network name?
+      name: vaultwarden-network
+
   ## Unique resources
   resource:
     # What is the http port of the docker container?
     httpport: 8090
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy

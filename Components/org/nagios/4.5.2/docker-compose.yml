@@ -4,6 +4,8 @@ services:
   nagios-service:
     container_name: ${SCENARIO_NAME}_nagios_container
     image: jasonrivers/nagios:4.5.2
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-nagios}
     volumes:
       - ${SCENARIO_DATA_MOUNTPOINT1}:/opt/nagios/etc
       - ${SCENARIO_DATA_MOUNTPOINT2}:/opt/nagios/var
@@ -12,3 +14,10 @@ services:
       - ${SCENARIO_DATA_MOUNTPOINT5}:/opt/nagiosgraph/var
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:80"
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORK_NAME}
