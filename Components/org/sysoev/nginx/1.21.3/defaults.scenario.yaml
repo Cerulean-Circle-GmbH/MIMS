@@ -1,5 +1,8 @@
 scenario:
   ## Server setup
   server:
-    # What is the servers network name?
-    networkname: once-woda-network
+    # What is the servers hostname?
+    hostname: nginx
+    network:
+      # What is the servers network name?
+      name: once-woda-network

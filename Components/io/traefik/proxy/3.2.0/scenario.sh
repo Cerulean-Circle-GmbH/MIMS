@@ -12,17 +12,19 @@ function setEnvironment() {
 function checkAndCreateDataVolume() {
   banner "Check data volume"
   deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+
+  # create traefik config files
+  # mkdir -p ${SCENARIO_DATA_VOLUME}/configs
+  # touch ${SCENARIO_DATA_VOLUME}/configs/tls.yml
+  # touch ${SCENARIO_DATA_VOLUME}/configs/traefik.yml
+  # touch ${SCENARIO_DATA_VOLUME}/acme_letsencrypt.json
+  # sudo chown root:root ${SCENARIO_DATA_VOLUME}/acme_letsencrypt.json
+  # sudo chmod 600 ${SCENARIO_DATA_VOLUME}/acme_letsencrypt.json
 }
 
 function up() {
-  # Check network
-  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
-
   # Check data volume
   checkAndCreateDataVolume
-
-  # Create secret
-  deploy-tools.checkAndCreateSecret vaultwarden_admin_token.txt argon2
 
   deploy-tools.up
 }
@@ -61,14 +63,14 @@ function test() {
     log "Volumes:"
     docker volume ls | grep ${SCENARIO_DATA_VOLUME}
     log "Images:"
-    docker image ls | grep vaultwarden
+    docker image ls | grep traefik
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_vaultwarden_container
+    docker ps -all | grep ${SCENARIO_NAME}_traefik_container
   fi
 
-  # Check Vaultwarden status
-  banner "Check Vaultwarden $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  deploy-tools.checkContainer "Vaultwarden (docker)" ${SCENARIO_NAME}_vaultwarden_container
+  # Check Traefik Proxy status
+  banner "Check Traefik Proxy $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "Traefik Proxy (docker)" ${SCENARIO_NAME}_traefik_container
   return $? # Return the result of the last command
 }
 

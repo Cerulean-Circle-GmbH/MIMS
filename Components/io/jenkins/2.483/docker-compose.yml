@@ -4,6 +4,8 @@ services:
   jenkins-service:
     container_name: ${SCENARIO_NAME}_jenkins_container
     image: ${SCENARIO_NAME}_jenkins_image
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-jenkins}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${SCENARIO_DATA_MOUNTPOINT1}:/var/jenkins_home
@@ -12,3 +14,10 @@ services:
       - "${SCENARIO_RESOURCE_AGENTPORT}:50000"
     environment:
       - JENKINS_OPTS="--prefix=/jenkins"
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

@@ -62,6 +62,9 @@ function deploy-tools.setEnvironment() {
   if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
     # SCENARIO_DATA_VOLUME is a path
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml"
+  elif [[ $SCENARIO_TRAEFIK_ENABLE = "true" ]]; then
+    # add traefik related stuff
+    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml -f docker-compose.traefik.yml"
   else
     # SCENARIO_DATA_VOLUME is a volume
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
@@ -253,6 +256,31 @@ function deploy-tools.checkAndCreateNetwork() {
     docker network create $network
   else
     log "Network already exists: $network"
+  fi
+}
+
+# Create secrets and show them once during initialization
+function deploy-tools.checkAndCreateSecret() {
+  local filename=$1
+  local cipher=$2
+
+  if [ ! -d "${SCENARIO_SRC_SECRETSDIR}" ]; then
+    mkdir -p "${SCENARIO_SRC_SECRETSDIR}"
+  fi
+
+  if [ ! -f "${SCENARIO_SRC_SECRETSDIR}/$filename" ]; then
+    temp_password=$(openssl rand -base64 15)
+    log ""
+    log "********************************************************************************************"
+    log "*** Your password string is: ${temp_password} - Please write it down somewhere safe! ***"
+    log "********************************************************************************************"
+    log ""
+
+    if [ $cipher = "argon2" ]; then
+      echo -n "${temp_password}" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4 > ${SCENARIO_SRC_SECRETSDIR}/$filename
+    else
+      log "Non existing cipher method selected! Cannot create secret file!"
+    fi
   fi
 }
 

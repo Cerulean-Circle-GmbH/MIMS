@@ -5,6 +5,8 @@ scenario:
     component: .
     # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
     cachedir: ~/.cache/MIMS-Scenarios
+    # This is the directory storing secrets for docker containers
+    secretsdir: /var/dev/MIMS-Scenarios/_secrets
 
   ## Server setup
   server:

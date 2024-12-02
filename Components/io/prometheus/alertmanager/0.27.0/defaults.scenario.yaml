@@ -8,5 +8,14 @@ scenario:
   server:
     # What is the servers hostname?
     hostname: prometheus-alertmgr
-    # What is the servers network name?
-    networkname: monitoring-network
+    network:
+      # What is the servers network name?
+      name: monitoring-network
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy

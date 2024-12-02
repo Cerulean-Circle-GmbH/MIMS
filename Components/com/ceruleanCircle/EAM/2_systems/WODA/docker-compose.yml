@@ -4,6 +4,8 @@ services:
   once.sh:
     container_name: ${SCENARIO_SRC_ONCE_CONTAINER}
     image: ${SCENARIO_SRC_ONCE_IMAGE}
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-once}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
@@ -21,3 +23,10 @@ services:
       ONCE_DOCKER_HTTPS_PORT: 8443
       ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: 5002
       ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: 5005
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORK_NAME}
