@@ -29,13 +29,14 @@
         "thenuprojectcontributors.vscode-nushell-lang"
       ]
     }
-  }
+  },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "docker --version",
+  // .. Install yq yaml parser manually, because devbox has some issues with that
+  "postCreateCommand": "curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.5/yq_linux_amd64.tar.gz | tar xz && mv yq_linux_amd64 /usr/local/bin/yq"
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "devbox"
