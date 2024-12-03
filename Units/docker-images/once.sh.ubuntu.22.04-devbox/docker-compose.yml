@@ -1,0 +1,35 @@
+services:
+  devbox:
+    container_name: devbox_container
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DOCKER_BUILDKIT: 1
+    restart: unless-stopped
+    environment:
+      - SHELL=/bin/bash
+    volumes:
+      # to persist global packages
+      - ./devbox.json:/root/.local/share/devbox/global/default/devbox.json
+      - ./devbox.lock:/root/.local/share/devbox/global/default/devbox.lock
+      # mount users .ssh directory
+      - ~/.ssh:/root/.ssh
+      - ${VAR_DEV:-/dev/null}:/var/dev
+      # persist nix-store
+      - nix-store:/nix
+    # vscode needs a running container, so we make its shell interactive
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    # for being able to run docker-in-docker
+    privileged: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+
+volumes:
+  nix-store:
+    external: true
+  dind-var-lib-docker:
+    external: true
