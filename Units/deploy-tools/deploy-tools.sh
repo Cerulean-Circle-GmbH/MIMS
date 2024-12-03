@@ -58,15 +58,17 @@ function banner() {
 
 # Set some variables
 function deploy-tools.setEnvironment() {
+  # Source the .env file
+  set -a  # Automatically export all variables
+  # 'source' isn't available on all systems, so use . instead
+  . .env
+  set +a
+
   # This separation is necessary because of the old version of docker on WODA.test
-  if [[ $SCENARIO_DATA_VOLUME == *"/"* ]]; then
-    # SCENARIO_DATA_VOLUME is a path
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml"
-  elif [[ $SCENARIO_TRAEFIK_ENABLE = "true" ]]; then
+  if [[ $SCENARIO_TRAEFIK_ENABLE = "true" ]]; then
     # add traefik related stuff
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml -f docker-compose.traefik.yml"
   else
-    # SCENARIO_DATA_VOLUME is a volume
     COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
   fi
 
@@ -166,15 +168,15 @@ function deploy-tools.downloadFile() {
 
 # Check if data volume is a path or a volume
 function deploy-tools.checkAndCreateDataVolume() {
-  local datavolume=$1
+  local datavolume_var="${1}_PATH"
+  local external_var="${1}_EXTERNAL"
+  # resolve value by bash variable indirection
+  local datavolume=${!datavolume_var}
+  local external=${!external_var}
   local target=$2
 
   # set separator for handling of arrays as environment variables
   IFS=','
-
-  # Retrieve and convert the string back to an array
-  read -r -a mountpoints_array <<< "$SCENARIO_DATA_MOUNTPOINTS"
-  read -r -a names_array <<< "$SCENARIO_DATA_VOLUME_NAMES"
 
   if [ -z $target ]; then
     # default value
@@ -195,14 +197,13 @@ function deploy-tools.checkAndCreateDataVolume() {
     if ! deploy-tools.contains mountpoints_array "$datavolume"; then
       # Appending string '$datavolume' to the array.
       mountpoints_array+=($datavolume)
-      names_array+=("/notapplicable/")
     fi
   else
     log "Volume name does not contain a slash, so it is a volume: $datavolume"
     if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
       log "Volume does not exist yet: $datavolume"
-      # Create volume if ${SCENARIO_DATA_EXTERNAL} is true
-      if [[ "$SCENARIO_DATA_EXTERNAL" == "true" ]]; then
+      # Create volume if $external is true
+      if [[ "$external" == "true" ]]; then
         log "Creating external volume: $datavolume"
         docker volume create $datavolume
       fi
@@ -214,31 +215,26 @@ function deploy-tools.checkAndCreateDataVolume() {
     if ! deploy-tools.contains mountpoints_array "$target"; then
       # Appending string '$datavolume' to the array.
       mountpoints_array+=($target)
-      names_array+=($datavolume)
     fi
   fi
   # Convert the arrays to strings (e.g., using IFS as separators)
   SCENARIO_DATA_MOUNTPOINTS=${mountpoints_array[*]}
-  SCENARIO_DATA_VOLUME_NAMES=${names_array[*]}
   deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINTS
-  deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAMES
 
   # Add each volume as an environment variable
   i=1
   for volume in "${mountpoints_array[@]}"; do
     j=$((i - 1))
 
-    eval "SCENARIO_DATA_MOUNTPOINT$i=${volume}"
-    eval "SCENARIO_DATA_VOLUME_NAME$i=${names_array[$j]}"
-    deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT$i
-    deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_VOLUME_NAME$i
+    eval "SCENARIO_DATA_MOUNTPOINT_$i=${volume}"
+    deploy-tools.addToFile $CONFIG_DIR/.env SCENARIO_DATA_MOUNTPOINT_$i
 
     i=$((i + 1))
   done
 
-  # Check SCENARIO_DATA_EXTERNAL
-  if [[ "$SCENARIO_DATA_EXTERNAL" != "true" && "$SCENARIO_DATA_EXTERNAL" != "false" ]]; then
-    logError "SCENARIO_DATA_EXTERNAL must be true or false (but is $SCENARIO_DATA_EXTERNAL)"
+  # Check $external
+  if [[ "$external" != "true" && "$external" != "false" ]]; then
+    logError "${external_var} must be true or false (but is $external)"
     exit 1
   fi
 
@@ -277,6 +273,11 @@ function deploy-tools.checkAndCreateSecret() {
     log ""
 
     if [ $cipher = "argon2" ]; then
+      if ! command -v argon2 &> /dev/null; then
+        log "Command argon2 could not be found! Exiting!"
+        exit 1
+      fi
+
       echo -n "${temp_password}" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4 > ${SCENARIO_SRC_SECRETSDIR}/$filename
     else
       log "Non existing cipher method selected! Cannot create secret file!"
@@ -394,28 +395,31 @@ function deploy-tools.down() {
 
   # Shutdown and remove containers
   banner "Shutdown and remove containers"
-  CLEANUP=""
-  if [ "$SCENARIO_DATA_EXTERNAL" == "false" ]; then
-    CLEANUP="--volumes"
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down
 
-    # set separator for handling of arrays as environment variables
-    IFS=','
+  # Count the number of environment variables starting with SCENARIO_DATA_VOLUME_ and ending with _PATH
+  count=$(env | grep -E "^SCENARIO_DATA_VOLUME_[0-9]+_PATH=" | wc -l)
+  for (( i = 1; i <= $count; i++ ))
+  do
+    local datavolume_var="SCENARIO_DATA_VOLUME_${i}_PATH"
+    local external_var="SCENARIO_DATA_VOLUME_${i}_EXTERNAL"
+    # resolve value by bash variable indirection
+    local datavolume=${!datavolume_var}
+    local external=${!external_var}
 
-    # Retrieve and convert the string back to an array
-    read -r -a mountpoints_array <<< "$SCENARIO_DATA_MOUNTPOINTS"
-
-    for volume in "${mountpoints_array[@]}"; do
+    if [ "$external" == "false" ]; then
       # Remove data directory if it is a path
-      if [[ $volume == *"/"* ]]; then
-        log "Removing data directory: $volume"
-        rm -rf $volume
+      if [[ $datavolume == *"/"* ]]; then
+        log "Removing data directory: $datavolume"
+        rm -rf $datavolume
+      else
+        # otherwise remove docker volume
+        log "Removing docker volume:"
+        docker volume rm -f $datavolume
       fi
-    done
+    fi
+  done
 
-    # set separator to default value, otherwise docker-compose command will fail
-    IFS=' '
-  fi
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS down $CLEANUP
   if [ "$VERBOSITY" == "-v" ]; then
     docker ps | grep $SCENARIO_NAME
   fi
@@ -486,17 +490,4 @@ function deploy-tools.contains() {
     fi
   done
   return $in
-}
-
-function createArgonHash() {
-  local pass="$1"
-
-  if ! command -v argon2 &> /dev/null; then
-    echo "Command argon2 could not be found!"
-    exit 1
-  fi
-
-  # Generate the ADMIN_TOKEN
-  echo $(echo -n "$pass" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4)
-  exit 0
 }
