@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if ! command -v yq &> /dev/null; then
+  log "Command yq could not be found! Exiting!"
+  exit 1
+fi
+
 # Get current dir
 pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
@@ -225,28 +230,120 @@ function sourceEnv() {
 
 # Parse defaults.scenario.yaml
 function parse_yaml {
+  unset i
+  unset fs
   local prefix=$2
-  local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @ | tr @ '\034')
+  local separator=${3:-_}
+
+  local indexfix=-1
+  # Detect awk flavor
+  if awk --version 2>&1 | grep -q "GNU Awk" ; then
+      # GNU Awk detected
+      indexfix=-1
+  elif awk -Wv 2>&1 | grep -q "mawk" ; then
+      # mawk detected
+      indexfix=0
+  fi
+
+  local s='[[:space:]]*' sm='[ \t]*' w='[a-zA-Z0-9_.]*' fs=${fs:-$(echo @|tr @ '\034')} i=${i:-  }
+
+  ###############################################################################
+  # sed 1: remove empty lines but preserve comments
+  # sed 2: process lists
+  # sed 3: process dictionaries
+  # sed 4: rearrange anchors
+  # sed 5: remove '---'/'...'/quotes, add file separator to create fields for awk 2
+  # awk: convert the formatted data to variable assignments
+  ###############################################################################
+  sed -e "s|^\($s\)?|\1-|" \
+      -ne "s|^\($s\)-$s\($w\)$s:$s\(.*\)|\1-\n\1 \2: \3|" \
+      -e "t 1" \
+      -ne ":1" \
+      -ne "s|^$s\$||;t 2" \
+      -ne "p" \
+      -ne ":2" \
+      -ne "d" $1 | \
+  sed -ne "s|,$s\]|]|g" \
+      -e ":1" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1\2: \3[\4]\n\1$i- \5|;t 1" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s\[$s\(.*\)$s\]|\1\2: \3\n\1$i- \4|;" \
+      -e ":2" \
+      -e "s|^\($s\)\($w\)$s:$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1\2: [\3]\n\1$i- \4|;t 2" \
+      -e "s|^\($s\)\($w\)$s:$s\[$s\(.*\)$s\]|\1\2:\n\1$i- \3|;" \
+      -e ":3" \
+      -e "s|^\($s\)-$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1- [\2]\n\1$i- \3|;t 3" \
+      -e "s|^\($s\)-$s\[$s\(.*\)$s\]|\1-\n\1$i- \2|;p" | \
+  sed -ne "s|,$s}|}|g" \
+      -e ":1" \
+      -e "s|^\($s\)-$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1- {\2}\n\1$i\3: \4|;t 1" \
+      -e "s|^\($s\)-$s{$s\(.*\)$s}|\1-\n\1$i\2|;" \
+      -e ":2" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1\2: \3 {\4}\n\1$i\5: \6|;t 2" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s{$s\(.*\)$s}|\1\2: \3\n\1$i\4|;" \
+      -e ":3" \
+      -e "s|^\($s\)\($w\)$s:$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1\2: {\3}\n\1$i\4: \5|;t 3" \
+      -e "s|^\($s\)\($w\)$s:$s{$s\(.*\)$s}|\1\2:\n\1$i\3|;p" | \
+  sed -e "s|^\($s\)\($w\)$s:$s\(&$w\)\(.*\)|\1\2:\4\n\3|" \
+      -e "s|^\($s\)-$s\(&$w\)\(.*\)|\1- \3\n\2|" | \
   sed -ne "s|^\($s\):|\1|" \
-    -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
-    -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" \
-    -e "s|$s\(##*\)$s\(.*\)\$|\1 \2|p" $1 \
-    | awk -F$fs '{
-      if ( $1 ~ /#.*/ ) {
-        if ( $1 ~ /##.*/ ) {
-          print("")
-        }
-        print($1);
+      -e "s|^\($s\)\(---\)\($s\)||" \
+      -e "s|^\($s\)\(\.\.\.\)\($s\)||" \
+      -e "s|^\($s\)-${s}[\"']\(.*\)[\"']$s\$|\1$fs$fs\2|p;t" \
+      -e "s|^\($s\)\($w\)$s:${s}[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p;t" \
+      -e "s|^\($s\)-$s\(.*\)$s\$|\1$fs$fs\2|" \
+      -e "s|^\($s\)\($w\)$s:${s}[\"']\?\(.*\)$s\$|\1$fs\2$fs\3|" \
+      -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)[\"']$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)\($w\)$s:${s}[\"']\(.*\)$s\$|\1$fs\2$fs\3|" \
+      -e "s|^\($s\)[\"']\([^&][^$fs]*\)[\"']$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)[\"']\([^&][^$fs]*\)$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|" \
+      -e "s|^\($s\)\([^&][^$fs]*\)[\"']$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)\([^&][^$fs]*\)$s\$|\1$fs$fs$fs\2|" \
+      -e "s|$s\$||p" | \
+  awk -F$fs "{
+    gsub(/\t/,\"        \",\$1);
+    if(NF>3) {if(length(value) > 0) {value =\"\";} print(\$4);}
+    else {
+      if(match(\$1,/^&/)) {anchor[substr(\$1,2)] = full_vn; getline;};
+      indent = length(\$1)/length(\"$i\");
+      vname[indent] = \$2;
+      value = \$3;
+      for (i in vname) {if (i > indent) {delete vname[i]; idx[i] = 0;}}
+      if(length(\$2) == 0) {vname[indent] = ++idx[indent];};
+      vn=\"\"; for (i=0; i<indent; i++) {vn = (vn)(vname[i])(\"$separator\")}
+      vn=\"$prefix\" vn;
+      full_vn = vn vname[indent];
+      if(vn == \"$prefix\") vn = \"$prefix$separator\";
+      if(vn == \"_\") vn = \"__\";
+    }
+    gsub(/\./,\"$separator\",full_vn);
+    gsub(/\\\\\"/,\"\\\"\",value);
+    gsub(/'/,\"'\\\"'\\\"'\",value);
+    assignment[full_vn] = value;
+    if(!match(assignment[vn], full_vn))assignment[vn] = assignment[vn] \" \" full_vn;
+    if(match(value,/^\*/)){
+      ref = anchor[substr(value,2)];
+      if(length(ref) == 0){
+        printf(\"%s=%s\n\", toupper(full_vn), value);
       } else {
-        indent = length($1)/2;
-        vname[indent] = $2;
-        for (i in vname) {if (i > indent) {delete vname[i]}}
-        if (length($3) > 0) {
-            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-            printf("%s%s%s=\"%s\"\n", "'$prefix'", toupper(vn), toupper($2), $3);
+        for(val in assignment){
+          if((length(ref)>0) && index(val, ref) == 1){
+            tmpval = assignment[val];
+            sub(ref,full_vn,val);
+            if(match(val,\"$separator\$\")){
+              gsub(ref,full_vn,tmpval);
+            } else if (length(tmpval) > 0) {
+                printf(\"%s=%s\n\", toupper(val), tmpval);
+            }
+            assignment[val] = tmpval;
+          }
         }
       }
-    }'
+    } else if (length(value) > 0) {
+      printf(\"%s=%s\n\", toupper(full_vn), value);
+    }
+  }"
 }
 
 # Copy scenario config
@@ -277,8 +374,11 @@ function config() {
   SCENARIO_DEFAULTS_YAML=$cwd/Components/$SCENARIO_SRC_COMPONENT/defaults.scenario.yaml
   SCENARIO_BASEDEFAULTS_YAML=$cwd/Units/deploy-tools/basedefaults.scenario.yaml
   SCENARIO_DEFAULTS_ENV=$cwd/Components/$SCENARIO_SRC_COMPONENT/_defaults.scenario.sh
-  parse_yaml $SCENARIO_BASEDEFAULTS_YAML > $SCENARIO_DEFAULTS_ENV
-  parse_yaml $SCENARIO_DEFAULTS_YAML >> $SCENARIO_DEFAULTS_ENV
+
+  # merge yaml files
+  yq eval-all '. as $item ireduce ({}; . *+ $item)' $SCENARIO_BASEDEFAULTS_YAML $SCENARIO_DEFAULTS_YAML > $SCENARIO_DEFAULTS_YAML.tmp
+  parse_yaml $SCENARIO_DEFAULTS_YAML.tmp > $SCENARIO_DEFAULTS_ENV
+  rm $SCENARIO_DEFAULTS_YAML.tmp
 
   # Check $SCENARIO_FILE_NAME for missing variables
   local current_comment=""
