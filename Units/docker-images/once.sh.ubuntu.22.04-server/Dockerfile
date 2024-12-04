@@ -20,6 +20,10 @@ RUN dpkg --remove --force-remove-reinstreq libnode-dev
 RUN dpkg --remove --force-remove-reinstreq libnode72:amd64
 RUN dpkg --remove --force-remove-reinstreq libnode72:arm64
 
+# Install yq yaml parser
+RUN curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.5/yq_linux_amd64.tar.gz | \
+    tar xz && mv yq_linux_amd64 /usr/local/bin/yq
+
 # build all things inside container
 ADD entrypoint entrypoint
 RUN entrypoint/build.sh

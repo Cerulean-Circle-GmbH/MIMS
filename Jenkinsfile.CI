@@ -106,7 +106,7 @@ pipeline {
                         set -e
                         ./scenario.deploy de/wo-da/test/dev-ci deinit
                         ./scenario.deploy de/wo-da/test/dev-ci init,up,test
-                        ./scenario.deploy de/wo-da/test/dev-ci test -v > $WORKSPACE/_results/com.sfsre.backup.dev-ci.log
+                        ./scenario.deploy de/wo-da/test/dev-ci test -v > $WORKSPACE/_results/de.wo-da.test.dev-ci.log
                     '''
                 }
             }
