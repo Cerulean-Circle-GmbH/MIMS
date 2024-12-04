@@ -346,8 +346,8 @@ function deploy-tools.checkAndRestoreDataVolume() {
         # Extract data and strip /var/jenkins_home from the tar
         log "Extracting data into volume: $datavolume"
         # use shell expansion to get last part of path for $datavolume
-        docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "tar -xzf /backup/${datavolume##*/}.tar.gz -C /data --strip-components=$stripcomponents > /dev/null"
-        docker run --rm -v $datavolume:/data -v ./_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
+        docker run --rm -v $datavolume:/data -v ${SCENARIO_SRC_CACHEDIR}/_data_restore:/backup alpine sh -c "tar -xzf /backup/${datavolume##*/}.tar.gz -C /data --strip-components=$stripcomponents > /dev/null"
+        docker run --rm -v $datavolume:/data -v ${SCENARIO_SRC_CACHEDIR}/_data_restore:/backup alpine sh -c "chown -R 1000:1000 /data > /dev/null"
       fi
     fi
   fi

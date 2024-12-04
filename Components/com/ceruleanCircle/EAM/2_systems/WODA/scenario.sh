@@ -195,11 +195,11 @@ function test() {
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
-
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
+    log ""
     log "Images:"
     docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
-
+    log ""
     log "Containers:"
     docker ps | grep ${SCENARIO_SRC_ONCE_CONTAINER}
   fi
