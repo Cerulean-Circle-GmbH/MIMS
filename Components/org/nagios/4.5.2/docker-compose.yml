@@ -7,11 +7,11 @@ services:
     restart: always
     hostname: ${SCENARIO_SERVER_HOSTNAME:-nagios}
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/opt/nagios/etc
-      - ${SCENARIO_DATA_MOUNTPOINT2}:/opt/nagios/var
-      - ${SCENARIO_DATA_MOUNTPOINT3}:/opt/Custom-Nagios-Plugins
-      - ${SCENARIO_DATA_MOUNTPOINT4}:/opt/nagiosgraph/etc
-      - ${SCENARIO_DATA_MOUNTPOINT5}:/opt/nagiosgraph/var
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/opt/nagios/etc
+      - ${SCENARIO_DATA_MOUNTPOINT_2}:/opt/nagios/var
+      - ${SCENARIO_DATA_MOUNTPOINT_3}:/opt/Custom-Nagios-Plugins
+      - ${SCENARIO_DATA_MOUNTPOINT_4}:/opt/nagiosgraph/etc
+      - ${SCENARIO_DATA_MOUNTPOINT_5}:/opt/nagiosgraph/var
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:80"
     networks:

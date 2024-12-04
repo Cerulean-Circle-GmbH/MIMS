@@ -10,7 +10,7 @@ services:
       - ADMIN_TOKEN_FILE=/run/secrets/vw_admin_token
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/data/
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/data/
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:80"
     secrets:

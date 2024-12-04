@@ -7,7 +7,7 @@ services:
     restart: always
     hostname: ${SCENARIO_SERVER_HOSTNAME:-nginx}
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/nginx/conf.d/
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/etc/nginx/conf.d/
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/conf:/etc/letsencrypt
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/www:/var/www/certbot
     ports:
