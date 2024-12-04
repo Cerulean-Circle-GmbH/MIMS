@@ -1,4 +1,4 @@
-# docker with sshd suppoer
+# docker with sshd support
 
 ## use sh scripts
 
@@ -22,6 +22,13 @@ c2 devTool config.edit
 ```
 
 ## changes
+
+#### 2024-12-04 - v0.17:
+
+- added yq yaml parser v4.44.5
+- added jq json parser v1.7.1
+
+#### Old history:
 
 change image names and versions in
 ```

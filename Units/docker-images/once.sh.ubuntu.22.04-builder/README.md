@@ -26,6 +26,7 @@ c2 devTool config.edit
 #### 2024-12-04 - v0.6:
 
 - added yq yaml parser v4.44.5
+- added jq json parser v1.7.1
 
 #### Old history:
 
