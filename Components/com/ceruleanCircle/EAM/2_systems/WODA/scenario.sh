@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
 }
 
 function recreateOnceCerts() {
@@ -50,7 +50,7 @@ function up() {
   # Set environment
   setEnvironment
 
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
 
   # Create .gitconfig
   if [ $SCENARIO_SRC_ONCE_OUTERCONFIG != "none" ] && [ ! -f $SCENARIO_SRC_ONCE_OUTERCONFIG/.gitconfig ]; then
