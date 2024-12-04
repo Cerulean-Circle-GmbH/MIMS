@@ -7,8 +7,8 @@ services:
     restart: always
     hostname: ${SCENARIO_SERVER_HOSTNAME:-prometheus}
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/prometheus
-      - ${SCENARIO_DATA_MOUNTPOINT2}:/prometheus
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/etc/prometheus
+      - ${SCENARIO_DATA_MOUNTPOINT_2}:/prometheus
     command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:9090"

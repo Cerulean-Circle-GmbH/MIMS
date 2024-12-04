@@ -1,7 +1,13 @@
 scenario:
+  ## Config data setup
   data:
-    # What is the path used to store the scraped data (e.g. './db' or 'db-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume1: ./db
+    volume:
+      # What is the path of the data volume (e.g. './data' or 'data-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./db
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
 
   ## Unique resources
   resource:
