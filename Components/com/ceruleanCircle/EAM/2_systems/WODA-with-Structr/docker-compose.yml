@@ -10,7 +10,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
       # TODO: Das geht nicht, wenn das volume unten nicht existiert (none wird behandelt)
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
@@ -38,9 +38,9 @@ services:
       - ${SCENARIO_RESOURCE_STRUCTR_HTTP}:8082
       - ${SCENARIO_RESOURCE_STRUCTR_HTTPS}:8083
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
-      - ${SCENARIO_DATA_MOUNTPOINT2}:/var/lib/structr-volume/
+      - ${SCENARIO_DATA_MOUNTPOINT_2}:/var/lib/structr-volume/
       - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.pkcs12:ro
       - ${SCENARIO_SERVER_EAMDDIR}:/EAMD.ucp
       - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/

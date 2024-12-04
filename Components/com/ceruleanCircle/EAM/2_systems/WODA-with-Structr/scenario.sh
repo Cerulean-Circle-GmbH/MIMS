@@ -12,8 +12,8 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "db-volume"
 }
 
 function recreateOnceCerts() {
@@ -67,8 +67,8 @@ function up() {
   # TODO: Use default structr server if file is a server or none
 
   # TODO: --strip-components=1, fix in backup before
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_SRC_STRUCTR_DATAFILE $SCENARIO_DATA_VOLUME1 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_2_RESTORESOURCE $SCENARIO_DATA_VOLUME_2_PATH 1
 
   # Download structr.zip
   banner "Download structr.zip"
