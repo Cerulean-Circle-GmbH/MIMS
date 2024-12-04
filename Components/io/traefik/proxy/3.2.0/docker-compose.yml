@@ -16,7 +16,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro # So that Traefik can listen to the Docker events
       - /var/log/traefik/:/var/log/traefik/
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/traefik:rw
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/etc/traefik:rw
     networks:
       proxy:
         ipv4_address: ${SCENARIO_SERVER_NETWORK_IPV4ADDRESS}

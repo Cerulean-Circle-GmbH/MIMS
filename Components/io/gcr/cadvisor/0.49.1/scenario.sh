@@ -37,6 +37,7 @@ function test() {
     banner "Test"
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_cadvisor_container
   fi

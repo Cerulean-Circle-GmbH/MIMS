@@ -12,7 +12,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
 }
 
 # TODO: Add backup step to all scenarios
@@ -39,8 +39,8 @@ function up() {
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
 
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
-
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
+  
   # Download structr.zip
   banner "Download structr.zip"
   deploy-tools.downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
@@ -112,9 +112,11 @@ function test() {
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
+    log ""
     log "Images:"
     docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
+    log ""
     log "Containers:"
     docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}
   fi

@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
 }
 
 function up() {
@@ -59,9 +59,11 @@ function test() {
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
+    log ""
     log "Images:"
     docker image ls | grep vaultwarden
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_vaultwarden_container
   fi

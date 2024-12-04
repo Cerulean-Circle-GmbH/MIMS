@@ -25,6 +25,14 @@ RUN mkdir -p ~/.docker/cli-plugins/ \
   && curl -L https://github.com/docker/buildx/releases/download/v0.11.2/buildx-v0.11.2.linux-amd64 -o ~/.docker/cli-plugins/docker-buildx \
   && chmod +x ~/.docker/cli-plugins/docker-buildx
 
+# Install yq yaml parser
+RUN curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.5/yq_linux_amd64.tar.gz | \
+    tar xz && mv yq_linux_amd64 /usr/local/bin/yq
+
+# Install jq json parser
+RUN curl -fsSLO https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64 && \
+    mv jq-linux-amd64 /usr/local/bin/jq && chmod 755 /usr/local/bin/jq
+
 # build all things inside container
 ADD entrypoint entrypoint
 RUN entrypoint/build.sh

@@ -16,8 +16,9 @@ RUN apt-get update \
   ca-certificates \
   curl \
   git \
-  xz-utils \
   sudo \
+  wget \
+  xz-utils \
   # Clean up
   && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
@@ -54,6 +55,10 @@ RUN echo "\n# Use devbox as global package manager\n" \
   >> ~/.bashrc
 COPY devbox.json /root/.local/share/devbox/global/default/devbox.json
 COPY devbox.lock /root/.local/share/devbox/global/default/devbox.lock
+
+# Install yq yaml parser manually, because devbox has some issues with that
+RUN curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.5/yq_linux_amd64.tar.gz | \
+     tar xz && mv yq_linux_amd64 /usr/local/bin/yq
 
 # use sh ant not bash, because bash will initialize devbox runtime
 CMD ["sh"]
