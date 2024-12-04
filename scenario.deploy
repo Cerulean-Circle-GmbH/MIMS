@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-if ! command -v yq &> /dev/null; then
-  log "Command yq could not be found! Exiting!"
-  exit 1
-fi
-
 # Get current dir
 pushd $(dirname $0) > /dev/null
 cwd=$(pwd)
 popd > /dev/null
 . $cwd/Units/deploy-tools/deploy-tools.sh
+
+if ! command -v yq &> /dev/null; then
+  log "Command yq could not be found! Exiting!"
+  exit 1
+fi
 
 if [ -f ".env" ]; then
   # source local environment
