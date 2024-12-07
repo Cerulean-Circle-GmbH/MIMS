@@ -1,0 +1,23 @@
+scenario:
+  ## Unique resources
+  resource:
+    # What is the http port of the docker container?
+    httpport: 9000
+    # What is the admin port of the docker container?
+    adminport: 9001
+
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: minio
+    network:
+      # What is the servers network name?
+      name: minio-network
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy
