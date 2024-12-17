@@ -144,7 +144,7 @@ function up() {
   DOCKEROUTPUT=$(
     docker exec -i $SCENARIO_SRC_ONCE_CONTAINER bash -s << EOF
         source /root/.once
-        export ONCE_REVERSE_PROXY_CONFIG='[["auth","test.wo-da.de"],["snet","test.wo-da.de"],["structr","${SCENARIO_STRUCTR_CONTAINER}:8083"]]'
+        export ONCE_REVERSE_PROXY_CONFIG='[["auth","${SCENARIO_SERVER_NAME}"],["structr","${SCENARIO_STRUCTR_CONTAINER}:8083"]]'
         export ONCE_REV_PROXY_HOST='0.0.0.0'
         export ONCE_STRUCTR_SERVER='https://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS'
         CF=\$ONCE_DEFAULT_SCENARIO/.once

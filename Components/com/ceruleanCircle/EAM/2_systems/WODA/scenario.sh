@@ -108,6 +108,23 @@ function up() {
 
   recreateOnceCerts
 
+    # Reconfigure ONCE server
+  banner "Reconfigure ONCE server (in container $SCENARIO_SRC_ONCE_CONTAINER)"
+  DOCKEROUTPUT=$(
+    docker exec -i $SCENARIO_SRC_ONCE_CONTAINER bash -s << EOF
+        source /root/.once
+        export ONCE_REVERSE_PROXY_CONFIG='[["auth","${SCENARIO_SERVER_NAME}"]]'
+        export ONCE_REV_PROXY_HOST='0.0.0.0'
+        CF=\$ONCE_DEFAULT_SCENARIO/.once
+        mv \$CF \$CF.ORIG
+        cat \$CF.ORIG | sed "s;ONCE_REVERSE_PROXY_CONFIG=.*;ONCE_REVERSE_PROXY_CONFIG='\$ONCE_REVERSE_PROXY_CONFIG';" | \
+                        sed "s;ONCE_REV_PROXY_HOST=.*;ONCE_REV_PROXY_HOST='\$ONCE_REV_PROXY_HOST';" > \$CF
+        echo "CF=\$CF"
+        cat \$CF | grep ONCE_REVERSE_PROXY_CONFIG
+EOF
+  )
+  logVerbose "$DOCKEROUTPUT"
+
   # Checkout correct branch
   if [ -n "$SCENARIO_SRC_ONCE_BRANCH" ] && [ "$SCENARIO_SRC_ONCE_BRANCH" != "none" ]; then
     banner "Checkout correct branch (in container $SCENARIO_SRC_ONCE_CONTAINER)"
