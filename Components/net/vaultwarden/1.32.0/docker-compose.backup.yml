@@ -14,6 +14,7 @@ services:
     # Check https://github.com/offen/docker-volume-backup/releases
     # for a list of available releases.
     image: offen/docker-volume-backup:v2.43.0
+    container_name: ${SCENARIO_NAME}_vaultwarden_backup
     restart: always
     environment:
       - BACKUP_CRON_EXPRESSION=${SCENARIO_BACKUP_CRON_EXPRESSION:-@daily}
