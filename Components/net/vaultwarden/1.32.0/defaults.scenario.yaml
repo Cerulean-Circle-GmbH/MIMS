@@ -19,3 +19,31 @@ scenario:
     network:
       # What is the traefik proxy network name?
       name: proxy
+
+  ## Backup
+  backup:
+    # Do you want to backup the container?
+    enable: false
+    # Do you want to stop the container services during backup?
+    stopduringbackup: false
+    # Local backup path
+    #localpath: /workspace/MIMS/_volumes/backup
+    cron:
+      # To disable the cron job, use `0 0 5 31 2 ?` as value. The default ist `@daily`
+      expression: 0 5 * * *
+    # The compression algorithm used in conjunction with tar. Valid options are: "gz" (Gzip), "zst" (Zstd) or "none" (tar only)
+    compression: gz
+    ssh:
+      host:
+        # The name of the remote SSH backup server
+        name: backup.sfsre.com
+      # The port of the remote SSH backup server
+      port: 22
+      # The user to log into the remote SSH backup server
+      user: root
+      identity:
+        # The private key path to mount in container for the remote SSH backup server
+        file: ~/.ssh/id_rsa
+      remote:
+        # The Directory to place the backups to on the remote SSH backup server
+        path: /var/backups/woda.metatrom.net_vault42
