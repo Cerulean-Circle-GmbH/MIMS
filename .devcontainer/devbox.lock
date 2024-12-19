@@ -487,6 +487,74 @@
         }
       }
     },
+    "less@668": {
+      "last_modified": "2024-11-28T07:51:56Z",
+      "resolved": "github:NixOS/nixpkgs/226216574ada4c3ecefcbbec41f39ce4655f78ef#less",
+      "source": "devbox-search",
+      "version": "668",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/f790ymixyfi7qzcwb38q1ij99m8hhy0g-less-668",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/h6d8f22n4v68zdm57vcw0rjw0b51hgiy-less-668-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/f790ymixyfi7qzcwb38q1ij99m8hhy0g-less-668"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8ya56ryzv0jmp6pnzn49wf03wp09chaz-less-668",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/fgq8bwi9ny56a91sqvvjsi0k99rvikkh-less-668-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8ya56ryzv0jmp6pnzn49wf03wp09chaz-less-668"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/hink0l5s05wcfpnsc3qqwdsrn9fiwlxx-less-668",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/kd0c0qw2vdqbvwx5v0cqlj4fihd8r1px-less-668-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/hink0l5s05wcfpnsc3qqwdsrn9fiwlxx-less-668"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/y433bl4sfbg3pfrdhfmh88g7398rqfb1-less-668",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/882brps2x7jxwwadvxg0kcsdm7bqm6yg-less-668-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/y433bl4sfbg3pfrdhfmh88g7398rqfb1-less-668"
+        }
+      }
+    },
     "libargon2@20190702": {
       "last_modified": "2024-11-28T07:51:56Z",
       "resolved": "github:NixOS/nixpkgs/226216574ada4c3ecefcbbec41f39ce4655f78ef#libargon2",
@@ -532,6 +600,70 @@
             }
           ],
           "store_path": "/nix/store/kkghhixwfzs1y4pkir5piifjbcdjplyg-libargon2-20190702"
+        }
+      }
+    },
+    "nano@8.2": {
+      "last_modified": "2024-11-28T07:51:56Z",
+      "resolved": "github:NixOS/nixpkgs/226216574ada4c3ecefcbbec41f39ce4655f78ef#nano",
+      "source": "devbox-search",
+      "version": "8.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/zkj0gdss4wqp2l0jk5ghcfmm4dj61psi-nano-8.2",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/wsp9lmiqm0qnca8mnai85n968cq14z09-nano-8.2-info"
+            }
+          ],
+          "store_path": "/nix/store/zkj0gdss4wqp2l0jk5ghcfmm4dj61psi-nano-8.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/91b0j668v3wpdjng4xpj00g93a4ml973-nano-8.2",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/1vvr1a8y7sw9xb5703jjkagkvkjnwp8m-nano-8.2-info"
+            }
+          ],
+          "store_path": "/nix/store/91b0j668v3wpdjng4xpj00g93a4ml973-nano-8.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/03v4bx3y34q6fqx64m3r3y2fz568b2w0-nano-8.2",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/v74yqwxidrbm3zi5wl557yhiypzhx89j-nano-8.2-info"
+            }
+          ],
+          "store_path": "/nix/store/03v4bx3y34q6fqx64m3r3y2fz568b2w0-nano-8.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/zldkw06bqw80ih4jlcn52fjj679bx9q5-nano-8.2",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/8f4v662a33m66lph313442x55k3a49qa-nano-8.2-info"
+            }
+          ],
+          "store_path": "/nix/store/zldkw06bqw80ih4jlcn52fjj679bx9q5-nano-8.2"
         }
       }
     },
