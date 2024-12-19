@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.13.5/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.13.7/.schema/devbox.schema.json",
   "packages": [
     "carapace@1.0.7",
     "docker-buildx@0.11.2",
@@ -8,8 +8,11 @@
     "fish@3.7.1",
     "git-lfs@3.5.1",
     "git@2.46.0",
+    "gnupg@2.4.5",
     "jq@1.7.1",
+    "less@668",
     "libargon2@20190702",
+    "nano@8.2",
     "nushell@0.97.1",
     "openssh@8.2p1",
     "openssl_1_1@1.1.1g",
