@@ -19,6 +19,7 @@ RUN apt-get update \
   git \
   net-tools \
   sudo \
+  tzdata \
   wget \
   xz-utils \
   # Clean up

@@ -59,17 +59,20 @@ function banner() {
 # Set some variables
 function deploy-tools.setEnvironment() {
   # Source the .env file
-  set -a  # Automatically export all variables
+  set -a # Automatically export all variables
   # 'source' isn't available on all systems, so use . instead
   . .env
   set +a
 
   # This separation is necessary because of the old version of docker on WODA.test
+  COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
   if [[ $SCENARIO_TRAEFIK_ENABLE = "true" ]]; then
     # add traefik related stuff
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml -f docker-compose.traefik.yml"
-  else
-    COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
+    COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.traefik.yml"
+  fi
+  if [[ $SCENARIO_BACKUP_ENABLE = "true" ]]; then
+    # add backup related stuff
+    COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.backup.yml"
   fi
 
   # Rsync verbosity
@@ -399,8 +402,7 @@ function deploy-tools.down() {
 
   # Count the number of environment variables starting with SCENARIO_DATA_VOLUME_ and ending with _PATH
   count=$(env | grep -E "^SCENARIO_DATA_VOLUME_[0-9]+_PATH=" | wc -l)
-  for (( i = 1; i <= $count; i++ ))
-  do
+  for ((i = 1; i <= $count; i++)); do
     local datavolume_var="SCENARIO_DATA_VOLUME_${i}_PATH"
     local external_var="SCENARIO_DATA_VOLUME_${i}_EXTERNAL"
     # resolve value by bash variable indirection
