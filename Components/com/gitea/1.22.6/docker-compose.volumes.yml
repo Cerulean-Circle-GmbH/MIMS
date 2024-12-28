@@ -1,0 +1,10 @@
+version: "3.4"
+
+volumes:
+  data-volume:
+    external: ${SCENARIO_DATA_VOLUME_1_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_1_PATH}
+
+  db-volume:
+    external: ${SCENARIO_DATA_VOLUME_2_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_2_PATH}
