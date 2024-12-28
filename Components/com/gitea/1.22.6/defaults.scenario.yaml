@@ -45,20 +45,20 @@ scenario:
         expression: 0 5 * * *
       # The compression algorithm used in conjunction with tar. Valid options are: "gz" (Gzip), "zst" (Zstd) or "none" (tar only)
       compression: gz
-      # ssh:
-      #   host:
-      #     # The name of the remote SSH backup server
-      #     name: backup.sfsre.com
-      #   # The port of the remote SSH backup server
-      #   port: 22
-      #   # The user to log into the remote SSH backup server
-      #   user: root
-      #   identity:
-      #     # The private key path to mount in container for the remote SSH backup server
-      #     file: ~/.ssh/id_rsa
-      #   remote:
-      #     # The Directory to place the backups to on the remote SSH backup server
-      #     path: /var/backups/woda.metatrom.net_gitea
+      ssh:
+        host:
+          # The name of the remote SSH backup server ('' - if not applicable)
+          name: backup.sfsre.com
+        # The port of the remote SSH backup server ('' - if not applicable)
+        port: 22
+        # The user to log into the remote SSH backup server ('' - if not applicable)
+        user: root
+        identity:
+          # The private key path to mount in container for the remote SSH backup server ('' - if not applicable)
+          file: ~/.ssh/id_rsa
+        remote:
+          # The Directory to place the backups to on the remote SSH backup server ('' - if not applicable)
+          path: /var/backups/woda.metatrom.net_gitea
     # Do you want to backup the db container?
     - enable: false
       # Do you want to stop the db container services during backup?
@@ -70,17 +70,17 @@ scenario:
         expression: 0 5 * * *
       # The compression algorithm used in conjunction with tar. Valid options are: "gz" (Gzip), "zst" (Zstd) or "none" (tar only)
       compression: gz
-      # ssh:
-      #   host:
-      #     # The name of the remote SSH backup server
-      #     name: backup.sfsre.com
-      #   # The port of the remote SSH backup server
-      #   port: 22
-      #   # The user to log into the remote SSH backup server
-      #   user: root
-      #   identity:
-      #     # The private key path to mount in container for the remote SSH backup server
-      #     file: ~/.ssh/id_rsa
-      #   remote:
-      #     # The Directory to place the backups to on the remote SSH backup server
-      #     path: /var/backups/woda.metatrom.net_gitea
+      ssh:
+        host:
+          # The name of the remote SSH backup server ('' - if not applicable)
+          name: backup.sfsre.com
+        # The port of the remote SSH backup server ('' - if not applicable)
+        port: 22
+        # The user to log into the remote SSH backup server ('' - if not applicable)
+        user: root
+        identity:
+          # The private key path to mount in container for the remote SSH backup server ('' - if not applicable)
+          file: ~/.ssh/id_rsa
+        remote:
+          # The Directory to place the backups to on the remote SSH backup server ('' - if not applicable)
+          path: /var/backups/woda.metatrom.net_gitea
