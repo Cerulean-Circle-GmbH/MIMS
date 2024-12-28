@@ -7,7 +7,7 @@ services:
     command: server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_PASSWORD_FILE=/run/secrets/minio_admin_token
     restart: always
     hostname: ${SCENARIO_SERVER_HOSTNAME:-minio}
     volumes:
@@ -15,6 +15,8 @@ services:
     ports:
       - "${SCENARIO_RESOURCE_HTTPPORT}:9000"
       - "${SCENARIO_RESOURCE_ADMINPORT}:9001"
+    secrets:
+      - minio_admin_token
     networks:
       - default
 
@@ -22,3 +24,8 @@ networks:
   default:
     external:
       name: ${SCENARIO_SERVER_NETWORK_NAME}
+
+# https://docs.docker.com/reference/compose-file/services/#secrets
+secrets:
+  minio_admin_token:
+    file: ${SCENARIO_SRC_SECRETSDIR}/minio_admin_token.txt
