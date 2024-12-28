@@ -70,7 +70,7 @@ function deploy-tools.setEnvironment() {
     # add traefik related stuff
     COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.traefik.yml"
   fi
-  if [[ $SCENARIO_BACKUP_ENABLE = "true" ]]; then
+  if [[ $SCENARIO_BACKUP_ENABLE = "true" || $SCENARIO_BACKUP_1_ENABLE = "true" ]]; then
     # add backup related stuff
     COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.backup.yml"
   fi
