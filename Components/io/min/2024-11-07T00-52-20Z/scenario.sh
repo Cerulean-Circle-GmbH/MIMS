@@ -21,6 +21,12 @@ function up() {
   # Check data volume
   checkAndCreateDataVolume
 
+  # Restore backup
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
+
+  # Create secret
+  deploy-tools.checkAndCreateSecret minio_admin_token.txt plain
+
   deploy-tools.up
 }
 
