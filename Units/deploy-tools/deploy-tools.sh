@@ -275,7 +275,9 @@ function deploy-tools.checkAndCreateSecret() {
     log "********************************************************************************************"
     log ""
 
-    if [ $cipher = "argon2" ]; then
+    if [ $cipher = "plain" ]; then
+      echo -n "${temp_password}" > ${SCENARIO_SRC_SECRETSDIR}/$filename
+    elif [ $cipher = "argon2" ]; then
       if ! command -v argon2 &> /dev/null; then
         log "Command argon2 could not be found! Exiting!"
         exit 1
