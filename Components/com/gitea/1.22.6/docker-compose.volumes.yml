@@ -8,3 +8,7 @@ volumes:
   db-volume:
     external: ${SCENARIO_DATA_VOLUME_2_EXTERNAL}
     name: ${SCENARIO_DATA_VOLUME_2_PATH}
+
+  runner-volume:
+    external: ${SCENARIO_DATA_VOLUME_3_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_3_PATH}

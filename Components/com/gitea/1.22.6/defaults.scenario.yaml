@@ -19,7 +19,13 @@ scenario:
     volume:
       # What is the path used to store the gitea db (e.g. './db' or 'db-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
       - path: /var/dev/MIMS-Scenarios/_volumes/gitea-db
-        # Where to find the restore data (none - if not applicable)?
+        # Where to find the restore data for gitea db (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
+      # What is the path used to store the action runner data (e.g. './runner-data' or 'runner-data'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: /var/dev/MIMS-Scenarios/_volumes/gitea-runner-data
+        # Where to find the restore data for action runner (none - if not applicable)?
         restoresource: none
         # Is the data volume external (true or false; if not external, it will be deleted on down)?
         external: true
@@ -62,6 +68,31 @@ scenario:
     # Do you want to backup the db container?
     - enable: false
       # Do you want to stop the db container services during backup?
+      stopduringbackup: false
+      # Local backup path
+      localpath: /workspace/MIMS/_volumes/backup
+      cron:
+        # To disable the cron job, use `0 0 5 31 2 ?` as value. The default ist `@daily`
+        expression: 0 5 * * *
+      # The compression algorithm used in conjunction with tar. Valid options are: "gz" (Gzip), "zst" (Zstd) or "none" (tar only)
+      compression: gz
+      ssh:
+        host:
+          # The name of the remote SSH backup server ('' - if not applicable)
+          name: backup.sfsre.com
+        # The port of the remote SSH backup server ('' - if not applicable)
+        port: 22
+        # The user to log into the remote SSH backup server ('' - if not applicable)
+        user: root
+        identity:
+          # The private key path to mount in container for the remote SSH backup server ('' - if not applicable)
+          file: ~/.ssh/id_rsa
+        remote:
+          # The Directory to place the backups to on the remote SSH backup server ('' - if not applicable)
+          path: /var/backups/woda.metatrom.net_gitea
+    # Do you want to backup the runner container?
+    - enable: false
+      # Do you want to stop the runner container during backup?
       stopduringbackup: false
       # Local backup path
       localpath: /workspace/MIMS/_volumes/backup

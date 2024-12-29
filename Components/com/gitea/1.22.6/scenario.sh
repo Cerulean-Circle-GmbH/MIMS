@@ -13,6 +13,7 @@ function checkAndCreateDataVolume() {
   banner "Check data volume"
   deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume"
   deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "db-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_3 "runner-volume"
 }
 
 function up() {
@@ -25,9 +26,14 @@ function up() {
   # Restore backup
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_2_RESTORESOURCE $SCENARIO_DATA_VOLUME_2_PATH 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_3_RESTORESOURCE $SCENARIO_DATA_VOLUME_3_PATH 1
 
-  # Create secret
+  # Create secrets
+  # deploy-tools.checkAndCreateSecret gitea_runner_registration_token.txt plain # << Will be available in 1.23.0
   deploy-tools.checkAndCreateSecret gitea_db_passwd.txt plain
+
+  # Set correct network name for Action Runner config
+  sed -i "s/<network-placeholder>/$SCENARIO_SERVER_NETWORK_NAME/" runner_config.yaml
 
   deploy-tools.up
 }
