@@ -29,7 +29,7 @@ function up() {
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_3_RESTORESOURCE $SCENARIO_DATA_VOLUME_3_PATH 1
 
   # Create secrets
-  # deploy-tools.checkAndCreateSecret gitea_runner_registration_token.txt plain # << Will be available in 1.23.0
+  deploy-tools.checkAndCreateSecret gitea_runner_registration_token.txt plain
   deploy-tools.checkAndCreateSecret gitea_db_passwd.txt plain
 
   # Set correct network name for Action Runner config
