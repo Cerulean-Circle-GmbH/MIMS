@@ -1,16 +1,18 @@
 scenario:
-  ## Server setup
-  server:
-    # What is the servers hostname?
-    hostname: vaultwarden
-    network:
-      # What is the servers network name?
-      name: vaultwarden-network
-
   ## Unique resources
   resource:
     # What is the http port of the docker container?
-    httpport: 8090
+    httpport: 9000
+    # What is the admin port of the docker container?
+    adminport: 9001
+
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: minio
+    network:
+      # What is the servers network name?
+      name: minio-network
 
   ## Traefik proxy setup
   traefik:
@@ -27,7 +29,7 @@ scenario:
     # Do you want to stop the container services during backup?
     stopduringbackup: false
     # Local backup path
-    #localpath: /workspace/MIMS/_volumes/backup
+    # localpath: /workspace/MIMS/_volumes/backup
     cron:
       # To disable the cron job, use `0 0 5 31 2 ?` as value. The default ist `@daily`
       expression: 0 5 * * *
@@ -46,4 +48,4 @@ scenario:
         file: ~/.ssh/id_rsa
       remote:
         # The Directory to place the backups to on the remote SSH backup server ('' - if not applicable)
-        path: /var/backups/woda.metatrom.net_vault42
+        path: /var/backups/woda.metatrom.net_minio

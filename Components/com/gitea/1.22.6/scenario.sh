@@ -11,7 +11,9 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "db-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_3 "runner-volume"
 }
 
 function up() {
@@ -23,9 +25,15 @@ function up() {
 
   # Restore backup
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_2_RESTORESOURCE $SCENARIO_DATA_VOLUME_2_PATH 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_3_RESTORESOURCE $SCENARIO_DATA_VOLUME_3_PATH 1
 
-  # Create secret
-  deploy-tools.checkAndCreateSecret vaultwarden_admin_token.txt argon2
+  # Create secrets
+  deploy-tools.checkAndCreateSecret gitea_runner_registration_token.txt plain
+  deploy-tools.checkAndCreateSecret gitea_db_passwd.txt plain
+
+  # Set correct network name for Action Runner config
+  sed -i "s/<network-placeholder>/$SCENARIO_SERVER_NETWORK_NAME/" runner_config.yaml
 
   deploy-tools.up
 }
@@ -62,18 +70,18 @@ function test() {
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
+    docker volume ls | grep -E "(${SCENARIO_DATA_VOLUME_1_PATH}|${SCENARIO_DATA_VOLUME_2_PATH})"
     log ""
     log "Images:"
-    docker image ls | grep vaultwarden
+    docker image ls | grep gitea
     log ""
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_vaultwarden_container
+    docker ps -all | grep ${SCENARIO_NAME}_gitea_container
   fi
 
-  # Check Vaultwarden status
-  banner "Check Vaultwarden $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  deploy-tools.checkContainer "Vaultwarden (docker)" ${SCENARIO_NAME}_vaultwarden_container
+  # Check Gitea status
+  banner "Check Gitea $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "Gitea (docker)" ${SCENARIO_NAME}_gitea_container
   return $? # Return the result of the last command
 }
 

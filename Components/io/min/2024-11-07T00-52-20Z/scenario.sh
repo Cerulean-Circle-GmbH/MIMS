@@ -25,7 +25,7 @@ function up() {
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
 
   # Create secret
-  deploy-tools.checkAndCreateSecret vaultwarden_admin_token.txt argon2
+  deploy-tools.checkAndCreateSecret minio_admin_token.txt plain
 
   deploy-tools.up
 }
@@ -65,15 +65,15 @@ function test() {
     docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
     log ""
     log "Images:"
-    docker image ls | grep vaultwarden
+    docker image ls | grep minio
     log ""
     log "Containers:"
-    docker ps -all | grep ${SCENARIO_NAME}_vaultwarden_container
+    docker ps -all | grep ${SCENARIO_NAME}_minio_container
   fi
 
-  # Check Vaultwarden status
-  banner "Check Vaultwarden $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
-  deploy-tools.checkContainer "Vaultwarden (docker)" ${SCENARIO_NAME}_vaultwarden_container
+  # Check MinIO status
+  banner "Check MinIO $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "MinIO (docker)" ${SCENARIO_NAME}_minio_container
   return $? # Return the result of the last command
 }
 

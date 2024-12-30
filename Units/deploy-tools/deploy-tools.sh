@@ -70,7 +70,7 @@ function deploy-tools.setEnvironment() {
     # add traefik related stuff
     COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.traefik.yml"
   fi
-  if [[ $SCENARIO_BACKUP_ENABLE = "true" ]]; then
+  if [[ $SCENARIO_BACKUP_ENABLE = "true" || $SCENARIO_BACKUP_1_ENABLE = "true" ]]; then
     # add backup related stuff
     COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.backup.yml"
   fi
@@ -275,7 +275,9 @@ function deploy-tools.checkAndCreateSecret() {
     log "********************************************************************************************"
     log ""
 
-    if [ $cipher = "argon2" ]; then
+    if [ $cipher = "plain" ]; then
+      echo -n "${temp_password}" > ${SCENARIO_SRC_SECRETSDIR}/$filename
+    elif [ $cipher = "argon2" ]; then
       if ! command -v argon2 &> /dev/null; then
         log "Command argon2 could not be found! Exiting!"
         exit 1
