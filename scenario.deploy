@@ -150,7 +150,7 @@ function getVarFromOldVar() {
 # Unset variables by filter
 unsetVariablesByFilter() {
   local filter=$1
-  local -n excludes=$2 # -n is needed for nameref a declared array
+  local excludes=$2 # -n is needed for nameref a declared array
   for var in $(compgen -v | grep $filter); do
     if [ -z $excludes ]; then
       unset $var
@@ -182,7 +182,7 @@ function sourceEnv() {
     exit 1
   fi
 
-  SCENARIO_FILE_NAME=$SCENARIOS_STORAGE_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario.$SCENARIO_FILE_TYPE
+  SCENARIO_FILE_NAME=$SCENARIOS_STORAGE_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME.scenario.$ENV_FILE_TYPE
   SCENARIO_FILE_NAME_TMP=$SCENARIO_FILE_NAME.tmp
   SCENARIOS_DIR_LOCAL=$cwd/_scenarios
 
@@ -692,8 +692,8 @@ fi
 
 # Check for available scenarios
 SCENARIOS_STORAGE_DIR=${SCENARIOS_STORAGE_DIR:-"$cwd/Scenarios"}
-SCENARIO_FILE_TYPE=env
-AVAILABLE_SCENARIOS=$(find $SCENARIOS_STORAGE_DIR -name "*.scenario.$SCENARIO_FILE_TYPE" | sort | sed "s;$SCENARIOS_STORAGE_DIR/;;" | sed "s/.scenario.${SCENARIO_FILE_TYPE}//" | sed "s/ /\\ /g")
+ENV_FILE_TYPE=env
+AVAILABLE_SCENARIOS=$(find $SCENARIOS_STORAGE_DIR -name "*.scenario.$ENV_FILE_TYPE" | sort | sed "s;$SCENARIOS_STORAGE_DIR/;;" | sed "s/.scenario.${ENV_FILE_TYPE}//" | sed "s/ /\\ /g")
 
 # Scan for scenario
 if [ -z "$1" ]; then
@@ -768,9 +768,9 @@ for s in $SCENARIOS_LIST; do
   echo "Run scenario: $s"
 
   # Reset SCENARIO_* variables
-  EXCLUDES=(SCENARIO_FILE_TYPE)
+  EXCLUDES=()
   unsetVariablesByFilter SCENARIO_ EXCLUDES
-
+  
   SCENARIO_NAME=$(basename $s)
   SCENARIO_NAME_SPACE=$(dirname $s)
   sourceEnv
