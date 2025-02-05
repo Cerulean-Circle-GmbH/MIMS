@@ -11,13 +11,13 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "db-volume"
 }
 
 function up() {
   # Check network
-  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORKNAME
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
 
   # Check data volume
   checkAndCreateDataVolume
@@ -57,9 +57,11 @@ function test() {
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
+    docker volume ls | grep -E "(${SCENARIO_DATA_VOLUME_1_PATH}|${SCENARIO_DATA_VOLUME_2_PATH})"
+    log ""
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_prometheus_container
   fi

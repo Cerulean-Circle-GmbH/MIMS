@@ -11,14 +11,17 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME} "etc-volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME1} "var-volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME2} "plugin-volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME3} "graph-etc-volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME4} "graph-var-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "etc-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "var-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_3 "plugin-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_4 "graph-etc-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_5 "graph-var-volume"
 }
 
 function up() {
+  # Check network
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
+
   # Check data volume
   checkAndCreateDataVolume
 
@@ -57,9 +60,11 @@ function test() {
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
+    docker volume ls | grep -E "(${SCENARIO_DATA_VOLUME_1_PATH}|${SCENARIO_DATA_VOLUME_2_PATH}|${SCENARIO_DATA_VOLUME_3_PATH}|${SCENARIO_DATA_VOLUME_4_PATH}|${SCENARIO_DATA_VOLUME_5_PATH})"
+    log ""
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_nagios_container
   fi

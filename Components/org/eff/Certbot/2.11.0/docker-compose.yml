@@ -1,10 +1,10 @@
-version: "3"
+version: "3.4"
 
 services:
   certbot-service:
     container_name: certbot_container
     image: certbot/certbot:v2.11.0
-    restart: unless-stopped
+    restart: always
     volumes:
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/conf:/etc/letsencrypt
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/www:/var/www/certbot

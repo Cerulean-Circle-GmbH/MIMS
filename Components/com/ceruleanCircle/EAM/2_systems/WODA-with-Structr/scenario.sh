@@ -12,8 +12,8 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME "data-volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME1 "db-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "db-volume"
 }
 
 function recreateOnceCerts() {
@@ -43,6 +43,9 @@ EOF
 }
 
 function up() {
+  # Check network
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
+
   # Check data volume
   checkAndCreateDataVolume
 
@@ -61,12 +64,10 @@ function up() {
     cp -f $CONFIG_DIR/structr/keystore.p12 $CONFIG_DIR/$SCENARIO_STRUCTR_KEYSTORE_DIR/
   fi
 
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_2_RESTORESOURCE $SCENARIO_DATA_VOLUME_2_PATH 1
+
   # TODO: Use default structr server if file is a server or none
-
-  # TODO: --strip-components=1, fix in backup before
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_SRC_STRUCTR_DATAFILE $SCENARIO_DATA_VOLUME1 1
-
   # Download structr.zip
   banner "Download structr.zip"
   deploy-tools.downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
@@ -259,12 +260,12 @@ function test() {
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
-
+    docker volume ls | grep -E "(${SCENARIO_DATA_VOLUME_1_PATH}|${SCENARIO_DATA_VOLUME_2_PATH})"
+    log ""
     log "Images:"
     docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
     docker image ls | grep ${SCENARIO_STRUCTR_IMAGE}
-
+    log ""
     log "Containers:"
     docker ps | grep ${SCENARIO_SRC_ONCE_CONTAINER}
     docker ps | grep ${SCENARIO_STRUCTR_CONTAINER}

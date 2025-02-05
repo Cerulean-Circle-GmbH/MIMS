@@ -1,10 +1,13 @@
 scenario:
   ## Server setup
   server:
+    # What is the servers hostname?
+    hostname: structr
     # What is the EAMD root directory on the server?
     eamddir: /var/dev/EAMD.ucp/
-    # What is the servers network name?
-    networkname: once-woda-network
+    network:
+      # What is the servers network name?
+      name: once-woda-network
 
   ## Config data setup
   #data:
@@ -18,3 +21,11 @@ scenario:
     http: 8082
     # What is the STRUCTR https port?
     https: 8083
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy

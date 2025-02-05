@@ -29,15 +29,12 @@ function test() {
   # Set environment
   setEnvironment
 
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
-
   # Print volumes, images, containers and files
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Images:"
     docker image ls | grep ${SCENARIO_DOCKER_IMAGENAME}
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_container
   fi

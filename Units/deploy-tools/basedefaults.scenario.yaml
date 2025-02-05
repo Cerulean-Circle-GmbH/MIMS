@@ -5,6 +5,8 @@ scenario:
     component: .
     # This is the cache directory for downloaded files, like structr.zip or WODA-current.tar.gz
     cachedir: ~/.cache/MIMS-Scenarios
+    # This is the directory storing secrets for docker containers
+    secretsdir: /var/dev/MIMS-Scenarios/_secrets
 
   ## Server setup
   server:
@@ -21,9 +23,10 @@ scenario:
 
   ## Config data setup
   data:
-    # What is the path of the data volume (e.g. './data' or 'data-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume: ./data
-    # Where to find the restore data (none - if not applicable)?
-    restoresource: none
-    # Is the data volume external (true or false; if not external, it will be deleted on down)?
-    external: true
+    volume:
+      # What is the path of the data volume (e.g. './data' or 'data-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./data
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true

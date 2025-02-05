@@ -4,11 +4,13 @@ services:
   once.sh:
     container_name: ${SCENARIO_SRC_ONCE_CONTAINER}
     image: ${SCENARIO_SRC_ONCE_IMAGE}
+    restart: always
+    hostname: ${SCENARIO_SERVER_ONCE_HOSTNAME:-once}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
       # TODO: Das geht nicht, wenn das volume unten nicht existiert (none wird behandelt)
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
@@ -17,26 +19,37 @@ services:
       - ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP}:5002
       - ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}:5005
     environment:
-      ONCE_DOCKER_HTTP_PORT: ${SCENARIO_RESOURCE_ONCE_HTTP}
-      ONCE_DOCKER_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_HTTPS}
-      ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP}
-      ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}
+      ONCE_DOCKER_HTTP_PORT: 8080
+      ONCE_DOCKER_HTTPS_PORT: 8443
+      ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: 5002
+      ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: 5005
+    networks:
+      - default
+
   woda-structr-server:
     container_name: ${SCENARIO_STRUCTR_CONTAINER}
     build: "./structr"
     image: ${SCENARIO_STRUCTR_IMAGE}
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
-    restart: unless-stopped
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-structr}
     env_file: ".env"
     ports:
       - ${SCENARIO_RESOURCE_STRUCTR_HTTP}:8082
       - ${SCENARIO_RESOURCE_STRUCTR_HTTPS}:8083
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
-      - ${SCENARIO_DATA_MOUNTPOINT2}:/var/lib/structr-volume/
+      - ${SCENARIO_DATA_MOUNTPOINT_2}:/var/lib/structr-volume/
       - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.pkcs12:ro
       - ${SCENARIO_SERVER_EAMDDIR}:/EAMD.ucp
       - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
     environment:
       - PROXY_ADDRESS_FORWARDING=true
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

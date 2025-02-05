@@ -4,11 +4,13 @@ services:
   once.sh:
     container_name: ${SCENARIO_SRC_ONCE_CONTAINER}
     image: ${SCENARIO_SRC_ONCE_IMAGE}
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-once}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/snapd.socket:/run/snapd.socket
       # TODO: Das geht nicht, wenn das volume unten nicht existiert (none wird behandelt)
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/dev
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/dev
       - ${SCENARIO_SRC_ONCE_OUTERCONFIG}:/outer-config
     ports:
       - ${SCENARIO_RESOURCE_ONCE_HTTP}:8080
@@ -17,7 +19,14 @@ services:
       - ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP}:5002
       - ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}:5005
     environment:
-      ONCE_DOCKER_HTTP_PORT: ${SCENARIO_RESOURCE_ONCE_HTTP}
-      ONCE_DOCKER_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_HTTPS}
-      ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTP}
-      ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: ${SCENARIO_RESOURCE_ONCE_REVERSEPROXY_HTTPS}
+      ONCE_DOCKER_HTTP_PORT: 8080
+      ONCE_DOCKER_HTTPS_PORT: 8443
+      ONCE_DOCKER_REVERSE_PROXY_HTTP_PORT: 5002
+      ONCE_DOCKER_REVERSE_PROXY_HTTPS_PORT: 5005
+    networks:
+      - default
+
+networks:
+  default:
+    external:
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

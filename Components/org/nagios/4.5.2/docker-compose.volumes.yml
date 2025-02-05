@@ -2,21 +2,21 @@ version: "3.4"
 
 volumes:
   etc-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME1}
+    external: ${SCENARIO_DATA_VOLUME_1_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_1_PATH}
 
   var-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME2}
+    external: ${SCENARIO_DATA_VOLUME_2_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_2_PATH}
 
   plugin-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME3}
+    external: ${SCENARIO_DATA_VOLUME_3_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_3_PATH}
 
   graph-etc-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME4}
+    external: ${SCENARIO_DATA_VOLUME_4_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_4_PATH}
 
   graph-var-volume:
-    external: ${SCENARIO_DATA_EXTERNAL}
-    name: ${SCENARIO_DATA_VOLUME_NAME5}
+    external: ${SCENARIO_DATA_VOLUME_5_EXTERNAL}
+    name: ${SCENARIO_DATA_VOLUME_5_PATH}

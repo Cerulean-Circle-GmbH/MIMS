@@ -1,20 +1,23 @@
-version: "3"
+version: "3.4"
 
 services:
   nginx-service:
     container_name: nginx_proxy_container
     image: nginx:1.21.3-alpine
-    restart: unless-stopped
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-nginx}
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/etc/nginx/conf.d/
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/etc/nginx/conf.d/
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/conf:/etc/letsencrypt
       - ${SCENARIO_SERVER_CERTCONFIGDIR}/www:/var/www/certbot
     ports:
       - "80:80"
       - "443:443"
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+    networks:
+      - default
 
 networks:
   default:
     external:
-      name: ${SCENARIO_SERVER_NETWORKNAME}
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

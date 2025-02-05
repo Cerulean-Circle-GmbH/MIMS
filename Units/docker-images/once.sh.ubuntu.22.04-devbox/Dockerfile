@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}
 # Define environment variable
 # ENV DEBUG ON
 ENV WORKDIR=/workspace
-ENV DEVBOX_USE_VERSION=0.13.5
+ENV DEVBOX_USE_VERSION=0.13.7
 ENV DEFAULT_TZ=Europe/Berlin
 
 # Install additional OS packages
@@ -15,9 +15,13 @@ RUN apt-get update \
   binutils \
   ca-certificates \
   curl \
+  errno \
   git \
-  xz-utils \
+  net-tools \
   sudo \
+  tzdata \
+  wget \
+  xz-utils \
   # Clean up
   && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
@@ -54,6 +58,13 @@ RUN echo "\n# Use devbox as global package manager\n" \
   >> ~/.bashrc
 COPY devbox.json /root/.local/share/devbox/global/default/devbox.json
 COPY devbox.lock /root/.local/share/devbox/global/default/devbox.lock
+
+# Patch PATH for OOSH including devbox
+RUN sed -i 's|^export PATH=.*|export PATH="/root/.local/share/devbox/global/default/.devbox/nix/profile/default/bin:/root/oosh/su:/root/oosh/ng:/root/oosh:/root/oosh/init:/root/oosh/external:/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/root/.local/share/devbox/global/default/.devbox/virtenv/runx/bin"|' ~/config/user.env
+
+# Install yq yaml parser manually, because devbox has some issues with that
+RUN curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.5/yq_linux_amd64.tar.gz | \
+  tar xz && mv yq_linux_amd64 /usr/local/bin/yq
 
 # use sh ant not bash, because bash will initialize devbox runtime
 CMD ["sh"]

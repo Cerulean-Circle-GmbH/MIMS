@@ -6,20 +6,23 @@ services:
     build: "./structr"
     image: ${SCENARIO_STRUCTR_IMAGE}
     user: "${SCENARIO_STRUCTR_UID}:${SCENARIO_STRUCTR_GID}"
-    restart: unless-stopped
+    restart: always
+    hostname: ${SCENARIO_SERVER_HOSTNAME:-structr}
     env_file: ".env"
     ports:
       - ${SCENARIO_RESOURCE_HTTP}:8082
       - ${SCENARIO_RESOURCE_HTTPS}:8083
     volumes:
-      - ${SCENARIO_DATA_MOUNTPOINT1}:/var/lib/structr-volume/
+      - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/lib/structr-volume/
       - ${SCENARIO_STRUCTR_KEYSTORE_DIR}/keystore.p12:/var/lib/structr/keystore.pkcs12:ro
       - ${SCENARIO_SERVER_EAMDDIR}:/EAMD.ucp
       - ${SCENARIO_SERVER_EAMDDIR}/Components/tla/EAMD/UcpComponentSupport/1.0.0/src/sh:/var/lib/structr/scripts/
     environment:
       - PROXY_ADDRESS_FORWARDING=true
+    networks:
+      - default
 
 networks:
   default:
     external:
-      name: ${SCENARIO_SERVER_NETWORKNAME}
+      name: ${SCENARIO_SERVER_NETWORK_NAME}

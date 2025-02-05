@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume $SCENARIO_DATA_VOLUME
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
 }
 
 function recreateOnceCerts() {
@@ -41,13 +41,16 @@ EOF
 }
 
 function up() {
+  # Check network
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
+
   # Check data volume
   checkAndCreateDataVolume
 
   # Set environment
   setEnvironment
 
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 1
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
 
   # Create .gitconfig
   if [ $SCENARIO_SRC_ONCE_OUTERCONFIG != "none" ] && [ ! -f $SCENARIO_SRC_ONCE_OUTERCONFIG/.gitconfig ]; then
@@ -192,11 +195,11 @@ function test() {
   if [ "$VERBOSITY" == "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
-
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
+    log ""
     log "Images:"
     docker image ls | grep $(echo $SCENARIO_SRC_ONCE_IMAGE | sed "s;:.*;;")
-
+    log ""
     log "Containers:"
     docker ps | grep ${SCENARIO_SRC_ONCE_CONTAINER}
   fi

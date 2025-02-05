@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
 }
 
 function up() {
@@ -27,12 +27,8 @@ function up() {
   docker pull jenkins/jenkins:2.474-jdk17
   docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
 
-  # Check data volume
-  banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume ${SCENARIO_DATA_VOLUME}
-
   # TODO: --strip-components=1, fix in backup before
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_RESTORESOURCE $SCENARIO_DATA_VOLUME 2
+  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 2
 
   # Create and run container
   banner "Create and run container"
@@ -91,9 +87,11 @@ function test() {
   if [ "$VERBOSITY" = "-v" ]; then
     banner "Test"
     log "Volumes:"
-    docker volume ls | grep ${SCENARIO_DATA_VOLUME}
+    docker volume ls | grep ${SCENARIO_DATA_VOLUME_1_PATH}
+    log ""
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}_jenkins_image
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_jenkins_container
   fi

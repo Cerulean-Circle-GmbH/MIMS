@@ -1,15 +1,49 @@
 scenario:
+  ## Config data setup
   data:
-    # What is the path of the var volume (e.g. './var' or 'nagios-var-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume1: ./var
-    # What is the path of the plugins volume (e.g. './plugins' or 'nagios-plugins-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume2: ./plugins
-    # What is the path of the nagiosgraph etc volume (e.g. './graph_etc' or 'nagios-graph-etc-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume3: ./graph_etc
-    # What is the path of the nagiosgraph var volume (e.g. './graph_var' or 'nagios-graph-var-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
-    volume4: ./graph_var
+    volume:
+      # What is the path of the var volume (e.g. './var' or 'nagios-var-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./var
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
+      # What is the path of the plugins volume (e.g. './plugins' or 'nagios-plugins-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./plugins
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
+      # What is the path of the nagiosgraph etc volume (e.g. './graph_etc' or 'nagios-graph-etc-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./graph_etc
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
+      # What is the path of the nagiosgraph var volume (e.g. './graph_var' or 'nagios-graph-var-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./graph_var
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
 
   ## Unique resources
   resource:
     # What is the http port of the docker container?
     httpport: 8888
+
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: nagios
+    network:
+      # What is the servers network name?
+      name: monitoring-network
+
+  ## Traefik proxy setup
+  traefik:
+    # Do you want to route this service via traefik?
+    enable: false
+    network:
+      # What is the traefik proxy network name?
+      name: proxy

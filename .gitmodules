@@ -1,0 +1,3 @@
+[submodule "Scenarios"]
+	path = Scenarios
+	url = 2cuGitea:web4x/EAMD.scenarios.git

@@ -1,0 +1,23 @@
+scenario:
+  ## Server setup
+  server:
+    # What is the servers hostname?
+    hostname: traefik
+    network:
+      # What is the servers network name?
+      name: proxy
+      # What is the servers network IPv4 address?
+      ipv4address: 172.30.255.254
+      # What is the servers network IPv4 subnet?
+      ipv4subnet: 172.30.0.0/16
+
+  ## Unique resources
+  resource:
+    # What is the http port of the docker container?
+    httpport: 80
+    # What is the https port of the docker container?
+    httpsport: 443
+    # What is the mTLS port of the docker container?
+    tlsport: 4443
+    # What is the api port of the docker container?
+    apiport: 8080

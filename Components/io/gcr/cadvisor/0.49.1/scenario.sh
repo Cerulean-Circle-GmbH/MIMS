@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function up() {
   # Check network
-  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORKNAME
+  deploy-tools.checkAndCreateNetwork $SCENARIO_SERVER_NETWORK_NAME
 
   deploy-tools.up
 }
@@ -37,6 +37,7 @@ function test() {
     banner "Test"
     log "Images:"
     docker image ls | grep ${SCENARIO_NAME}
+    log ""
     log "Containers:"
     docker ps -all | grep ${SCENARIO_NAME}_cadvisor_container
   fi
