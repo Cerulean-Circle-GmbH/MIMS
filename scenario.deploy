@@ -148,19 +148,11 @@ function getVarFromOldVar() {
   fi
 }
 
-# Unset variables by filter
-unsetVariablesByFilter() {
+# Unset variables
+unsetVariables() {
   local filter=$1
-  local excludes=$2 # -n is needed for nameref a declared array
   for var in $(compgen -v | grep $filter); do
-    if [ -z $excludes ]; then
-      unset $var
-    else
-      if [[ ! " ${excludes[@]} " =~ " ${var} " ]]; then
-        # array contains not $var, so unset
-        unset $var
-      fi
-    fi
+    unset $var
   done
 }
 
@@ -769,8 +761,7 @@ for s in $SCENARIOS_LIST; do
   echo "Run scenario: $s"
 
   # Reset SCENARIO_* variables
-  EXCLUDES=()
-  unsetVariablesByFilter SCENARIO_ EXCLUDES
+  unsetVariables SCENARIO_
   
   SCENARIO_NAME=$(basename $s)
   SCENARIO_NAME_SPACE=$(dirname $s)
