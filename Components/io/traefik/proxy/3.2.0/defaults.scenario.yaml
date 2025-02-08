@@ -6,9 +6,9 @@ scenario:
     network:
       # What is the servers network name?
       name: proxy
-      # What is the servers network IPv4 address?
+      # What is the servers docker internal network IPv4 address?
       ipv4address: 172.30.255.254
-      # What is the servers network IPv4 subnet?
+      # What is the servers docker internal network IPv4 subnet?
       ipv4subnet: 172.30.0.0/16
 
   ## Unique resources

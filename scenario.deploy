@@ -414,6 +414,11 @@ function config() {
 
       # Check namespace
       if [[ "$variable" == "SCENARIO_SERVER_NAME" ]]; then
+        if [ -z "$value" ]; then
+          SCENARIO_SERVER_NAME=$default
+        else
+          SCENARIO_SERVER_NAME=$value
+        fi
         checkNamespace
       fi
     else
@@ -762,7 +767,7 @@ for s in $SCENARIOS_LIST; do
 
   # Reset SCENARIO_* variables
   unsetVariables SCENARIO_
-  
+
   SCENARIO_NAME=$(basename $s)
   SCENARIO_NAME_SPACE=$(dirname $s)
   sourceEnv
