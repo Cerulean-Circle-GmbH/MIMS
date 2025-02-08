@@ -210,8 +210,18 @@ function sourceEnv() {
   getVarFromOldVar SCENARIO_SRC_ONCE_BRANCH SCENARIO_SRC_BRANCH
   getVarFromOldVar SCENARIO_SRC_STRUCTR_DATAFILE SCENARIO_SRC_STRUCTRDATAFILE
 
+  # Check whether the component dir exists first in cwd or in MIMS_ROOT
+  COMPONENT_DIR=$cwd/Components/$SCENARIO_SRC_COMPONENT
+  if [ ! -d $COMPONENT_DIR ]; then
+    COMPONENT_DIR=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
+    if [ ! -d $COMPONENT_DIR ]; then
+      logError "Component dir for $SCENARIO_SRC_COMPONENT not found"
+      exit 1
+    fi
+  fi
+
   # Source other env files from component definition
-  OTHER_ENV_FILES=$(find ${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT -name .env)
+  OTHER_ENV_FILES=$(find $COMPONENT_DIR -name .env)
   for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
     source $OTHER_ENV_FILE
   done
@@ -363,10 +373,20 @@ function config() {
     SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir" "")
   fi
 
+  # Check whether the component dir exists first in cwd or in MIMS_ROOT
+  COMPONENT_DIR=$cwd/Components/$SCENARIO_SRC_COMPONENT
+  if [ ! -d $COMPONENT_DIR ]; then
+    COMPONENT_DIR=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
+    if [ ! -d $COMPONENT_DIR ]; then
+      logError "Component dir for $SCENARIO_SRC_COMPONENT not found"
+      exit 1
+    fi
+  fi
+
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
-  SCENARIO_DEFAULTS_YAML=${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT/defaults.scenario.yaml
+  SCENARIO_DEFAULTS_YAML=$COMPONENT_DIR/defaults.scenario.yaml
   SCENARIO_BASEDEFAULTS_YAML=${MIMS_ROOT}/Units/deploy-tools/basedefaults.scenario.yaml
-  SCENARIO_DEFAULTS_ENV=${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT/_defaults.scenario.sh
+  SCENARIO_DEFAULTS_ENV=$COMPONENT_DIR/_defaults.scenario.sh
 
   # merge yaml files
   yq eval-all '. as $item ireduce ({}; . *+ $item)' $SCENARIO_BASEDEFAULTS_YAML $SCENARIO_DEFAULTS_YAML > $SCENARIO_DEFAULTS_YAML.tmp
@@ -463,7 +483,7 @@ function init() {
   bannerBig "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
-  cp -R -a ${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT/* ${MIMS_ROOT}/Units/deploy-tools/*.sh ${MIMS_ROOT}/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
+  cp -R -a $COMPONENT_DIR/* ${MIMS_ROOT}/Units/deploy-tools/*.sh ${MIMS_ROOT}/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     local value=${!ENV_VAR}
