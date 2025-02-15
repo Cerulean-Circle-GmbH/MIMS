@@ -122,7 +122,7 @@ function deploy-tools.addToFile() {
     cat $file.tmp > $file
     rm $file.tmp
     # Add envvar to file with using $envvar as variable
-    echo "${envvar}=${!envvar}" >> $file
+    echo "${envvar}=\"${!envvar}\"" >> $file
     logVerbose "Added $envvar to $file"
   fi
 }

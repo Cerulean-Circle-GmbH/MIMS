@@ -370,6 +370,9 @@ function config() {
   if [ -z "$SCENARIO_SRC_COMPONENT" ]; then
     log "Available component dirs:"
     cd ${MIMS_ROOT} && find Components -name defaults.scenario.yaml | sort | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
+    if [ -d ${cwd}/Components ]; then
+      cd ${cwd} && find Components -name defaults.scenario.yaml | sort | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
+    fi
     SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir" "")
   fi
 
@@ -543,9 +546,8 @@ EOF
     log "Scenario '$SCENARIO_NAME' is now inited (local only)."
   fi
   if [ "$VERBOSITY" == "-v" ]; then
-    callScript hostname
-    log "Files:"
-    callScript pwd
+    log "Hostname: $(callScript hostname)"
+    log "Files in: $(callScript pwd)"
     callScript tree -L 3 -a .
   fi
 }
