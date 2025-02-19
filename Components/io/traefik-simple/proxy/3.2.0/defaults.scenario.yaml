@@ -13,5 +13,5 @@ scenario:
   basicauth:
     # What is the username for basic auth?
     username: admin
-    # What is the password for basic auth? (Every $ must be '\\\$'!)
+    # What is the password for basic auth?
     password: none
