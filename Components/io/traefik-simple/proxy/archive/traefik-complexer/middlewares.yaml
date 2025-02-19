@@ -1,0 +1,24 @@
+
+http:
+  middlewares:
+    secured:
+      headers:
+        # For enabling HSTS
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+
+        customRequestHeaders:
+          # enables upgrade to websocket
+          X-Forwarded-Proto: https
+
+        customResponseHeaders:
+          # disable page indexing by search engines
+          X-Robots-Tag: noindex, nofollow
+
+    auth1:
+      basicAuth:
+        users:
+          # The below one is just admin:admin
+          - "admin:$apr1$ptzkgbw2$mkohRpevjIzSTMBuVbt3I."

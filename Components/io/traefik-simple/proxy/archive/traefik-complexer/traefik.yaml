@@ -1,0 +1,98 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+serversTransport:
+  insecureSkipVerify: true
+
+log:
+  level: DEBUG
+  filePath: "/var/log/traefik/traefik.log"
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
+
+api:
+  dashboard: true
+  insecure: false
+
+metrics:
+  prometheus:
+    addrouterslabels: true
+
+providers:
+  docker:
+    endpoint: unix:///var/run/docker.sock
+    exposedByDefault: true
+
+  file:
+    # This allows you to import all *.yaml files from this
+    # directory and merge their configurations in real-time.
+    # This is same where we are keeping `_services.yaml`
+    # `_middlewares.yaml` and others.
+    directory: /etc/traefik
+    watch: true
+
+entrypoints:
+  #ssh:
+  #  address: ":2222"
+
+  ping:
+    address: ":88"
+
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: "https"
+          scheme: "https"
+          permanent: true
+
+  https:
+    address: ":443"
+    http:
+      # tls: ....
+      # You can also specify the TLS section here instead
+      # of the routers, if you only have a single domain name.
+      # Then, within routers you can just put `tls: {}` everywhere
+      # and it will work
+      middlewares:
+        # IMPORTANT:
+        # This tells traefik to apply this set of middleware
+        # to `ALL` the traffic going through this entry point.
+        - "secured@file"
+
+  traefik:
+    address: ":8080"
+
+ping:
+  entryPoint: "ping"
+
+certificatesResolvers:
+  default:
+    acme:
+      email: me@matthiaskittner.de
+      storage: /etc/traefik/acme.json
+      httpChallenge:
+        entryPoint: "http"
+
+#  netcup:
+#    acme:
+#      email: "me@matthiaskittner.de"
+#      storage: "acme.json"
+#      dnsChallenge:
+#        #Es fehlt automate.matthiaskittner.de
+#        #delayBeforeCheck: 60
+#        provider: netcup
+#        resolvers:
+#          - "root-dns.netcup.net"
+#          - "second-dns.netcup.net"
+
+#  cloudflare:
+#    acme:
+#      email: me@matthiaskittner.de
+#      storage: /etc/traefik/acme.json
+#      httpChallenge:
+#        entryPoint: "http"

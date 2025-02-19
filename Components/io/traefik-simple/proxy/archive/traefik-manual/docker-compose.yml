@@ -1,0 +1,42 @@
+services:
+  traefik:
+    image: traefik:3.2.0
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      #- "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml
+      - ./letsencrypt:/letsencrypt
+    labels:
+      - "traefik.enable=true"
+
+      # Dashboard Router
+      - "traefik.http.routers.traefik.rule=Host(`automate.matthiaskittner.de`) && PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+      # API Router für /api/overview
+      - "traefik.http.routers.api.rule=Host(`automate.matthiaskittner.de`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.api.service=api@internal"
+
+      - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^https://(.*)/dashboard$$"
+      - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=https://$1/dashboard/"
+      - "traefik.http.routers.traefik.middlewares=dashboard-redirect,basic-auth-global"
+      - "traefik.http.middlewares.basic-auth-global.basicauth.users=mkt:$$apr1$$oj.jCTfz$$gnE/MAEkzW5kqZUAOWoou/"
+      
+      # Middleware: API Redirect, falls nötig
+      #- "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      #- "traefik.http.routers.api.middlewares=api-stripprefix"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

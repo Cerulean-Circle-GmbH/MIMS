@@ -1,0 +1,12 @@
+http:
+  routers:
+    dashboard:
+      rule: "PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
+      entryPoints:
+        - traefik
+        - https
+      rule: "Host(`automate.matthiaskittner.de`)"  # Hier wird die Domain definiert
+      service: "api@internal"
+      # basic auth middleware from _middlewares.yaml
+      middlewares:
+        - "auth1@file"
