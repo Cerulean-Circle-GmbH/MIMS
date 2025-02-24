@@ -1,5 +1,3 @@
-version: "3.4"
-
 volumes:
   service-volume:
     external: ${SCENARIO_DATA_VOLUME_1_EXTERNAL}
