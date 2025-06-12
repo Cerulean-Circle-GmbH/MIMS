@@ -34,6 +34,10 @@ scenario:
   traefik:
     # Do you want to route this service via traefik?
     enable: false
+    # What is the url?
+    url: gitea.example.com
+    # Route to erpnext (does not yet work with erpnext)
+    route: /
     network:
       # What is the traefik proxy network name?
       name: proxy
