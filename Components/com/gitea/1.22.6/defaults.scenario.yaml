@@ -14,6 +14,24 @@ scenario:
       # What is the servers network name?
       name: gitea-network
 
+  ## Mailer setup
+  mailer:
+    # Do you want to enable the mailer?
+    enable: false
+    # What protocol should the mailer use?
+    protocol: smtp+starttls
+    # What is the mailer host?
+    host: smtp.gmail.com
+    # What is the mailer port?
+    port: 587
+    # Should the mailer use a client certificate?
+    useclientcert: false
+    # What is the mailer user?
+    user: example@gmail.com
+    # What is the mailer password?
+    passwd: mypasswd1234
+    # What is the mailer from address?
+    from: example@gmail.com
   ## Config data setup
   data:
     volume:
