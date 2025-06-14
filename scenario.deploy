@@ -5,7 +5,13 @@ pushd $(dirname $0) > /dev/null
 MIMS_ROOT=$(pwd)
 popd > /dev/null
 cwd=$(pwd)
-. ${MIMS_ROOT}/Units/deploy-tools/deploy-tools.sh
+
+# Current deploy tools version
+DEPLOYTOOLSVERSION="1.0.0"
+# Default deploy tools version if not set in scenario
+COMPONENTS_DEPLOYTOOLSVERSION="1.0.0"
+
+. ${MIMS_ROOT}/Units/deploy-tools/${DEPLOYTOOLSVERSION}/deploy-tools.sh
 
 if ! command -v yq &> /dev/null; then
   log "Command yq could not be found! Exiting!"
@@ -149,7 +155,7 @@ function getVarFromOldVar() {
 }
 
 # Unset variables
-unsetVariables() {
+function unsetVariables() {
   local filter=$1
   for var in $(compgen -v | grep $filter); do
     unset $var
@@ -386,9 +392,14 @@ function config() {
     fi
   fi
 
+  # Source components .env file
+  if [ -f $COMPONENT_DIR/.env ]; then
+    . $COMPONENT_DIR/.env
+  fi
+
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
   SCENARIO_DEFAULTS_YAML=$COMPONENT_DIR/defaults.scenario.yaml
-  SCENARIO_BASEDEFAULTS_YAML=${MIMS_ROOT}/Units/deploy-tools/basedefaults.scenario.yaml
+  SCENARIO_BASEDEFAULTS_YAML=${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/basedefaults.scenario.yaml
   SCENARIO_DEFAULTS_ENV=$COMPONENT_DIR/_defaults.scenario.sh
 
   # merge yaml files
@@ -486,7 +497,7 @@ function init() {
   bannerBig "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
-  cp -R -a $COMPONENT_DIR/* ${MIMS_ROOT}/Units/deploy-tools/*.sh ${MIMS_ROOT}/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
+  cp -R -a $COMPONENT_DIR/* ${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/*.sh ${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/*.yaml $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     local value=${!ENV_VAR}
