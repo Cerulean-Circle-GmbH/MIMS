@@ -5,11 +5,10 @@ pushd $(dirname $0) > /dev/null
 MIMS_ROOT=$(pwd)
 popd > /dev/null
 cwd=$(pwd)
+CMDLINE="$0 $*"
 
 # Current deploy tools version
-DEPLOYTOOLSVERSION="1.0.0"
-# Default deploy tools version if not set in scenario
-COMPONENTS_DEPLOYTOOLSVERSION="1.0.0"
+DEPLOYTOOLSVERSION="2.0.0"
 
 . ${MIMS_ROOT}/Units/deploy-tools/${DEPLOYTOOLSVERSION}/deploy-tools.sh
 
@@ -395,6 +394,14 @@ function config() {
   # Source components .env file
   if [ -f $COMPONENT_DIR/.env ]; then
     . $COMPONENT_DIR/.env
+  fi
+
+  # Check COMPONENTS_DEPLOYTOOLSVERSION
+  if [ -z "$COMPONENTS_DEPLOYTOOLSVERSION" ]; then
+    logError "COMPONENTS_DEPLOYTOOLSVERSION is not set in $COMPONENT_DIR/.env"
+    logError "alternatively you can set the fallback by:"
+    echo "COMPONENTS_DEPLOYTOOLSVERSION=1.0.0 $CMDLINE"
+    exit 1
   fi
 
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
