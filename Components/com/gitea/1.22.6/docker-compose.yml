@@ -93,4 +93,4 @@ secrets:
   gitea_db_passwd:
     file: ${SCENARIO_SRC_SECRETSDIR}/gitea_db_passwd.txt
   gitea_mailer_passwd:
-    file: ${SCENARIO_MAILER_PASSWORDFILE}
+    file: ${SCENARIO_SRC_SECRETSDIR}/gitea_mailer_passwd.txt
