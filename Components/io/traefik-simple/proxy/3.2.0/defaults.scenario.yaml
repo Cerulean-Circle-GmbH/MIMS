@@ -1,14 +1,26 @@
 scenario:
+  ## Config data setup
+  data:
+    volume:
+      # What is the path of the data volume (e.g. './data' or 'data-volume'; if it contains a '/', it is considered as a path, otherwise as a docker volume name)?
+      - path: ./data
+        # Where to find the restore data (none - if not applicable)?
+        restoresource: none
+        # Is the data volume external (true or false; if not external, it will be deleted on down)?
+        external: true
+
   ## Unique resources
   resource:
     # What is the http port of the docker container?
     httpport: 80
     # What is the https port of the docker container?
     httpsport: 443
+
   ## Letsencrypt settings
   letsencrypt:
     # What is the email address for letsencrypt?
     email: none
+
   ## Basic auth settings
   basicauth:
     # What is the username for basic auth?
