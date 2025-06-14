@@ -20,7 +20,8 @@ services:
       - GITEA__mailer__SMTP_PORT=${SCENARIO_MAILER_PORT}
       - GITEA__mailer__USE_CLIENT_CERT=${SCENARIO_MAILER_USECLIENTCERT}
       - GITEA__mailer__USER=${SCENARIO_MAILER_USER}
-      - GITEA__mailer__PASSWD=${SCENARIO_MAILER_PASSWD}
+      - GITEA__mailer__PASSWD__FILE=/run/secrets/gitea_mailer_passwd
+      #- GITEA__mailer__PASSWD=${SCENARIO_MAILER_PASSWD} # replaced by file
       - GITEA__mailer__FROM=${SCENARIO_MAILER_FROM}
       # Will be available in 1.23.0
       # - GITEA_RUNNER_REGISTRATION_TOKEN_FILE=/run/secrets/gitea_runner_registration_token
@@ -36,6 +37,7 @@ services:
       - "${SCENARIO_RESOURCE_SSHPORT}:22"
     secrets:
       - gitea_db_passwd
+      - gitea_mailer_passwd
       # - gitea_runner_registration_token
     networks:
         default:
@@ -90,3 +92,5 @@ secrets:
     file: ${SCENARIO_SRC_SECRETSDIR}/gitea_runner_registration_token.txt
   gitea_db_passwd:
     file: ${SCENARIO_SRC_SECRETSDIR}/gitea_db_passwd.txt
+  gitea_mailer_passwd:
+    file: ${SCENARIO_MAILER_PASSWORDFILE}

@@ -28,8 +28,8 @@ scenario:
     useclientcert: false
     # What is the mailer user?
     user: example@gmail.com
-    # What is the mailer password?
-    passwd: mypasswd1234
+    # What is the mailer password file? Password file must be a text file containing the password in the first line.
+    passwordfile: /var/dev/MIMS-Scenarios/secrets/gitea_mailer_passwd.txt
     # What is the mailer from address?
     from: example@gmail.com
   ## Config data setup
