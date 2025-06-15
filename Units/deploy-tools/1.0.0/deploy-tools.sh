@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: Define which variables are expected of give then as arguments
-
 # Get config dir
 pushd $(dirname $0) > /dev/null
 CONFIG_DIR=$(pwd)
@@ -113,7 +111,6 @@ function deploy-tools.checkURL() {
   fi
 }
 
-# TODO: Is this good practice?
 function deploy-tools.addToFile() {
   local file=$1
   local envvar=$2
