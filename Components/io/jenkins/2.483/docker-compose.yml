@@ -1,5 +1,3 @@
-version: "3.4"
-
 services:
   jenkins-service:
     container_name: ${SCENARIO_NAME}_jenkins_container
@@ -19,5 +17,5 @@ services:
 
 networks:
   default:
-    external:
-      name: ${SCENARIO_SERVER_NETWORK_NAME}
+    external: true
+    name: ${SCENARIO_SERVER_NETWORK_NAME}

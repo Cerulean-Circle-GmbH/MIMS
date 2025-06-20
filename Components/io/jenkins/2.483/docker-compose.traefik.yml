@@ -1,5 +1,3 @@
-version: "3.4"
-
 services:
   jenkins-service:
     networks:
@@ -7,6 +5,10 @@ services:
     labels:
       traefik.enable: true
       traefik.docker.network: ${SCENARIO_TRAEFIK_NETWORK_NAME}
+      # Router for /jenkins
+      traefik.http.routers.jenkins.rule: Host(`${SCENARIO_SERVER_NAME}`) && PathPrefix(`/jenkins`)
+      traefik.http.routers.jenkins.entrypoints: websecure
+      traefik.http.routers.jenkins.tls.certresolver: letsencrypt
 
 networks:
   proxy:
