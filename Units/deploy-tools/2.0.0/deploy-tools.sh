@@ -370,6 +370,24 @@ function deploy-tools.up() {
   fi
 }
 
+function deploy-tools.waitForContainer() {
+  local container_name=$1
+  local retries=30
+  local wait_time=2
+
+  log "Waiting for container $container_name to be ready..."
+  for ((i = 0; i < retries; i++)); do
+    if docker ps | grep -q "$container_name"; then
+      log "Container $container_name is running."
+      return 0
+    fi
+    sleep $wait_time
+  done
+
+  logError "Container $container_name did not start within the expected time."
+  return 1
+}
+
 function deploy-tools.start() {
   # Set environment
   deploy-tools.setEnvironment
