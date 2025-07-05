@@ -5,7 +5,12 @@ pushd $(dirname $0) > /dev/null
 MIMS_ROOT=$(pwd)
 popd > /dev/null
 cwd=$(pwd)
-. ${MIMS_ROOT}/Units/deploy-tools/deploy-tools.sh
+CMDLINE="$0 $*"
+
+# Current deploy tools version
+DEPLOYTOOLSVERSION="2.0.0"
+
+. ${MIMS_ROOT}/Units/deploy-tools/${DEPLOYTOOLSVERSION}/deploy-tools.sh
 
 if ! command -v yq &> /dev/null; then
   log "Command yq could not be found! Exiting!"
@@ -72,6 +77,19 @@ function isInited() {
   fi
 }
 
+# Check that a string is part of the output of a command
+function isPartOfOutput() {
+  local command="$1"
+  local string="$2"
+
+  # Execute the command and check if the string is in the output
+  if $command | grep -q "$string"; then
+    return 0  # String is part of the output
+  else
+    return 1  # String is not part of the output
+  fi
+}
+
 # Convert server string to namespace
 function convert_to_namespace() {
   local server_string="$1"
@@ -96,7 +114,7 @@ function convert_to_namespace() {
 
 # Print usage
 function printUsage() {
-  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,logs,updateconfig] [-v|-s|-h]"
+  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,logs,updateconfig,backup,restore,update] [-v|-s|-h]"
   log
   log "        Lifecycle actions:"
   log "          init   - init remote scenario dir"
@@ -110,6 +128,11 @@ function printUsage() {
   log "          test   - Test the running scenario"
   log "          logs   - Collect logs of scenario"
   log "          updateconfig - update local scenario config"
+  log
+  log "        Deployment actions:"
+  log "          backup - Backup scenario"
+  log "          restore - Restore scenario from backup"
+  log "          update - Update scenario services"
   log
   log "        Options:"
   log "          -v|--verbose - verbose"
@@ -149,7 +172,7 @@ function getVarFromOldVar() {
 }
 
 # Unset variables
-unsetVariables() {
+function unsetVariables() {
   local filter=$1
   for var in $(compgen -v | grep $filter); do
     unset $var
@@ -210,8 +233,18 @@ function sourceEnv() {
   getVarFromOldVar SCENARIO_SRC_ONCE_BRANCH SCENARIO_SRC_BRANCH
   getVarFromOldVar SCENARIO_SRC_STRUCTR_DATAFILE SCENARIO_SRC_STRUCTRDATAFILE
 
+  # Check whether the component dir exists first in cwd or in MIMS_ROOT
+  COMPONENT_DIR=$cwd/Components/$SCENARIO_SRC_COMPONENT
+  if [ ! -d $COMPONENT_DIR ]; then
+    COMPONENT_DIR=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
+    if [ ! -d $COMPONENT_DIR ]; then
+      logError "Component dir for $SCENARIO_SRC_COMPONENT not found"
+      exit 1
+    fi
+  fi
+
   # Source other env files from component definition
-  OTHER_ENV_FILES=$(find ${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT -name .env)
+  OTHER_ENV_FILES=$(find $COMPONENT_DIR -name .env)
   for OTHER_ENV_FILE in $OTHER_ENV_FILES; do
     source $OTHER_ENV_FILE
   done
@@ -360,13 +393,39 @@ function config() {
   if [ -z "$SCENARIO_SRC_COMPONENT" ]; then
     log "Available component dirs:"
     cd ${MIMS_ROOT} && find Components -name defaults.scenario.yaml | sort | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
+    if [ -d ${cwd}/Components ]; then
+      cd ${cwd} && find Components -name defaults.scenario.yaml | sort | sed "s;Components/;    ;" | sed "s/.defaults.scenario.yaml//" | sed "s/ /\\ /g"
+    fi
     SCENARIO_SRC_COMPONENT=$(ask_with_default "Choose available component dir" "")
   fi
 
+  # Check whether the component dir exists first in cwd or in MIMS_ROOT
+  COMPONENT_DIR=$cwd/Components/$SCENARIO_SRC_COMPONENT
+  if [ ! -d $COMPONENT_DIR ]; then
+    COMPONENT_DIR=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
+    if [ ! -d $COMPONENT_DIR ]; then
+      logError "Component dir for $SCENARIO_SRC_COMPONENT not found"
+      exit 1
+    fi
+  fi
+
+  # Source components .env file
+  if [ -f $COMPONENT_DIR/.env ]; then
+    . $COMPONENT_DIR/.env
+  fi
+
+  # Check COMPONENTS_DEPLOYTOOLSVERSION
+  if [ -z "$COMPONENTS_DEPLOYTOOLSVERSION" ]; then
+    logError "COMPONENTS_DEPLOYTOOLSVERSION is not set in $COMPONENT_DIR/.env"
+    logError "alternatively you can set the fallback by:"
+    echo "COMPONENTS_DEPLOYTOOLSVERSION=1.0.0 $CMDLINE"
+    exit 1
+  fi
+
   # Convert defaults.scenario.yaml > _defaults.scenario.sh
-  SCENARIO_DEFAULTS_YAML=${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT/defaults.scenario.yaml
-  SCENARIO_BASEDEFAULTS_YAML=${MIMS_ROOT}/Units/deploy-tools/basedefaults.scenario.yaml
-  SCENARIO_DEFAULTS_ENV=${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT/_defaults.scenario.sh
+  SCENARIO_DEFAULTS_YAML=$COMPONENT_DIR/defaults.scenario.yaml
+  SCENARIO_BASEDEFAULTS_YAML=${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/basedefaults.scenario.yaml
+  SCENARIO_DEFAULTS_ENV=$COMPONENT_DIR/_defaults.scenario.sh
 
   # merge yaml files
   yq eval-all '. as $item ireduce ({}; . *+ $item)' $SCENARIO_BASEDEFAULTS_YAML $SCENARIO_DEFAULTS_YAML > $SCENARIO_DEFAULTS_YAML.tmp
@@ -407,13 +466,18 @@ function config() {
         logVerbose "Preset SCENARIO_SERVER_SSHCONFIG=$SCENARIO_SERVER_SSHCONFIG"
         logVerbose "Preset SCENARIO_SERVER_CONFIGSDIR=$SCENARIO_SERVER_CONFIGSDIR"
 
-        # TODO: This should be handled in a better way, not at this common script level
+        # This should be handled in a better way, not at this common script level
         #SCENARIO_SRC_ONCE_OUTERCONFIG="none"
         #logVerbose "Preset SCENARIO_SRC_ONCE_OUTERCONFIG=$SCENARIO_SRC_ONCE_OUTERCONFIG"
       fi
 
       # Check namespace
       if [[ "$variable" == "SCENARIO_SERVER_NAME" ]]; then
+        if [ -z "$value" ]; then
+          SCENARIO_SERVER_NAME=$default
+        else
+          SCENARIO_SERVER_NAME=$value
+        fi
         checkNamespace
       fi
     else
@@ -458,17 +522,17 @@ function init() {
   bannerBig "Setup scenario dir locally and sync to remote"
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
-  cp -R -a ${MIMS_ROOT}/Components/$SCENARIO_SRC_COMPONENT/* ${MIMS_ROOT}/Units/deploy-tools/*.sh ${MIMS_ROOT}/Units/deploy-tools/*.yaml $LOCAL_CONFIG_DIR/
+  cp -R -a $COMPONENT_DIR/* ${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/*.sh ${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/*.yaml $LOCAL_CONFIG_DIR/
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     local value=${!ENV_VAR}
-    # Test if value contains a variable
-    if [[ $value = *\$* ]]; then
+    # Test if value contains a variable (must be with {})
+    if [[ $value = *\${*}* ]]; then
       # Use eval to expand variable
       local var_expanded=$(eval printf '%s' "$value")
-      echo "$ENV_VAR=$var_expanded"
+      echo "$ENV_VAR='$var_expanded'"
     else
-      echo "$ENV_VAR=$value"
+      echo "$ENV_VAR='$value'"
     fi
   done > $LOCAL_CONFIG_DIR/.env
 
@@ -518,9 +582,8 @@ EOF
     log "Scenario '$SCENARIO_NAME' is now inited (local only)."
   fi
   if [ "$VERBOSITY" == "-v" ]; then
-    callScript hostname
-    log "Files:"
-    callScript pwd
+    log "Hostname: $(callScript hostname)"
+    log "Files in: $(callScript pwd)"
     callScript tree -L 3 -a .
   fi
 }
@@ -635,6 +698,12 @@ function test() {
     return 1
   fi
 
+  # Check if test is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",test"; then
+    logError "Scenario script 'scenario.sh' does not implement 'test'."
+    return 1
+  fi
+
   # Test remote
   bannerBig "Test remote"
   if isInited; then
@@ -664,6 +733,12 @@ function logs() {
     return 1
   fi
 
+  # Check if logs is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",logs"; then
+    logError "Scenario script 'scenario.sh' does not implement 'logs'."
+    return 1
+  fi
+
   # Collect logs remotely
   bannerBig "Shutdown remotely"
   callScript ./scenario.sh logs $VERBOSITY || true
@@ -673,6 +748,65 @@ function logs() {
 function updateconfig() {
   config
   doCopyConfig
+}
+
+# Backup scenario
+function backup() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Check if backup is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",backup"; then
+    logError "Scenario script 'scenario.sh' does not implement 'backup'."
+    return 1
+  fi
+
+  # Backup scenario
+  bannerBig "Backup scenario"
+  callScript ./scenario.sh backup $VERBOSITY || true
+  log "Scenario '$SCENARIO_NAME' is now backuped."
+}
+
+# Restore scenario
+function restore() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Check if restore is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",restore"; then
+    logError "Scenario script 'scenario.sh' does not implement 'restore'."
+    return 1
+  fi
+
+  # Restore scenario
+  bannerBig "Restore scenario"
+  callScript ./scenario.sh restore $VERBOSITY || true
+
+  log "Scenario '$SCENARIO_NAME' is now restored."
+}
+
+# Update scenario
+function update() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Check if update is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",update"; then
+    logError "Scenario script 'scenario.sh' does not implement 'update'."
+    return 1
+  fi
+
+  # Update scenario
+  bannerBig "Update scenario"
+  callScript ./scenario.sh update $VERBOSITY || true
+
+  log "Scenario '$SCENARIO_NAME' is now updated."
 }
 
 ### MAIN ###
@@ -762,7 +896,7 @@ for s in $SCENARIOS_LIST; do
 
   # Reset SCENARIO_* variables
   unsetVariables SCENARIO_
-  
+
   SCENARIO_NAME=$(basename $s)
   SCENARIO_NAME_SPACE=$(dirname $s)
   sourceEnv
@@ -795,6 +929,15 @@ for s in $SCENARIOS_LIST; do
       RETVAL=$? # return value
     elif [ "$STEP" == "updateconfig" ]; then
       updateconfig
+      RETVAL=$? # return value
+    elif [ "$STEP" == "backup" ]; then
+      backup
+      RETVAL=$? # return value
+    elif [ "$STEP" == "restore" ]; then
+      restore
+      RETVAL=$? # return value
+    elif [ "$STEP" == "update" ]; then
+      update
       RETVAL=$? # return value
     else
       logError "Unknown step: $STEP"

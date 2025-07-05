@@ -5,8 +5,19 @@ services:
     networks:
       - proxy
     labels:
-      traefik.enable: true
-      traefik.docker.network: ${SCENARIO_TRAEFIK_NETWORK_NAME}
+      - "traefik.enable=true"
+      - "traefik.docker.network=${SCENARIO_TRAEFIK_NETWORK_NAME}"
+      # Router for route
+      - "traefik.http.routers.${SCENARIO_NAME}.rule=Host(`${SCENARIO_TRAEFIK_URL}`) && PathPrefix(`${SCENARIO_TRAEFIK_ROUTE}`)"
+      - "traefik.http.routers.${SCENARIO_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.${SCENARIO_NAME}.tls.certresolver=letsencrypt"
+      # Strip route from the path for ${SCENARIO_NAME}
+      - "traefik.http.middlewares.${SCENARIO_NAME}-headers.headers.customrequestheaders.Host=${SCENARIO_TRAEFIK_URL}"
+      - "traefik.http.middlewares.${SCENARIO_NAME}-headers.headers.customrequestheaders.X-Forwarded-Prefix=${SCENARIO_TRAEFIK_ROUTE}"
+      - "traefik.http.middlewares.${SCENARIO_NAME}-stripprefix.stripprefix.prefixes=${SCENARIO_TRAEFIK_ROUTE}"
+      - "traefik.http.middlewares.${SCENARIO_NAME}-stripprefix.stripprefix.forceSlash=false"
+      - "traefik.http.routers.${SCENARIO_NAME}.middlewares=${SCENARIO_NAME}-stripprefix,${SCENARIO_NAME}-headers"
+      - "traefik.http.services.${SCENARIO_NAME}.loadbalancer.server.port=3000"
 
 networks:
   proxy:

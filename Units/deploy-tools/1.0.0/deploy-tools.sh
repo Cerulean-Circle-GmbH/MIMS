@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: Define which variables are expected of give then as arguments
-
 # Get config dir
 pushd $(dirname $0) > /dev/null
 CONFIG_DIR=$(pwd)
@@ -113,7 +111,6 @@ function deploy-tools.checkURL() {
   fi
 }
 
-# TODO: Is this good practice?
 function deploy-tools.addToFile() {
   local file=$1
   local envvar=$2
@@ -122,8 +119,8 @@ function deploy-tools.addToFile() {
     cat $file.tmp > $file
     rm $file.tmp
     # Add envvar to file with using $envvar as variable
-    echo "${envvar}=${!envvar}" >> $file
-    logVerbose "Added $envvar to $file"
+    echo "${envvar}=\"${!envvar}\"" >> $file
+    #logVerbose "Added $envvar to $file"
   fi
 }
 
@@ -192,7 +189,7 @@ function deploy-tools.checkAndCreateDataVolume() {
       local datavolume="${datavolume/#./$CONFIG_DIR}"
     fi
 
-    log "Volume name contains a slash, so it is a path: $datavolume"
+    logVerbose "Volume name contains a slash, so it is a path: $datavolume"
     mkdir -p $datavolume
     chmod 777 $datavolume
 
@@ -202,16 +199,16 @@ function deploy-tools.checkAndCreateDataVolume() {
       mountpoints_array+=($datavolume)
     fi
   else
-    log "Volume name does not contain a slash, so it is a volume: $datavolume"
+    logVerbose "Volume name does not contain a slash, so it is a volume: $datavolume"
     if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
-      log "Volume does not exist yet: $datavolume"
+      logVerbose "Volume does not exist yet: $datavolume"
       # Create volume if $external is true
       if [[ "$external" == "true" ]]; then
         log "Creating external volume: $datavolume"
         docker volume create $datavolume
       fi
     else
-      log "Volume already exists: $datavolume"
+      logVerbose "Volume already exists: $datavolume"
     fi
 
     # Use the function to check if the array contains the string
@@ -249,12 +246,12 @@ function deploy-tools.checkAndCreateDataVolume() {
 function deploy-tools.checkAndCreateNetwork() {
   local network=$1
 
-  log "Checking network name: $network"
+  logVerbose "Checking network name: $network"
   if [[ -z $(docker network ls | grep ${network}) ]]; then
     log "Network does not exist yet: $network. Creating it."
     docker network create $network
   else
-    log "Network already exists: $network"
+    logVerbose "Network already exists: $network"
   fi
 }
 
@@ -279,13 +276,13 @@ function deploy-tools.checkAndCreateSecret() {
       echo -n "${temp_password}" > ${SCENARIO_SRC_SECRETSDIR}/$filename
     elif [ $cipher = "argon2" ]; then
       if ! command -v argon2 &> /dev/null; then
-        log "Command argon2 could not be found! Exiting!"
+        logError "Command argon2 could not be found! Exiting!"
         exit 1
       fi
 
       echo -n "${temp_password}" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4 > ${SCENARIO_SRC_SECRETSDIR}/$filename
     else
-      log "Non existing cipher method selected! Cannot create secret file!"
+      logError "Non existing cipher method selected! Cannot create secret file!"
     fi
   fi
 }
