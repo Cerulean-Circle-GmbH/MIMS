@@ -461,11 +461,55 @@ function deploy-tools.logs() {
   # Set environment
   deploy-tools.setEnvironment
 
-  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS logs
+  docker-compose -p $SCENARIO_NAME $COMPOSE_FILE_ARGUMENTS logs -f
+}
+
+function deploy-tools.backupVolume() {
+  local datavolume_var=$1
+  local target=$2
+  local scenario_name=$3
+  local timestamp=$4
+  local backupdir=$5
+
+  # resolve value by bash variable indirection
+  local datavolume=${!datavolume_var}
+
+  # Create backup directory if it does not exist
+  mkdir -p "$backupdir"
+
+  # Backup the volume into a tar.gz file
+  target_file="${scenario_name}_${timestamp}_${target}.tar.gz"
+  log "Backing up volume '${datavolume}' to ${backupdir}/${target_file}"
+  docker run --rm -v ${datavolume}:/data ubuntu du -skh /data
+  docker run --rm -v ${datavolume}:/data -v ${backupdir}:/backup ubuntu tar czf /backup/${target_file} -C /data .
+  ls -lah ${backupdir}/${target_file}
+}
+
+function deploy-tools.restoreVolume() {
+  local datavolume_var=$1
+  local source=$2
+  local scenario_name=$3
+  local timestamp=$4
+  local backupdir=$5
+
+  # resolve value by bash variable indirection
+  local datavolume=${!datavolume_var}
+
+  # Backup the volume into a tar.gz file
+  source_file="${scenario_name}_${timestamp}_${source}.tar.gz"
+  log "Restoring volume '${datavolume}' from ${backupdir}/${source_file}"
+  if [ ! -f "${backupdir}/${source_file}" ]; then
+    logError "Backup file ${backupdir}/${source_file} does not exist!"
+    exit 1
+  fi
+  # Clean up the data volume before restoring
+  docker run --rm -v ${datavolume}:/data alpine sh -c "rm -rf /data/* /data/.[!.]* /data/..?*"
+  # Restoring
+  docker run --rm -v ${datavolume}:/data -v ${backupdir}:/backup ubuntu sh -c "tar xzf /backup/${source_file} -C /data"
 }
 
 function deploy-tools.printUsage() {
-  log "Usage: $0 (up,start,stop,down,logs,test)  [-v|-s|-h]"
+  log "Usage: $0 (up,start,stop,down,logs,test,backup,restore,update)  [-v|-s|-h]"
 }
 
 function deploy-tools.parseArguments() {

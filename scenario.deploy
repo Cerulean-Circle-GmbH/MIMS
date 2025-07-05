@@ -50,10 +50,17 @@ function callScript() {
     $@
     return $?
   else
-    ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG bash -s << EOF
-            cd $REMOTE_CONFIG_DIR
-            $@
-EOF
+    # Check if interactive shell
+    if [ -t 0 ]; then
+      use_tty="-tt"
+    else
+      use_tty=""
+    fi
+    # TODO: First "cd" is necessary to ensure that the command is executed in the correct directory. Why?
+    CMD="cd && cd $REMOTE_CONFIG_DIR && pwd && $@"
+    #echo "CMD: $CMD"
+    ssh $use_tty $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG \
+        bash -c "$CMD"
     return $?
   fi
 }
@@ -74,19 +81,6 @@ function isInited() {
     # Check if scenario is available on remote server
     ssh $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG "[ -d '${REMOTE_CONFIG_DIR}' ]"
     return $?
-  fi
-}
-
-# Check that a string is part of the output of a command
-function isPartOfOutput() {
-  local command="$1"
-  local string="$2"
-
-  # Execute the command and check if the string is in the output
-  if $command | grep -q "$string"; then
-    return 0  # String is part of the output
-  else
-    return 1  # String is not part of the output
   fi
 }
 
@@ -698,12 +692,6 @@ function test() {
     return 1
   fi
 
-  # Check if test is implemented in scenario.sh
-  if ! isPartOfOutput "callScript ./scenario.sh -h" ",test"; then
-    logError "Scenario script 'scenario.sh' does not implement 'test'."
-    return 1
-  fi
-
   # Test remote
   bannerBig "Test remote"
   if isInited; then
@@ -733,12 +721,6 @@ function logs() {
     return 1
   fi
 
-  # Check if logs is implemented in scenario.sh
-  if ! isPartOfOutput "callScript ./scenario.sh -h" ",logs"; then
-    logError "Scenario script 'scenario.sh' does not implement 'logs'."
-    return 1
-  fi
-
   # Collect logs remotely
   bannerBig "Shutdown remotely"
   callScript ./scenario.sh logs $VERBOSITY || true
@@ -757,15 +739,15 @@ function backup() {
     return 1
   fi
 
-  # Check if backup is implemented in scenario.sh
-  if ! isPartOfOutput "callScript ./scenario.sh -h" ",backup"; then
-    logError "Scenario script 'scenario.sh' does not implement 'backup'."
-    return 1
-  fi
-
   # Backup scenario
   bannerBig "Backup scenario"
-  callScript ./scenario.sh backup $VERBOSITY || true
+  callScript ./scenario.sh backup $VERBOSITY
+  RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    logError "Scenario '$SCENARIO_NAME' failed to backup."
+    logError "Please check the scenario.sh script implements 'backup'."
+    return $RETVAL
+  fi
   log "Scenario '$SCENARIO_NAME' is now backuped."
 }
 
@@ -776,15 +758,15 @@ function restore() {
     return 1
   fi
 
-  # Check if restore is implemented in scenario.sh
-  if ! isPartOfOutput "callScript ./scenario.sh -h" ",restore"; then
-    logError "Scenario script 'scenario.sh' does not implement 'restore'."
-    return 1
-  fi
-
   # Restore scenario
   bannerBig "Restore scenario"
-  callScript ./scenario.sh restore $VERBOSITY || true
+  callScript ./scenario.sh restore $VERBOSITY
+  RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    logError "Scenario '$SCENARIO_NAME' failed to restore."
+    logError "Please check the scenario.sh script implements 'restore'."
+    return $RETVAL
+  fi
 
   log "Scenario '$SCENARIO_NAME' is now restored."
 }
@@ -796,15 +778,15 @@ function update() {
     return 1
   fi
 
-  # Check if update is implemented in scenario.sh
-  if ! isPartOfOutput "callScript ./scenario.sh -h" ",update"; then
-    logError "Scenario script 'scenario.sh' does not implement 'update'."
-    return 1
-  fi
-
   # Update scenario
   bannerBig "Update scenario"
-  callScript ./scenario.sh update $VERBOSITY || true
+  callScript ./scenario.sh update $VERBOSITY
+  RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    logError "Scenario '$SCENARIO_NAME' failed to update."
+    logError "Please check the scenario.sh script implements 'update'."
+    return $RETVAL
+  fi
 
   log "Scenario '$SCENARIO_NAME' is now updated."
 }
