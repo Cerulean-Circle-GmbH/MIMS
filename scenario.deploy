@@ -77,6 +77,19 @@ function isInited() {
   fi
 }
 
+# Check that a string is part of the output of a command
+function isPartOfOutput() {
+  local command="$1"
+  local string="$2"
+
+  # Execute the command and check if the string is in the output
+  if $command | grep -q "$string"; then
+    return 0  # String is part of the output
+  else
+    return 1  # String is not part of the output
+  fi
+}
+
 # Convert server string to namespace
 function convert_to_namespace() {
   local server_string="$1"
@@ -101,7 +114,7 @@ function convert_to_namespace() {
 
 # Print usage
 function printUsage() {
-  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,logs,updateconfig] [-v|-s|-h]"
+  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,logs,updateconfig,backup,restore,update] [-v|-s|-h]"
   log
   log "        Lifecycle actions:"
   log "          init   - init remote scenario dir"
@@ -115,6 +128,11 @@ function printUsage() {
   log "          test   - Test the running scenario"
   log "          logs   - Collect logs of scenario"
   log "          updateconfig - update local scenario config"
+  log
+  log "        Deployment actions:"
+  log "          backup - Backup scenario"
+  log "          restore - Restore scenario from backup"
+  log "          update - Update scenario services"
   log
   log "        Options:"
   log "          -v|--verbose - verbose"
@@ -680,6 +698,12 @@ function test() {
     return 1
   fi
 
+  # Check if test is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",test"; then
+    logError "Scenario script 'scenario.sh' does not implement 'test'."
+    return 1
+  fi
+
   # Test remote
   bannerBig "Test remote"
   if isInited; then
@@ -709,6 +733,12 @@ function logs() {
     return 1
   fi
 
+  # Check if logs is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",logs"; then
+    logError "Scenario script 'scenario.sh' does not implement 'logs'."
+    return 1
+  fi
+
   # Collect logs remotely
   bannerBig "Shutdown remotely"
   callScript ./scenario.sh logs $VERBOSITY || true
@@ -718,6 +748,65 @@ function logs() {
 function updateconfig() {
   config
   doCopyConfig
+}
+
+# Backup scenario
+function backup() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Check if backup is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",backup"; then
+    logError "Scenario script 'scenario.sh' does not implement 'backup'."
+    return 1
+  fi
+
+  # Backup scenario
+  bannerBig "Backup scenario"
+  callScript ./scenario.sh backup $VERBOSITY || true
+  log "Scenario '$SCENARIO_NAME' is now backuped."
+}
+
+# Restore scenario
+function restore() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Check if restore is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",restore"; then
+    logError "Scenario script 'scenario.sh' does not implement 'restore'."
+    return 1
+  fi
+
+  # Restore scenario
+  bannerBig "Restore scenario"
+  callScript ./scenario.sh restore $VERBOSITY || true
+
+  log "Scenario '$SCENARIO_NAME' is now restored."
+}
+
+# Update scenario
+function update() {
+  if ! isInited; then
+    log "Scenario '$SCENARIO_NAME' is not inited."
+    return 1
+  fi
+
+  # Check if update is implemented in scenario.sh
+  if ! isPartOfOutput "callScript ./scenario.sh -h" ",update"; then
+    logError "Scenario script 'scenario.sh' does not implement 'update'."
+    return 1
+  fi
+
+  # Update scenario
+  bannerBig "Update scenario"
+  callScript ./scenario.sh update $VERBOSITY || true
+
+  log "Scenario '$SCENARIO_NAME' is now updated."
 }
 
 ### MAIN ###
@@ -840,6 +929,15 @@ for s in $SCENARIOS_LIST; do
       RETVAL=$? # return value
     elif [ "$STEP" == "updateconfig" ]; then
       updateconfig
+      RETVAL=$? # return value
+    elif [ "$STEP" == "backup" ]; then
+      backup
+      RETVAL=$? # return value
+    elif [ "$STEP" == "restore" ]; then
+      restore
+      RETVAL=$? # return value
+    elif [ "$STEP" == "update" ]; then
+      update
       RETVAL=$? # return value
     else
       logError "Unknown step: $STEP"
