@@ -8,6 +8,8 @@ scenario:
         restoresource: none
         # Is the data volume external (true or false; if not external, it will be deleted on down)?
         external: true
+    # What is the path used to store the volume backups
+    backupdir: /var/dev/MIMS-Scenarios/_backups
 
   ## Unique resources
   resource:
