@@ -11,7 +11,7 @@ function setEnvironment() {
 
 function checkAndCreateDataVolume() {
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume"
 }
 
 function up() {
@@ -28,9 +28,6 @@ function up() {
   banner "Create jenkins image"
   log "Building image..."
   docker build -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
-
-  # TODO: --strip-components=1, fix in backup before
-  deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 2
 
   # Create and run container
   banner "Create and run container"
