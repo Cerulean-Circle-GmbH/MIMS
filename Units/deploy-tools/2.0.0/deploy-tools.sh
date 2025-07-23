@@ -481,7 +481,8 @@ function deploy-tools.backupVolume() {
   target_file="${scenario_name}_${timestamp}_${target}.tar.gz"
   log "Backing up volume '${datavolume}' to ${backupdir}/${target_file}"
   docker run --rm -v ${datavolume}:/data ubuntu du -skh /data
-  docker run --rm -v ${datavolume}:/data -v ${backupdir}:/backup ubuntu tar czf /backup/${target_file} -C /data .
+  #docker run --rm -v ${datavolume}:/data -v ${backupdir}:/backup ubuntu tar czf /backup/${target_file} -C /data .
+  docker run --rm -v ${datavolume}:/data -v ${backupdir}:/backup ubuntu bash -c "echo 'tar it';tar czf /backup/${target_file} -C /data .;echo '${target_file} tared'"
   ls -lah ${backupdir}/${target_file}
 }
 
