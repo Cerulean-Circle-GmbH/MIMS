@@ -139,7 +139,6 @@ function printUsage() {
   log "Example: $0 dev stop,start"
   log "Example: $0 dev deinit"
   log
-  log "* up will call init and stop"
   log "* deinit will call down"
   log
   log "Available scenarios:"
