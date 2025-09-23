@@ -619,8 +619,8 @@ function start() {
     return 1
   fi
 
-  # Restart once server
-  bannerBig "Restart once server"
+  # Start scenario
+  bannerBig "Start scenario"
   callScript ./scenario.sh start $VERBOSITY
 
   log "Scenario '$SCENARIO_NAME' is now started (running on remote server)."
@@ -721,7 +721,7 @@ function logs() {
   fi
 
   # Collect logs remotely
-  bannerBig "Shutdown remotely"
+  bannerBig "Show logs remotely"
   callScript ./scenario.sh logs $VERBOSITY || true
 }
 
