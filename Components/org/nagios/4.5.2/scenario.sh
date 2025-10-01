@@ -10,12 +10,13 @@ function setEnvironment() {
 }
 
 function checkAndCreateDataVolume() {
+  local creation_mode=$1
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "etc-volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "var-volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_3 "plugin-volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_4 "graph-etc-volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_5 "graph-var-volume"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "etc-volume" "$creation_mode"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_2 "var-volume" "$creation_mode"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_3 "plugin-volume" "$creation_mode"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_4 "graph-etc-volume" "$creation_mode"
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_5 "graph-var-volume" "$creation_mode"
 }
 
 function up() {
@@ -37,21 +38,21 @@ function start() {
 
 function stop() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.stop
 }
 
 function down() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.down
 }
 
 function test() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   # Set environment
   setEnvironment
@@ -77,7 +78,7 @@ function test() {
 
 function logs() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.logs
 }

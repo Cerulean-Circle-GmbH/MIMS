@@ -177,6 +177,7 @@ function deploy-tools.checkAndCreateDataVolume() {
   local datavolume=${!datavolume_var}
   local external=${!external_var}
   local target=$2
+  local creation_mode=$3
 
   # set separator for handling of arrays as environment variables
   IFS=','
@@ -193,8 +194,12 @@ function deploy-tools.checkAndCreateDataVolume() {
     fi
 
     logVerbose "Volume name contains a slash, so it is a path: $datavolume"
-    mkdir -p $datavolume
-    chmod 777 $datavolume
+
+    # Only create directory if creation_mode is not "nocreate"
+    if [[ "$creation_mode" != "nocreate" ]]; then
+      mkdir -p $datavolume
+      chmod 777 $datavolume
+    fi
 
     # Use the function to check if the array contains the string
     if ! deploy-tools.contains mountpoints_array "$datavolume"; then
@@ -205,8 +210,8 @@ function deploy-tools.checkAndCreateDataVolume() {
     logVerbose "Volume name does not contain a slash, so it is a volume: $datavolume"
     if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
       logVerbose "Volume does not exist yet: $datavolume"
-      # Create volume if $external is true
-      if [[ "$external" == "true" ]]; then
+      # Create volume if $external is true and creation_mode is not "nocreate"
+      if [[ "$external" == "true" && "$creation_mode" != "nocreate" ]]; then
         log "Creating external volume: $datavolume"
         docker volume create $datavolume
       fi

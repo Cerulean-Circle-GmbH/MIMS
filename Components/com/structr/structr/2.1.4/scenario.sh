@@ -11,8 +11,9 @@ function setEnvironment() {
 }
 
 function checkAndCreateDataVolume() {
+  local creation_mode=$1
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume" "$creation_mode"
 }
 
 # TODO: Add backup step to all scenarios
@@ -40,7 +41,7 @@ function up() {
   fi
 
   deploy-tools.checkAndRestoreDataVolume $SCENARIO_DATA_VOLUME_1_RESTORESOURCE $SCENARIO_DATA_VOLUME_1_PATH 1
-  
+
   # Download structr.zip
   banner "Download structr.zip"
   deploy-tools.downloadFile https://test.wo-da.de/EAMD.ucp/Components/org/structr/StructrServer/2.1.4/dist/structr.zip structr.zip
@@ -85,14 +86,14 @@ function start() {
 
 function stop() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.stop
 }
 
 function down() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.down
 
@@ -102,7 +103,7 @@ function down() {
 
 function test() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   # Set environment
   setEnvironment
@@ -133,7 +134,7 @@ function test() {
 
 function logs() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.logs
 }

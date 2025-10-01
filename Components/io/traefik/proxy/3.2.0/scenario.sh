@@ -10,8 +10,9 @@ function setEnvironment() {
 }
 
 function checkAndCreateDataVolume() {
+  local creation_mode=$1
   banner "Check data volume"
-  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1
+  deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data-volume" "$creation_mode"
 
   # create traefik config files
   # mkdir -p ${SCENARIO_DATA_VOLUME}/configs
@@ -38,21 +39,21 @@ function start() {
 
 function stop() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.stop
 }
 
 function down() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.down
 }
 
 function test() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   # Set environment
   setEnvironment
@@ -78,7 +79,7 @@ function test() {
 
 function logs() {
   # Check data volume
-  checkAndCreateDataVolume
+  checkAndCreateDataVolume "nocreate"
 
   deploy-tools.logs
 }
