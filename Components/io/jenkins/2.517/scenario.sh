@@ -98,6 +98,7 @@ function test() {
 
   # Check Jenkins status
   banner "Check Jenkins $SCENARIO_SERVER_NAME - $SCENARIO_NAME"
+  deploy-tools.checkContainer "jenkins (docker)" ${SCENARIO_NAME}_jenkins_container
   deploy-tools.checkURL "Jenkins (http)" http://$SCENARIO_SERVER_NAME:$SCENARIO_RESOURCE_HTTPPORT/jenkins/login?from=%2Fjenkins%2F
   return $? # Return the result of the last command
 }

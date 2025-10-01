@@ -89,6 +89,7 @@ function test() {
     docker ps -all | grep ${SCENARIO_NAME}_traefik_container
   fi
 
+  deploy-tools.checkContainer "traefik (docker)" ${SCENARIO_NAME}_traefik_container
   return $? # Return the result of the last command
 }
 

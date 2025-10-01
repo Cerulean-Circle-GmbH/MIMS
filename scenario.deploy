@@ -57,7 +57,7 @@ function callScript() {
       use_tty=""
     fi
     # TODO: First "cd" is necessary to ensure that the command is executed in the correct directory. Why?
-    CMD="cd && cd $REMOTE_CONFIG_DIR && pwd && $@"
+    CMD="cd && cd $REMOTE_CONFIG_DIR && $@"
     #echo "CMD: $CMD"
     ssh $use_tty $use_key -o 'StrictHostKeyChecking no' $SCENARIO_SERVER_SSHCONFIG \
         bash -c "$CMD"
@@ -584,7 +584,7 @@ EOF
 # Startup scenario
 function up() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -610,7 +610,7 @@ function up() {
 # Start scenario
 function start() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -629,7 +629,7 @@ function start() {
 # Stop scenario
 function stop() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -643,7 +643,7 @@ function stop() {
 # Shutdown scenario
 function down() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -657,7 +657,7 @@ function down() {
 # Cleanup / Deinstall scenario
 function deinit() {
   if ! isInited; then
-    log "Warning: Scenario '$SCENARIO_NAME' is not inited."
+    log "Warning: 🚫 Scenario '$SCENARIO_NAME' is not inited."
   else
     down
   fi
@@ -687,7 +687,7 @@ EOF
 # Test scenario
 function test() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -716,7 +716,7 @@ function test() {
 # Collect logs of scenario
 function logs() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -734,7 +734,7 @@ function updateconfig() {
 # Backup scenario
 function backup() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -753,7 +753,7 @@ function backup() {
 # Restore scenario
 function restore() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -773,7 +773,7 @@ function restore() {
 # Update scenario
 function update() {
   if ! isInited; then
-    log "Scenario '$SCENARIO_NAME' is not inited."
+    log "🚫 Scenario '$SCENARIO_NAME' is not inited."
     return 1
   fi
 
@@ -873,6 +873,7 @@ log "Run scenarios from list: $SCENARIOS_LIST"
 
 ALLRETVAL=0
 for s in $SCENARIOS_LIST; do
+  echo "----------------"
   echo "Run scenario: $s"
 
   # Reset SCENARIO_* variables

@@ -88,10 +88,10 @@ function deploy-tools.checkContainer() {
   logVerbose
   logVerbose call: docker ps \| grep "$@"
   if [[ -z $(docker ps | grep "$@") ]]; then
-    log "--: not running: $1 - $comment"
+    log "❌: not running: $1 - $comment"
     return 1
   else
-    log "OK: running: $1 - $comment"
+    log "✅: running: $1 - $comment"
     return 0
   fi
 }
@@ -104,11 +104,11 @@ function deploy-tools.checkURL() {
   # cUrl option -L follows redirects, e.g. if http code is 301
   up=$(curl --connect-timeout 0 -ksL -m 10 -o /dev/null -w "%{http_code}" "$@")
   if [[ "$up" != "200" && "$up" != "302" ]]; then
-    log "--: not running (returned $up): $1 - $comment"
+    log "❌: not running (returned $up): $1 - $comment"
     curl --connect-timeout 0 -ksL -m 10 "$@"
     return 1
   else
-    log "OK: running: $1 - $comment"
+    log "✅: running: $1 - $comment"
     return 0
   fi
 }

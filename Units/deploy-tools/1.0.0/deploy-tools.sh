@@ -62,6 +62,8 @@ function deploy-tools.setEnvironment() {
   . .env
   set +a
 
+  echo "⚠️  Using deprecated version 1.0.0 of deploy-tools.sh, please update to 2.0.0!" > /dev/stderr
+
   # This separation is necessary because of the old version of docker on WODA.test
   COMPOSE_FILE_ARGUMENTS="-f docker-compose.yml -f docker-compose.volumes.yml"
   if [[ $SCENARIO_TRAEFIK_ENABLE = "true" ]]; then
