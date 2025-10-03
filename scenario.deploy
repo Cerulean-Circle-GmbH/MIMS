@@ -516,6 +516,15 @@ function init() {
   rm -rf $LOCAL_CONFIG_DIR
   mkdir -p $LOCAL_CONFIG_DIR
   cp -R -a $COMPONENT_DIR/* ${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/*.sh ${MIMS_ROOT}/Units/deploy-tools/${COMPONENTS_DEPLOYTOOLSVERSION}/*.yaml $LOCAL_CONFIG_DIR/
+
+  # Copy scenario-specific directory if it exists
+  SCENARIO_SPECIFIC_DIR=$SCENARIOS_STORAGE_DIR/$SCENARIO_NAME_SPACE/$SCENARIO_NAME
+  if [ -d "$SCENARIO_SPECIFIC_DIR" ]; then
+    logVerbose "Copying scenario-specific directory: $SCENARIO_SPECIFIC_DIR"
+    mkdir -p $LOCAL_CONFIG_DIR/$SCENARIO_NAME
+    cp -R -a "$SCENARIO_SPECIFIC_DIR"/* $LOCAL_CONFIG_DIR/$SCENARIO_NAME/
+  fi
+
   ENVIROMENT_VARIABLES=$(echo SCENARIO_NAME && echo SCENARIO_NAME_SPACE && cat ${SCENARIO_FILE_NAME}* $OTHER_ENV_FILES | grep -v ^# | grep -v ^$ | sed "s/=.*//" | sort | uniq)
   for ENV_VAR in $ENVIROMENT_VARIABLES; do
     local value=${!ENV_VAR}
