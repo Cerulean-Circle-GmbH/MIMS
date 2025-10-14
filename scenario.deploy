@@ -704,9 +704,9 @@ function test() {
   bannerBig "Test remote"
   if isInited; then
     if isLocal; then
-      log "Scenario '$SCENARIO_NAME' is inited."
+      logVerbose "Scenario '$SCENARIO_NAME' is inited."
     else
-      log "Scenario '$SCENARIO_NAME' is inited and available on remote server."
+      logVerbose "Scenario '$SCENARIO_NAME' is inited and available on remote server."
     fi
     callScript ./scenario.sh test $VERBOSITY
     if [ "$VERBOSITY" == "-v" ]; then
@@ -717,7 +717,7 @@ function test() {
     fi
     return $?
   else
-    log "Scenario '$SCENARIO_NAME' is not available on remote server."
+    logError "Scenario '$SCENARIO_NAME' is not available on remote server."
     return 1
   fi
 }
