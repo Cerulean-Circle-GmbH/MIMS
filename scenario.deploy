@@ -809,7 +809,7 @@ fi
 # Check for available scenarios
 SCENARIOS_STORAGE_DIR=${SCENARIOS_STORAGE_DIR:-"$cwd/Scenarios"}
 ENV_FILE_TYPE=env
-AVAILABLE_SCENARIOS=$(find $SCENARIOS_STORAGE_DIR -name "*.scenario.$ENV_FILE_TYPE" | sort | sed "s;$SCENARIOS_STORAGE_DIR/;;" | sed "s/.scenario.${ENV_FILE_TYPE}//" | sed "s/ /\\ /g")
+AVAILABLE_SCENARIOS=$(find -L $SCENARIOS_STORAGE_DIR -name "*.scenario.$ENV_FILE_TYPE" | sort | sed "s;$SCENARIOS_STORAGE_DIR/;;" | sed "s/.scenario.${ENV_FILE_TYPE}//" | sed "s/ /\\ /g")
 
 # Scan for scenario
 if [ -z "$1" ]; then
