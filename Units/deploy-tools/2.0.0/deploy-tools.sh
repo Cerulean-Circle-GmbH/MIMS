@@ -82,6 +82,14 @@ function deploy-tools.setEnvironment() {
   fi
 }
 
+function deploy-tools.setDockerSockPermissions() {
+  # Set permissions for docker.sock
+  if [ -S /var/run/docker.sock ]; then
+    sudo chown $(whoami):$(whoami) /var/run/docker.sock
+    sudo chmod 666 /var/run/docker.sock
+  fi
+}
+
 function deploy-tools.checkContainer() {
   comment=$1
   shift
