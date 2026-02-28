@@ -597,19 +597,25 @@ function up() {
   fi
 
   if callScript ./scenario.sh test $VERBOSITY; then
-    log "Scenario '$SCENARIO_NAME' is already running."
-    return 1
+    log "⚠️  Scenario '$SCENARIO_NAME' is already fully running — skipping up."
+    return 0
   fi
 
   checkNamespace
 
-  # Startup scenario
+  # Startup scenario (also brings up any partially missing services)
   bannerBig "Startup scenario '$SCENARIO_NAME'"
   callScript ./scenario.sh up $VERBOSITY
   RETVAL=$?
   if [ $RETVAL -ne 0 ]; then
     logError "Scenario '$SCENARIO_NAME' failed to start."
     return $RETVAL
+  fi
+
+  # Verify all services are now up
+  if ! callScript ./scenario.sh test $VERBOSITY; then
+    logError "Scenario '$SCENARIO_NAME' started but test still fails — some services may be missing."
+    return 1
   fi
 
   log "Scenario '$SCENARIO_NAME' is now up (running on remote server)."
