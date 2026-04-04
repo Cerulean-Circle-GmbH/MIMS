@@ -149,6 +149,23 @@ function restore() {
   deploy-tools.restoreVolume SCENARIO_DATA_VOLUME_1_PATH "data" $SCENARIO_NAME $TIMESTAMP "$SCENARIO_DATA_BACKUPDIR"
 }
 
+function update() {
+  # Check data volume (also sets the necessary environment variables)
+  checkAndCreateDataVolume
+
+  # Set environment
+  setEnvironment
+
+  banner "Update services"
+
+  # Pull the latest base image and rebuild
+  log "Building image with updated base image..."
+  docker build --pull -t ${SCENARIO_NAME}_jenkins_image . > $VERBOSEPIPE
+
+  # Restart the services to apply updates
+  echo "Please restart the services to apply updates with down,up command manually!"
+}
+
 # Scenario vars
 if [ -z "$1" ]; then
   deploy-tools.printUsage
@@ -176,6 +193,8 @@ elif [ $STEP = "backup" ]; then
   backup
 elif [ $STEP = "restore" ]; then
   restore
+elif [ $STEP = "update" ]; then
+  update
 else
   deploy-tools.printUsage
   exit 1
