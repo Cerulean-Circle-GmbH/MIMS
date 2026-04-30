@@ -28,6 +28,7 @@ function checkNamespace() {
   EXPECTED_NAMESPACE=$(convert_to_namespace $SCENARIO_SERVER_NAME)
   if [ "$SCENARIO_NAME_SPACE" != "$EXPECTED_NAMESPACE" ]; then
     log "WARNING: Scenario name space '$SCENARIO_NAME_SPACE' does not match server name '$SCENARIO_SERVER_NAME'"
+    log "Expected scenario name space would be '$EXPECTED_NAMESPACE'"
     return 1
   else
     log "Scenario name space '$SCENARIO_NAME_SPACE' matches server name '$SCENARIO_SERVER_NAME'"
