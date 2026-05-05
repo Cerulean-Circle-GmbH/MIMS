@@ -10,7 +10,7 @@ scenario:
 
   ## Server setup
   server:
-    # What is the server, the scenario will be deployed?
+    # What is the server, the scenario will be deployed to?
     name: test.wo-da.de
     # What is the SSH config the server can be connected with?
     sshconfig: WODA.test

@@ -597,10 +597,14 @@ function up() {
     return 1
   fi
 
-  if callScript ./scenario.sh test $VERBOSITY; then
-    log "⚠️  Scenario '$SCENARIO_NAME' is already fully running — skipping up."
-    return 0
-  fi
+  # TODO: Nochmal checken, ob das so sinnvoll ist, da es ja auch sein kann,
+  # dass das Scenario teilweise läuft, z.B. weil manche Services länger zum
+  # Starten brauchen oder weil manche Services manuell gestoppt wurden.
+  # Ein up sollte ja auch fehlende Services mit hochfahren, oder?
+  #if callScript ./scenario.sh test $VERBOSITY; then
+  #  log "⚠️  Scenario '$SCENARIO_NAME' is already fully running — skipping up."
+  #  return 0
+  #fi
 
   checkNamespace
 
