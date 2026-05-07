@@ -7,9 +7,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/jenkins_home
-    ports:
-      - "${SCENARIO_RESOURCE_HTTPPORT}:8080"
-      - "${SCENARIO_RESOURCE_AGENTPORT}:50000"
     environment:
       - JENKINS_OPTS="--prefix=/jenkins"
     networks:

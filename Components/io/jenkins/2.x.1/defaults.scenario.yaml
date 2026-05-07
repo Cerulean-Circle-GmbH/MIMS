@@ -9,13 +9,6 @@ scenario:
     # What is the path used to store the volume backups
     backupdir: /var/dev/MIMS-Scenarios/_backups
 
-  ## Unique resources
-  resource:
-    # What is the http port of the docker container?
-    httpport: 8086
-    # What is the jenkins agent communication port?
-    agentport: 50000
-
   ## Server setup
   server:
     # What is the servers hostname?
@@ -30,5 +23,3 @@ scenario:
     enable: false
     # What is the url of the jenkins service?
     url: jenkins.example.com
-    # Route to the jenkins service (e.g. '/' or '/jenkins')
-    route: /jenkins
