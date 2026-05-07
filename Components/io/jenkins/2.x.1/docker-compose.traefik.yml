@@ -1,0 +1,22 @@
+services:
+  jenkins-service:
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # Router for jenkins
+      - "traefik.http.routers.jenkins_${SCENARIO_NAME}.rule=Host(`${SCENARIO_TRAEFIK_URL}`) && PathPrefix(`${SCENARIO_TRAEFIK_ROUTE}`)"
+      - "traefik.http.routers.jenkins_${SCENARIO_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.jenkins_${SCENARIO_NAME}.tls.certresolver=letsencrypt"
+      # Strip route prefix and set forwarded headers
+      - "traefik.http.middlewares.jenkins_${SCENARIO_NAME}-headers.headers.customrequestheaders.Host=${SCENARIO_TRAEFIK_URL}"
+      - "traefik.http.middlewares.jenkins_${SCENARIO_NAME}-headers.headers.customrequestheaders.X-Forwarded-Prefix=${SCENARIO_TRAEFIK_ROUTE}"
+      - "traefik.http.middlewares.jenkins_${SCENARIO_NAME}-stripprefix.stripprefix.prefixes=${SCENARIO_TRAEFIK_ROUTE}"
+      - "traefik.http.middlewares.jenkins_${SCENARIO_NAME}-stripprefix.stripprefix.forceSlash=false"
+      - "traefik.http.routers.jenkins_${SCENARIO_NAME}.middlewares=jenkins_${SCENARIO_NAME}-stripprefix,jenkins_${SCENARIO_NAME}-headers"
+      - "traefik.http.services.jenkins_${SCENARIO_NAME}.loadbalancer.server.port=${SCENARIO_RESOURCE_HTTPPORT}"
+
+networks:
+  traefik:
+    external: true
