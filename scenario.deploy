@@ -445,9 +445,9 @@ function config() {
   rm -rf $SCENARIO_FILE_NAME_TMP
   IFS=$'\n'
   for line in $(cat "$SCENARIO_DEFAULTS_ENV"); do
-    if echo "$line" | grep -q "="; then
+    if [[ "$line" =~ ^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*= ]]; then
       local variable=$(echo "$line" | cut -d "=" -f 1)
-      local default=$(echo "$line" | cut -d "=" -f 2 | sed "s/^\"//" | sed "s/\"$//")
+      local default=$(echo "${line#*=}" | sed "s/^\"//" | sed "s/\"$//")
       local value=${!variable}
       #log
       #log "current_comment : \"$current_comment\""
