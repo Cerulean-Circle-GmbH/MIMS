@@ -229,10 +229,17 @@ function sourceEnv() {
 
   # Check whether the component dir exists first in cwd or in MIMS_ROOT
   COMPONENT_DIR=$cwd/Components/$SCENARIO_SRC_COMPONENT
-  if [ ! -d $COMPONENT_DIR ]; then
+  if [ ! -d "$COMPONENT_DIR" ]; then
     COMPONENT_DIR=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
-    if [ ! -d $COMPONENT_DIR ]; then
-      logError "Component dir for $SCENARIO_SRC_COMPONENT not found"
+    if [ ! -d "$COMPONENT_DIR" ]; then
+      CHECKED_CWD_COMPONENT=$cwd/Components/$SCENARIO_SRC_COMPONENT
+      CHECKED_MIMS_COMPONENT=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
+      logError "Component dir for '$SCENARIO_SRC_COMPONENT' not found"
+      logError "Scenario: '$SCENARIO_NAME_SPACE/$SCENARIO_NAME'"
+      logError "Checked paths:"
+      logError "  - $CHECKED_CWD_COMPONENT"
+      logError "  - $CHECKED_MIMS_COMPONENT"
+      logError "Hint: If this is a linked SUT component (e.g. de/sut), ensure the source repo is checked out and linked into 'Components'."
       exit 1
     fi
   fi
@@ -395,10 +402,17 @@ function config() {
 
   # Check whether the component dir exists first in cwd or in MIMS_ROOT
   COMPONENT_DIR=$cwd/Components/$SCENARIO_SRC_COMPONENT
-  if [ ! -d $COMPONENT_DIR ]; then
+  if [ ! -d "$COMPONENT_DIR" ]; then
     COMPONENT_DIR=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
-    if [ ! -d $COMPONENT_DIR ]; then
-      logError "Component dir for $SCENARIO_SRC_COMPONENT not found"
+    if [ ! -d "$COMPONENT_DIR" ]; then
+      CHECKED_CWD_COMPONENT=$cwd/Components/$SCENARIO_SRC_COMPONENT
+      CHECKED_MIMS_COMPONENT=$MIMS_ROOT/Components/$SCENARIO_SRC_COMPONENT
+      logError "Component dir for '$SCENARIO_SRC_COMPONENT' not found"
+      logError "Scenario: '$SCENARIO_NAME_SPACE/$SCENARIO_NAME'"
+      logError "Checked paths:"
+      logError "  - $CHECKED_CWD_COMPONENT"
+      logError "  - $CHECKED_MIMS_COMPONENT"
+      logError "Hint: If this is a linked SUT component (e.g. de/sut), ensure the source repo is checked out and linked into 'Components'."
       exit 1
     fi
   fi
