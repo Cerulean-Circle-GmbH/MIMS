@@ -613,8 +613,8 @@ function inspect() {
   INSPECT_DONE=true
 
   bannerBig "Inspect selected scenarios (local only)"
-  printf "%-30s | %s\n" "Description" "Name"
-  printf -- "------------------------------ | ----------------------------------------\n"
+  printf "%-50s | %s\n" "Description" "Name"
+  printf -- "-------------------------------------------------- | ----------------------------------------\n"
 
   local inspect_rows=""
 
@@ -646,7 +646,7 @@ $selected_scenario_description|$selected_scenario"
     if [ -z "$selected_scenario" ]; then
       continue
     fi
-    printf "%-30.30s | %s\n" "$selected_scenario_description" "$selected_scenario"
+    printf "%-50.50s | %s\n" "$selected_scenario_description" "$selected_scenario"
   done < <(printf "%s\n" "$inspect_rows" | sed '/^$/d' | sort -f -t '|' -k1,1)
 }
 
