@@ -1,4 +1,8 @@
 scenario:
+  ## Scenario metadata
+  # Short scenario description shown by 'scenario.deploy <scenario> inspect'
+  description: No description
+
   ## Source setup
   src:
     # This is the scenario component name which will be automatically filled. Default is ignored but must not be empty.

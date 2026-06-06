@@ -109,10 +109,11 @@ function convert_to_namespace() {
 
 # Print usage
 function printUsage() {
-  log "Usage: $0 <scenario> [init,up,stop,start,down,deinit,test,logs,updateconfig,backup,restore,update] [-v|-s|-h]"
+  log "Usage: $0 <scenario> [init,inspect,up,stop,start,down,deinit,test,logs,updateconfig,backup,restore,update] [-v|-s|-h]"
   log
   log "        Lifecycle actions:"
   log "          init   - init remote scenario dir"
+  log "          inspect - inspect selected scenarios locally (description + name table)"
   log "          up     - Create and start scenario"
   log "          stop   - Stop scenario"
   log "          start  - Start scenario if stopped"
@@ -604,6 +605,51 @@ EOF
   fi
 }
 
+# Inspect selected scenarios (local-only)
+function inspect() {
+  if [ -n "$INSPECT_DONE" ]; then
+    return 0
+  fi
+  INSPECT_DONE=true
+
+  bannerBig "Inspect selected scenarios (local only)"
+  printf "%-30s | %s\n" "Description" "Name"
+  printf -- "------------------------------ | ----------------------------------------\n"
+
+  local inspect_rows=""
+
+  while IFS= read -r selected_scenario; do
+    if [ -z "$selected_scenario" ]; then
+      continue
+    fi
+
+    local selected_scenario_name=$(basename "$selected_scenario")
+    local selected_scenario_namespace=$(dirname "$selected_scenario")
+    local selected_scenario_file="$SCENARIOS_STORAGE_DIR/$selected_scenario_namespace/$selected_scenario_name.scenario.$ENV_FILE_TYPE"
+    local selected_scenario_description=""
+
+    if [ -f "$selected_scenario_file" ]; then
+      unset SCENARIO_DESCRIPTION
+      . "$selected_scenario_file"
+      selected_scenario_description="$SCENARIO_DESCRIPTION"
+    fi
+
+    if [ -z "$selected_scenario_description" ]; then
+      selected_scenario_description="(no description)"
+    fi
+
+    inspect_rows="$inspect_rows
+$selected_scenario_description|$selected_scenario"
+  done <<< "$SCENARIOS_LIST"
+
+  while IFS='|' read -r selected_scenario_description selected_scenario; do
+    if [ -z "$selected_scenario" ]; then
+      continue
+    fi
+    printf "%-30.30s | %s\n" "$selected_scenario_description" "$selected_scenario"
+  done < <(printf "%s\n" "$inspect_rows" | sed '/^$/d' | sort -f -t '|' -k1,1)
+}
+
 # Startup scenario
 function up() {
   if ! isInited; then
@@ -901,6 +947,19 @@ if [ -z "$SCENARIOS_LIST" ]; then
   SCENARIOS_LIST=$SCENARIOS_STRING
 fi
 
+# Run inspect directly (local-only, no sourceEnv needed)
+ONLY_INSPECT=true
+for REQUESTED_STEP in $(echo $STEPS | sed "s/,/ /g"); do
+  if [ "$REQUESTED_STEP" != "inspect" ]; then
+    ONLY_INSPECT=false
+    break
+  fi
+done
+if [ "$ONLY_INSPECT" == "true" ]; then
+  inspect
+  exit $?
+fi
+
 # Run scenarios
 log "Run scenarios from list: $SCENARIOS_LIST"
 
@@ -920,6 +979,9 @@ for s in $SCENARIOS_LIST; do
   for STEP in $(echo $STEPS | sed "s/,/ /g"); do
     if [ "$STEP" == "init" ]; then
       init
+      RETVAL=$? # return value
+    elif [ "$STEP" == "inspect" ]; then
+      inspect
       RETVAL=$? # return value
     elif [ "$STEP" == "up" ]; then
       up
