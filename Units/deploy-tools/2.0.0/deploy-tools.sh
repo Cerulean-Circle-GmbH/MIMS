@@ -16,13 +16,27 @@ fi
 
 ## Simple tools without namespace
 
+# Color definitions (disabled when NO_COLOR is set or stdout is not a terminal)
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  _C_RESET=$'\033[0m'
+  _C_BOLD=$'\033[1m'
+  _C_RED=$'\033[0;31m'
+  _C_RED_BOLD=$'\033[1;31m'
+  _C_YELLOW_BOLD=$'\033[1;33m'
+  _C_CYAN_BOLD=$'\033[1;36m'
+  _C_WHITE_BOLD=$'\033[1;37m'
+  _C_GRAY=$'\033[0;90m'
+else
+  _C_RESET=''; _C_BOLD=''; _C_RED=''; _C_RED_BOLD=''
+  _C_YELLOW_BOLD=''; _C_CYAN_BOLD=''; _C_WHITE_BOLD=''; _C_GRAY=''
+fi
+
 # Log verbose
 function logVerbose() {
-  # Check for verbosity not equal to -v
   if [ "$VERBOSITY" != "-v" ]; then
     return
   fi
-  echo "$@"
+  echo "${_C_GRAY}$*${_C_RESET}"
 }
 
 # Log
@@ -35,23 +49,33 @@ function log() {
 
 # Log error
 function logError() {
-  echo "ERROR: $@" > /dev/stderr
+  echo "${_C_RED_BOLD}✖  ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2
 }
 
-# Banner
+# Big section banner (only in verbose mode)
 function bannerBig() {
-  logVerbose
-  logVerbose "####################################################################################################"
-  logVerbose "## $@"
-  logVerbose "####################################################################################################"
-  logVerbose
+  if [ "$VERBOSITY" != "-v" ]; then
+    return
+  fi
+  local msg="$*"
+  local len=${#msg}
+  local line
+  line=$(printf '═%.0s' $(seq 1 $((len + 4))))
+  echo ""
+  echo "${_C_CYAN_BOLD}  ╔${line}╗${_C_RESET}"
+  echo "${_C_CYAN_BOLD}  ║${_C_RESET}  ${_C_WHITE_BOLD}${msg}${_C_RESET}  ${_C_CYAN_BOLD}║${_C_RESET}"
+  echo "${_C_CYAN_BOLD}  ╚${line}╝${_C_RESET}"
+  echo ""
 }
 
-# Banner
+# Small section banner (only in verbose mode)
 function banner() {
-  logVerbose
-  logVerbose "--- $1"
-  logVerbose
+  if [ "$VERBOSITY" != "-v" ]; then
+    return
+  fi
+  echo ""
+  echo "${_C_YELLOW_BOLD}  ▸ $1${_C_RESET}"
+  echo ""
 }
 
 ## Namespace deploy-tools
@@ -283,9 +307,10 @@ function deploy-tools.checkAndCreateSecret() {
   if [ ! -f "${SCENARIO_SRC_SECRETSDIR}/$filename" ]; then
     temp_password=$(openssl rand -base64 15)
     log ""
-    log "********************************************************************************************"
-    log "*** Your password string is: ${temp_password} - Please write it down somewhere safe! ***"
-    log "********************************************************************************************"
+    log "${_C_YELLOW_BOLD}  ┌─────────────────────────────────────────────────────────────────────┐${_C_RESET}"
+    log "${_C_YELLOW_BOLD}  │  ⚠   Your password — write it down somewhere safe!${_C_RESET}"
+    log "${_C_YELLOW_BOLD}  │${_C_RESET}  ${_C_WHITE_BOLD}${temp_password}${_C_RESET}"
+    log "${_C_YELLOW_BOLD}  └─────────────────────────────────────────────────────────────────────┘${_C_RESET}"
     log ""
 
     if [ $cipher = "plain" ]; then

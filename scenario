@@ -24,11 +24,13 @@ def print_verbose [msg] {
 }
 
 def banner [msg: string] {
-  print_verbose $""
-  print_verbose $"####################################################################################################"
-  print_verbose $"## ($msg)"
-  print_verbose $"####################################################################################################"
-  print_verbose $""
+  let len = ($msg | str length)
+  let line = (1..($len + 4) | each { "═" } | str join "")
+  print_verbose ""
+  print_verbose $"(ansi cyan_bold)  ╔($line)╗(ansi reset)"
+  print_verbose $"(ansi cyan_bold)  ║(ansi reset)  (ansi white_bold)($msg)(ansi reset)  (ansi cyan_bold)║(ansi reset)"
+  print_verbose $"(ansi cyan_bold)  ╚($line)╝(ansi reset)"
+  print_verbose ""
 }
 
 def ask_with_default [question: string, answer: string] {
@@ -148,10 +150,11 @@ def --env config [] {
 
 # Manage once scenarios on local or remote servers.
 def main [] {
-  print_unsilent $"Manage once scenarios on local or remote servers.
+  print_unsilent $"(ansi white_bold)MIMS(ansi reset) — Manage once scenarios on local or remote servers.
 
-(ansi green)Usage:(ansi reset) scenario list
-       scenario deploy
+(ansi green_bold)Usage:(ansi reset)
+  (ansi cyan_bold)scenario list(ansi reset)     List available scenarios
+  (ansi cyan_bold)scenario deploy(ansi reset)   Deploy scenarios on local or remote servers
   "
 }
 
