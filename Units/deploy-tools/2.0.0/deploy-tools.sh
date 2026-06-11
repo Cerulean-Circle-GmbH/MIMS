@@ -107,10 +107,37 @@ function deploy-tools.setEnvironment() {
 }
 
 function deploy-tools.setDockerSockPermissions() {
-  # Set permissions for docker.sock
-  if [ -S /var/run/docker.sock ]; then
-    sudo chown $(whoami):$(whoami) /var/run/docker.sock
-    sudo chmod 666 /var/run/docker.sock
+  local sock=/var/run/docker.sock
+  [ -S "$sock" ] || return 0
+
+  local current_perms current_owner me
+  me=$(whoami)
+  current_perms=$(stat -c "%a" "$sock" 2>/dev/null || stat -f "%OLp" "$sock" 2>/dev/null)
+  current_owner=$(stat -c "%U" "$sock" 2>/dev/null || stat -f "%Su" "$sock" 2>/dev/null)
+
+  local current_group
+  current_group=$(stat -c "%G" "$sock" 2>/dev/null || stat -f "%Sg" "$sock" 2>/dev/null)
+
+  # Case 1: owned by current user with mode 666
+  if [ "$current_perms" = "666" ] && [ "$current_owner" = "$me" ]; then
+    logVerbose "docker.sock permissions already correct (owner=$current_owner, mode=$current_perms)"
+    return 0
+  fi
+
+  # Case 2: owned by root:docker with mode 660 and user is in docker group
+  if [ "$current_perms" = "660" ] && [ "$current_group" = "docker" ] && id -nG "$me" | grep -qw "docker"; then
+    logVerbose "docker.sock accessible via docker group (owner=$current_owner:$current_group, mode=$current_perms)"
+    return 0
+  fi
+
+  log "⚠️  docker.sock needs fixing (owner=$current_owner, mode=$current_perms) — expected owner=$me, mode=666"
+
+  if sudo -n true 2>/dev/null; then
+    sudo chown "$me":"$me" "$sock"
+    sudo chmod 666 "$sock"
+    log "✅ docker.sock permissions fixed."
+  else
+    logError "Cannot fix docker.sock: passwordless sudo not available. Run manually: sudo chown $me:$me $sock && sudo chmod 666 $sock"
   fi
 }
 
