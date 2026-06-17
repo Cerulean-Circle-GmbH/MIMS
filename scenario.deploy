@@ -613,8 +613,8 @@ function inspect() {
   INSPECT_DONE=true
 
   bannerBig "Inspect selected scenarios (local only)"
-  printf "%-50s | %s\n" "Description" "Name"
-  printf -- "-------------------------------------------------- | ----------------------------------------\n"
+  printf "${_C_BOLD}%-50s${_C_RESET}   ${_C_BOLD}%s${_C_RESET}\n" "Description" "Name"
+  printf "${_C_GRAY}%-50s   %s${_C_RESET}\n" "--------------------------------------------------" "----------------------------------------"
 
   local inspect_rows=""
 
@@ -646,7 +646,7 @@ $selected_scenario_description|$selected_scenario"
     if [ -z "$selected_scenario" ]; then
       continue
     fi
-    printf "%-50.50s | %s\n" "$selected_scenario_description" "$selected_scenario"
+    printf "%-50.50s   ${_C_CYAN}%s${_C_RESET}\n" "$selected_scenario_description" "$selected_scenario"
   done < <(printf "%s\n" "$inspect_rows" | sed '/^$/d' | sort -f -t '|' -k1,1)
 }
 
@@ -965,8 +965,10 @@ log "Run scenarios from list: $SCENARIOS_LIST"
 
 ALLRETVAL=0
 for s in $SCENARIOS_LIST; do
-  echo "----------------"
-  echo "Run scenario: $s"
+  echo ""
+  echo "${_C_BOLD}────────────────────────────────────────${_C_RESET}"
+  echo "${_C_WHITE_BOLD}  ▶  Run scenario: ${_C_CYAN_BOLD}$s${_C_RESET}"
+  echo "${_C_BOLD}────────────────────────────────────────${_C_RESET}"
 
   # Reset SCENARIO_* variables
   unsetVariables SCENARIO_
