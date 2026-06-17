@@ -4,6 +4,10 @@ services:
     image: ${SCENARIO_NAME}_jenkins_image
     restart: always
     hostname: ${SCENARIO_SERVER_HOSTNAME:-jenkins}
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/jenkins_home
