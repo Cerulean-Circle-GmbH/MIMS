@@ -1,6 +1,6 @@
 scenario:
   ## Scenario metadata
-  # Short scenario description shown by 'scenario.deploy <scenario> inspect'
+  # Short scenario description shown by 'scenario.deploy <scenario> inspect'.
   description: No description
 
   ## Source setup
