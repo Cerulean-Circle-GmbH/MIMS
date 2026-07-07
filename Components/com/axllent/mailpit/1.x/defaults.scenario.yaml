@@ -20,9 +20,9 @@ scenario:
   mailpit:
     # Max number of messages to keep in database
     maxmessages: 5000
-    # Accept any SMTP auth credentials (1 means true, 0 means false)
-    smtpauthacceptany: 1
-    # Allow insecure SMTP auth without TLS (1 means true, 0 means false)
+    # Path relative to scenario.src.secretsdir.
+    smtpauthfile: mailpit/smtp-auth
+    # Required while SMTP port 1025 is used without TLS.
     smtpauthallowinsecure: 1
 
   ## Traefik proxy setup
