@@ -7,6 +7,12 @@
 # Set some variables
 function setEnvironment() {
   deploy-tools.setEnvironment
+  if [[ $SCENARIO_TRAEFIK_ENABLE != "true" ]]; then
+    log "Traefik is disabled, will publish Jenkins HTTP port on the host so an external proxy can reach it"
+    COMPOSE_FILE_ARGUMENTS="${COMPOSE_FILE_ARGUMENTS} -f docker-compose.ports.yml"
+  else
+    log "Traefik is enabled, will not publish Jenkins HTTP port on the host"
+  fi
 }
 
 function checkAndCreateDataVolume() {

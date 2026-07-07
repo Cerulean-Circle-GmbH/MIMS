@@ -17,6 +17,11 @@ scenario:
       # What is the servers network name?
       name: jenkins-network
 
+  ## Unique resources
+  resource:
+    # Which host port should expose the Jenkins HTTP service?
+    httpport: 8080
+
   ## Traefik proxy setup
   traefik:
     # Do you want to route this service via traefik?

@@ -1,0 +1,4 @@
+services:
+  jenkins-service:
+    ports:
+      - "${SCENARIO_RESOURCE_HTTPPORT:-8080}:8080"
