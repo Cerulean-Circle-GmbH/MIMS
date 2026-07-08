@@ -14,34 +14,35 @@ function checkAndCreateDataVolume() {
   deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data_storage" "$creation_mode"
 }
 
-function checkSmtpAuthFile() {
-  local auth_file="${SCENARIO_SRC_SECRETSDIR}/${SCENARIO_MAILPIT_SMTPAUTHFILE}"
+# SMTP and the web UI both authenticate against this single file, so it must exist and be readable.
+function checkAuthFile() {
+  local auth_file="${SCENARIO_SRC_SECRETSDIR}/${SCENARIO_MAILPIT_AUTHFILE}"
 
-  if [ -z "${SCENARIO_MAILPIT_SMTPAUTHFILE:-}" ]; then
-    logError "SCENARIO_MAILPIT_SMTPAUTHFILE must not be empty"
+  if [ -z "${SCENARIO_MAILPIT_AUTHFILE:-}" ]; then
+    logError "SCENARIO_MAILPIT_AUTHFILE must not be empty"
     return 1
   fi
 
   if [ ! -f "$auth_file" ]; then
-    logError "Mailpit SMTP auth file not found: $auth_file"
+    logError "Mailpit auth file not found: $auth_file"
     return 1
   fi
 
   if [ ! -r "$auth_file" ]; then
-    logError "Mailpit SMTP auth file is not readable: $auth_file"
+    logError "Mailpit auth file is not readable: $auth_file"
     return 1
   fi
 }
 
 function up() {
-  checkSmtpAuthFile || return 1
+  checkAuthFile || return 1
   checkAndCreateDataVolume
   setEnvironment
   deploy-tools.up
 }
 
 function start() {
-  checkSmtpAuthFile || return 1
+  checkAuthFile || return 1
   checkAndCreateDataVolume
   setEnvironment
   deploy-tools.start
@@ -60,7 +61,7 @@ function down() {
 }
 
 function test() {
-  checkSmtpAuthFile || return 1
+  checkAuthFile || return 1
   checkAndCreateDataVolume "nocreate"
   setEnvironment
 

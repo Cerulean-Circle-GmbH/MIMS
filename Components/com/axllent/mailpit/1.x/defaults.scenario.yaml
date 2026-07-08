@@ -20,8 +20,8 @@ scenario:
   mailpit:
     # Max number of messages to keep in database
     maxmessages: 5000
-    # Path relative to scenario.src.secretsdir.
-    smtpauthfile: mailpit/smtp-auth
+    # Path (relative to scenario.src.secretsdir) to the shared auth file (user:bcrypt-hash per line). Used for both SMTP and the web UI / API, which always require authentication.
+    authfile: mailpit/auth
     # Required while SMTP port 1025 is used without TLS.
     smtpauthallowinsecure: 1
 
