@@ -40,6 +40,35 @@ The same credentials then apply to the SMTP login **and** the web UI / API.
 `up`, `start` and `test` abort with an error if the file is missing or unreadable
 (see `checkAuthFile` in [`scenario.sh`](scenario.sh)).
 
+## Sending mail — SMTP client settings
+
+Point your application / mail client at Mailpit's SMTP port and authenticate with a
+user from the auth file above:
+
+| Setting     | Value |
+|-------------|-------|
+| Host        | the server hosting this scenario (e.g. `test.wo-da.de`), or `localhost` when tunnelled |
+| Port        | `SCENARIO_RESOURCE_SMTPPORT` (default `1025`) |
+| Encryption  | **none / STARTTLS off** — no TLS is configured on port `1025` |
+| Username    | a user from `mailpit/auth` (e.g. `admin`) |
+| Password    | that user's password (the plaintext you passed to `htpasswd`) |
+
+Because there is no TLS on port `1025`, the client must be allowed to send
+credentials over an unencrypted connection — this is what
+`SCENARIO_MAILPIT_SMTPAUTHALLOWINSECURE=1` enables on the server side. Many mail
+libraries call this "allow insecure auth" or "no TLS".
+
+Example with [`swaks`](https://github.com/jetmore/swaks) to test the connection:
+
+```bash
+swaks --server test.wo-da.de:1025 \
+      --auth-user admin --auth-password 'admin2sut!' \
+      --from test@example.com --to someone@example.com \
+      --header 'Subject: Mailpit test' --body 'hello'
+```
+
+The message then appears in the web UI (which also requires the same login).
+
 ## Configuration
 
 Defaults live in [`defaults.scenario.yaml`](defaults.scenario.yaml):
