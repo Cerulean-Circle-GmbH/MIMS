@@ -13,6 +13,8 @@ services:
       - ${SCENARIO_DATA_MOUNTPOINT_1}:/var/jenkins_home
     environment:
       - JENKINS_OPTS="--prefix=/jenkins"
+      - TZ=Europe/Berlin
+      - JAVA_OPTS=-Duser.timezone=Europe/Berlin
     networks:
       - default
 
