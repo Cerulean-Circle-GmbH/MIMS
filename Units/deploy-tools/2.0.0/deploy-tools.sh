@@ -445,7 +445,7 @@ function deploy-tools.waitForContainer() {
 
   log "Waiting for container $container_name to be ready..."
   for ((i = 0; i < retries; i++)); do
-    if docker ps | grep -q "$container_name"; then
+    if docker ps --format '{{.Names}}' | grep -Fxq "$container_name"; then
       log "Container $container_name is running."
       return 0
     fi
