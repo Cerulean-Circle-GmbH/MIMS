@@ -317,6 +317,7 @@ function parse_yaml {
       -e "s|^\($s\)\(---\)\($s\)||" \
       -e "s|^\($s\)\(\.\.\.\)\($s\)||" \
       -e "s|^\($s\)-${s}[\"']\(.*\)[\"']$s\$|\1$fs$fs\2|p;t" \
+      -e "s|^\($s\)\($w\)$s:${s}[\"'][\"']$s\$|\1$fs\2${fs}__MIMS_EMPTY__|p;t" \
       -e "s|^\($s\)\($w\)$s:${s}[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p;t" \
       -e "s|^\($s\)-$s\(.*\)$s\$|\1$fs$fs\2|" \
       -e "s|^\($s\)\($w\)$s:${s}[\"']\?\(.*\)$s\$|\1$fs\2$fs\3|" \
@@ -368,6 +369,8 @@ function parse_yaml {
           }
         }
       }
+    } else if (value == \"__MIMS_EMPTY__\") {
+      printf(\"%s=\\\"\\\"\n\", toupper(full_vn));
     } else if (length(value) > 0) {
       printf(\"%s=%s\n\", toupper(full_vn), value);
     }
