@@ -86,8 +86,8 @@ function deploy-tools.checkContainer() {
   comment=$1
   shift
   logVerbose
-  logVerbose call: docker ps \| grep "$@"
-  if [[ -z $(docker ps | grep "$@") ]]; then
+  logVerbose call: docker ps --format '{{.Names}}' \| grep -Fx "$1"
+  if ! docker ps --format '{{.Names}}' | grep -Fxq "$1"; then
     log "--: not running: $1 - $comment"
     return 1
   else
@@ -202,7 +202,10 @@ function deploy-tools.checkAndCreateDataVolume() {
     fi
   else
     logVerbose "Volume name does not contain a slash, so it is a volume: $datavolume"
-    if [[ -z $(docker volume ls | grep ${datavolume}) ]]; then
+    # Exakter Namensvergleich: 'docker volume ls | grep mcp_rag_index' trifft
+    # sonst auch 'vai-mcp_rag_index', das Volume wird nicht angelegt und
+    # 'docker compose up' scheitert danach an genau diesem fehlenden Volume.
+    if ! docker volume ls --format '{{.Name}}' | grep -Fxq "$datavolume"; then
       logVerbose "Volume does not exist yet: $datavolume"
       # Create volume if $external is true
       if [[ "$external" == "true" ]]; then
@@ -249,7 +252,7 @@ function deploy-tools.checkAndCreateNetwork() {
   local network=$1
 
   logVerbose "Checking network name: $network"
-  if [[ -z $(docker network ls | grep ${network}) ]]; then
+  if ! docker network ls --format '{{.Name}}' | grep -Fxq "$network"; then
     log "Network does not exist yet: $network. Creating it."
     docker network create $network
   else
