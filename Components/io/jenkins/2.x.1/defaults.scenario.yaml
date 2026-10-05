@@ -19,7 +19,7 @@ scenario:
 
   ## Unique resources
   resource:
-    # Which host port should expose the Jenkins HTTP service?
+    # Which host port should expose the Jenkins HTTP service (only published if traefik is disabled, e.g. for an external proxy)?
     httpport: 8080
 
   ## Traefik proxy setup
