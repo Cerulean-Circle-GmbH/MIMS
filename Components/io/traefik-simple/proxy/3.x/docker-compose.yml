@@ -30,6 +30,7 @@ services:
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.middlewares=basic-auth-global"
 
       - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^https://(.*)${SCENARIO_TRAEFIK_ROUTE}$$"
       - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=https://$1${SCENARIO_TRAEFIK_ROUTE}/"
