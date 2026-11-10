@@ -14,6 +14,28 @@ function checkAndCreateDataVolume() {
   deploy-tools.checkAndCreateDataVolume SCENARIO_DATA_VOLUME_1 "data_storage" "$creation_mode"
 }
 
+# Optional: build the auth file from SCENARIO_MAILPIT_AUTH_USER / SCENARIO_MAILPIT_AUTH_HASH,
+# so the credentials can live in the scenario file instead of being created by hand on the server.
+function writeAuthFileFromScenario() {
+  if [ -z "${SCENARIO_MAILPIT_AUTH_USER:-}" ] && [ -z "${SCENARIO_MAILPIT_AUTH_HASH:-}" ]; then
+    return 0
+  fi
+  if [ -z "${SCENARIO_MAILPIT_AUTH_USER:-}" ] || [ -z "${SCENARIO_MAILPIT_AUTH_HASH:-}" ]; then
+    logError "SCENARIO_MAILPIT_AUTH_USER and SCENARIO_MAILPIT_AUTH_HASH must be set together"
+    return 1
+  fi
+  if [ -z "${SCENARIO_MAILPIT_AUTHFILE:-}" ]; then
+    logError "SCENARIO_MAILPIT_AUTHFILE must not be empty"
+    return 1
+  fi
+
+  local auth_file="${SCENARIO_SRC_SECRETSDIR}/${SCENARIO_MAILPIT_AUTHFILE}"
+  mkdir -p "$(dirname "$auth_file")" || return 1
+  # Only a hash is stored, but keep it readable for the container user.
+  printf '%s:%s\n' "$SCENARIO_MAILPIT_AUTH_USER" "$SCENARIO_MAILPIT_AUTH_HASH" > "$auth_file" || return 1
+  chmod 644 "$auth_file"
+}
+
 # SMTP and the web UI both authenticate against this single file, so it must exist and be readable.
 function checkAuthFile() {
   local auth_file="${SCENARIO_SRC_SECRETSDIR}/${SCENARIO_MAILPIT_AUTHFILE}"
@@ -35,6 +57,7 @@ function checkAuthFile() {
 }
 
 function up() {
+  writeAuthFileFromScenario || return 1
   checkAuthFile || return 1
   checkAndCreateDataVolume
   setEnvironment
@@ -42,6 +65,7 @@ function up() {
 }
 
 function start() {
+  writeAuthFileFromScenario || return 1
   checkAuthFile || return 1
   checkAndCreateDataVolume
   setEnvironment

@@ -26,6 +26,19 @@ read-only into the container and used for **both** `MP_SMTP_AUTH_FILE` and
 
 The path is configurable via `SCENARIO_MAILPIT_AUTHFILE` (default `mailpit/auth`).
 
+### Alternative: credentials in the scenario file
+
+Instead of creating the file by hand, set both of these in the scenario file:
+
+```bash
+SCENARIO_MAILPIT_AUTH_USER="admin"
+SCENARIO_MAILPIT_AUTH_HASH='$apr1$...'   # e.g. from: htpasswd -nbB admin 'pw' | cut -d: -f2
+```
+
+`up` and `start` then write `user:hash` to the auth file (overwriting it). Bcrypt and
+`$apr1$` hashes both work. The hash is stored in the scenario file, so only do this if
+a hash in the repository is acceptable. One user only; use the file for more.
+
 ### Format
 
 One `user:bcrypt-hash` entry per line. Multiple lines = multiple users. Create an
@@ -77,6 +90,7 @@ Defaults live in [`defaults.scenario.yaml`](defaults.scenario.yaml):
 |----------|---------|-------------|
 | `SCENARIO_MAILPIT_MAXMESSAGES` | `5000` | Max number of messages kept in the database |
 | `SCENARIO_MAILPIT_AUTHFILE` | `mailpit/auth` | Shared SMTP + UI auth file, relative to the secrets dir |
+| `SCENARIO_MAILPIT_AUTH_USER` / `SCENARIO_MAILPIT_AUTH_HASH` | empty | Optional: write `user:hash` into the auth file on `up`/`start` |
 | `SCENARIO_MAILPIT_SMTPAUTHALLOWINSECURE` | `1` | Allow SMTP auth over the plaintext port `1025` (no TLS) |
 
 > **Note:** `SMTPAUTHALLOWINSECURE=1` is required as long as SMTP is used over the
